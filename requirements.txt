@@ -4,3 +4,4 @@ gunicorn
 flask-login
 psycopg2-binary
 werkzeug
+google-generativeai
