@@ -36,6 +36,112 @@
       flex-direction: column;
     }
 
+    /* ===== AUTH SCREEN ===== */
+    #auth-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: var(--bg-primary);
+    }
+
+    .auth-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .auth-logo h1 { font-size: 22px; font-weight: 700; }
+    .auth-logo span { font-size: 12px; color: var(--text-secondary); display: block; }
+
+    .auth-tabs {
+      display: flex;
+      background: var(--bg-tertiary);
+      border-radius: 10px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .auth-tab.active {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .auth-form { display: flex; flex-direction: column; gap: 12px; }
+
+    .auth-form input {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 14px;
+      color: var(--text-primary);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    .auth-form input:focus { border-color: var(--accent); }
+    .auth-form input::placeholder { color: var(--text-secondary); }
+
+    .auth-btn {
+      background: var(--accent);
+      color: #05282c;
+      border: none;
+      border-radius: 10px;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 4px;
+    }
+
+    .auth-btn:hover { background: var(--accent-dark); }
+    .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .auth-error {
+      color: #ef4444;
+      font-size: 13px;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    /* ===== APP SCREEN ===== */
+    #app-screen {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+    }
+
     /* Header */
     header {
       height: 60px;
@@ -69,14 +175,32 @@
       letter-spacing: -0.3px;
     }
 
-    .header-spacer {
-      flex: 1;
-    }
+    .header-spacer { flex: 1; }
 
     .header-info {
       font-size: 12px;
       color: var(--text-secondary);
       font-family: "Courier New", monospace;
+    }
+
+    .logout-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-left: 8px;
+    }
+
+    .logout-btn:hover {
+      color: #ef4444;
+      border-color: #ef4444;
+      background: rgba(239,68,68,0.08);
+      transform: none;
     }
 
     /* Chat Container */
@@ -91,22 +215,10 @@
       scroll-behavior: smooth;
     }
 
-    #chat::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    #chat::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    #chat::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 4px;
-    }
-
-    #chat::-webkit-scrollbar-thumb:hover {
-      background: var(--text-secondary);
-    }
+    #chat::-webkit-scrollbar { width: 8px; }
+    #chat::-webkit-scrollbar-track { background: transparent; }
+    #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    #chat::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
     /* Messages */
     .msg {
@@ -121,14 +233,8 @@
     }
 
     @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .msg.user {
@@ -183,9 +289,7 @@
       background: var(--bg-secondary);
     }
 
-    input::placeholder {
-      color: var(--text-secondary);
-    }
+    input::placeholder { color: var(--text-secondary); }
 
     button {
       background: var(--accent);
@@ -204,20 +308,9 @@
       justify-content: center;
     }
 
-    button:hover {
-      background: var(--accent-dark);
-      transform: translateY(-1px);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
+    button:hover { background: var(--accent-dark); transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
     /* Welcome State */
     .welcome {
@@ -245,61 +338,83 @@
       font-size: 36px;
     }
 
-    .welcome h2 {
-      font-size: 28px;
-      color: var(--text-primary);
-      font-weight: 600;
-    }
-
-    .welcome p {
-      font-size: 14px;
-      max-width: 300px;
-    }
+    .welcome h2 { font-size: 28px; color: var(--text-primary); font-weight: 600; }
+    .welcome p { font-size: 14px; max-width: 300px; }
 
     /* Responsive */
     @media (max-width: 768px) {
-      .msg {
-        max-width: 95%;
-        padding: 10px 14px;
-        font-size: 15px;
-      }
+      .msg { max-width: 95%; padding: 10px 14px; font-size: 15px; }
+      header h1 { font-size: 16px; }
+      .header-info { display: none; }
+      .welcome h2 { font-size: 24px; }
 
-      header h1 {
-        font-size: 16px;
-      }
-
-      .header-info {
-        display: none;
-      }
-
-      .welcome h2 {
-        font-size: 24px;
-      }
+      .auth-box { margin: 16px; padding: 28px 20px; }
     }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="logo-badge">¢</div>
-  <h1>Cipher</h1>
-  <div class="header-spacer"></div>
-  <div class="header-info">created by Fatai Quadri</div>
-</header>
+<!-- ===== AUTH SCREEN ===== -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="logo-badge">¢</div>
+      <div>
+        <h1>Cipher</h1>
+        <span>created by Fatai Quadri</span>
+      </div>
+    </div>
 
-<div id="chat">
-  <div class="welcome">
-    <div class="welcome-logo">¢</div>
-    <h2>Cipher</h2>
-    <p>Ask me anything, or give me a calculation to solve.</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="showTab('login')">Log in</button>
+      <button class="auth-tab" onclick="showTab('signup')">Sign up</button>
+    </div>
+
+    <!-- Login -->
+    <div id="login-form" class="auth-form">
+      <input type="email" id="login-email" placeholder="Email" autocomplete="email" />
+      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
+      <div class="auth-error" id="login-error"></div>
+      <button class="auth-btn" onclick="doLogin()">Log in</button>
+    </div>
+
+    <!-- Signup -->
+    <div id="signup-form" class="auth-form" style="display:none;">
+      <input type="text" id="signup-username" placeholder="Username" autocomplete="username" />
+      <input type="email" id="signup-email" placeholder="Email" autocomplete="email" />
+      <input type="password" id="signup-password" placeholder="Password (min 6 chars)" autocomplete="new-password" />
+      <div class="auth-error" id="signup-error"></div>
+      <button class="auth-btn" onclick="doSignup()">Create account</button>
+    </div>
   </div>
 </div>
 
-<div class="input-area">
-  <form id="form">
-    <input id="input" type="text" placeholder="Message Cipher…" autocomplete="off" />
-    <button id="send" type="submit">Send</button>
-  </form>
+<!-- ===== APP SCREEN ===== -->
+<div id="app-screen">
+
+  <header>
+    <div class="logo-badge">¢</div>
+    <h1>Cipher</h1>
+    <div class="header-spacer"></div>
+    <div class="header-info">created by Fatai Quadri</div>
+    <button class="logout-btn" onclick="doLogout()">Sign out</button>
+  </header>
+
+  <div id="chat">
+    <div class="welcome">
+      <div class="welcome-logo">¢</div>
+      <h2>Cipher</h2>
+      <p>Ask me anything, or give me a calculation to solve.</p>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <form id="form">
+      <input id="input" type="text" placeholder="Message Cipher…" autocomplete="off" />
+      <button id="send" type="submit">Send</button>
+    </form>
+  </div>
+
 </div>
 
 <script>
@@ -309,6 +424,66 @@
   const sendBtn = document.getElementById('send');
   let hasMessages = false;
 
+  // ===== AUTH =====
+  function showTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach((t, i) => {
+      t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='signup'));
+    });
+    document.getElementById('login-form').style.display = tab==='login' ? 'flex' : 'none';
+    document.getElementById('signup-form').style.display = tab==='signup' ? 'flex' : 'none';
+  }
+
+  async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errEl = document.getElementById('login-error');
+    errEl.textContent = '';
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, password})
+    });
+    const data = await res.json();
+    if (data.success) { enterApp(data.username); }
+    else { errEl.textContent = data.error || 'Login failed.'; }
+  }
+
+  async function doSignup() {
+    const username = document.getElementById('signup-username').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const errEl = document.getElementById('signup-error');
+    errEl.textContent = '';
+    const res = await fetch('/signup', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username, email, password})
+    });
+    const data = await res.json();
+    if (data.success) { enterApp(data.username); }
+    else { errEl.textContent = data.error || 'Signup failed.'; }
+  }
+
+  async function doLogout() {
+    await fetch('/logout', {method: 'POST'});
+    location.reload();
+  }
+
+  function enterApp(username) {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.flexDirection = 'column';
+    input.focus();
+  }
+
+  // Check if already logged in on page load
+  (async () => {
+    const res = await fetch('/me');
+    const data = await res.json();
+    if (data.logged_in) { enterApp(data.username); }
+  })();
+
+  // ===== EXISTING CHAT LOGIC (unchanged) =====
   function clearWelcome() {
     if (!hasMessages) {
       chat.innerHTML = '';
