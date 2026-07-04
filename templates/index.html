@@ -301,6 +301,11 @@
       border-color: var(--border);
     }
 
+    .history-item.active {
+      background: var(--bg-tertiary);
+      border-color: var(--accent);
+    }
+
     .history-item .snippet {
       font-size: 13px;
       color: var(--text-primary);
@@ -606,6 +611,7 @@
   const sidebarBackdrop = document.getElementById('sidebar-backdrop');
   let hasMessages = false;
   let currentUsername = null;
+  let currentChatId = null;
 
   // ===== AUTH =====
   function showTab(tab) {
@@ -621,14 +627,19 @@
     const password = document.getElementById('login-password').value;
     const errEl = document.getElementById('login-error');
     errEl.textContent = '';
-    const res = await fetch('/login', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({email, password})
-    });
-    const data = await res.json();
-    if (data.success) { enterApp(data.username); }
-    else { errEl.textContent = data.error || 'Login failed.'; }
+    try {
+      const res = await fetch('/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({email, password})
+      });
+      const data = await res.json();
+      if (data.success) { enterApp(data.username); }
+      else { errEl.textContent = data.error || 'Login failed.'; }
+    } catch (err) {
+      errEl.textContent = 'Could not reach the server. Please try again.';
+      console.error('Login error:', err);
+    }
   }
 
   async function doSignup() {
@@ -637,14 +648,19 @@
     const password = document.getElementById('signup-password').value;
     const errEl = document.getElementById('signup-error');
     errEl.textContent = '';
-    const res = await fetch('/signup', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({username, email, password})
-    });
-    const data = await res.json();
-    if (data.success) { enterApp(data.username); }
-    else { errEl.textContent = data.error || 'Signup failed.'; }
+    try {
+      const res = await fetch('/signup', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username, email, password})
+      });
+      const data = await res.json();
+      if (data.success) { enterApp(data.username); }
+      else { errEl.textContent = data.error || 'Signup failed.'; }
+    } catch (err) {
+      errEl.textContent = 'Could not reach the server. Please try again.';
+      console.error('Signup error:', err);
+    }
   }
 
   async function doLogout() {
@@ -680,50 +696,39 @@
   }
 
   function startNewChat() {
-    chat.innerHTML = '';
-    hasMessages = false;
-    clearWelcome();
+    currentChatId = null;
     chat.innerHTML = '';
     hasMessages = false;
     const welcome = document.createElement('div');
     welcome.className = 'welcome';
     welcome.innerHTML = `<div class="welcome-logo">¢</div><h2>Welcome back, ${currentUsername || ''}</h2><p>Ask me anything, or give me a calculation to solve.</p>`;
     chat.appendChild(welcome);
+    highlightActiveChat();
     if (window.innerWidth <= 768) toggleSidebar();
   }
 
-  // Expects GET /history to return JSON:
-  // { history: [ { id, message, reply, timestamp } , ... ] }  (oldest -> newest, or any order; we sort client-side)
+  // GET /history returns: { chats: [ { id, title, updated_at } , ... ] }
   async function loadHistory() {
     try {
       const res = await fetch('/history');
-      if (!res.ok) return; // backend route may not exist yet
+      if (!res.ok) return;
       const data = await res.json();
-      const items = (data.history || []).slice().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-      renderHistorySidebar(items);
-      if (items.length) {
-        clearWelcome();
-        items.forEach(item => {
-          addMessage(item.message, 'user', false);
-          addMessage(item.reply, 'bot', false);
-        });
-        chat.scrollTop = chat.scrollHeight;
-      }
+      renderHistorySidebar(data.chats || []);
     } catch (err) {
       console.error('Could not load history:', err);
     }
   }
 
-  function renderHistorySidebar(items) {
+  function renderHistorySidebar(chats) {
     historyList.innerHTML = '';
-    if (!items.length) {
+    if (!chats.length) {
       historyList.innerHTML = '<div class="history-empty">No conversations yet.</div>';
       return;
     }
     let lastLabel = null;
-    // newest first in the sidebar
-    items.slice().reverse().forEach(item => {
-      const dateObj = new Date(item.timestamp);
+    // already sorted newest-first by the backend
+    chats.forEach(c => {
+      const dateObj = new Date(c.updated_at);
       const label = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
       if (label !== lastLabel) {
         const labelEl = document.createElement('div');
@@ -734,4 +739,107 @@
       }
       const btn = document.createElement('button');
       btn.className = 'history-item';
-      btn.innerHTML = `<div class="snippet">${escapeHtml(item.message)}</div><div class="time">${dateObj.to
+      btn.dataset.chatId = c.id;
+      btn.innerHTML = `<div class="snippet">${escapeHtml(c.title)}</div><div class="time">${dateObj.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>`;
+      btn.onclick = () => loadChat(c.id);
+      historyList.appendChild(btn);
+    });
+    highlightActiveChat();
+  }
+
+  function highlightActiveChat() {
+    historyList.querySelectorAll('.history-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.chatId === currentChatId);
+    });
+  }
+
+  // Loads a past conversation's full message list into the main chat pane
+  async function loadChat(chatId) {
+    try {
+      const res = await fetch(`/chat/${chatId}/messages`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      currentChatId = chatId;
+      chat.innerHTML = '';
+      hasMessages = true;
+
+      (data.messages || []).forEach(m => {
+        addMessage(m.content, m.role === 'assistant' ? 'bot' : 'user', false);
+      });
+      chat.scrollTop = chat.scrollHeight;
+      highlightActiveChat();
+    } catch (err) {
+      console.error('Could not load chat:', err);
+    }
+    if (window.innerWidth <= 768) toggleSidebar();
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  // ===== CHAT LOGIC =====
+  function clearWelcome() {
+    if (!hasMessages) {
+      chat.innerHTML = '';
+      hasMessages = true;
+    }
+  }
+
+  function addMessage(text, role, scroll = true) {
+    clearWelcome();
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.textContent = text;
+    chat.appendChild(div);
+    if (scroll) chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const message = input.value.trim();
+    if (!message) return;
+
+    addMessage(message, 'user');
+    input.value = '';
+    sendBtn.disabled = true;
+
+    const thinkingEl = addMessage('Thinking…', 'bot thinking');
+
+    try {
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, chat_id: currentChatId })
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
+      }
+
+      const data = await res.json();
+      thinkingEl.textContent = data.reply || 'No response received.';
+      thinkingEl.classList.remove('thinking');
+
+      currentChatId = data.chat_id || currentChatId;
+
+      // Refresh sidebar so this chat appears/moves to the top without a full reload
+      loadHistory();
+    } catch (err) {
+      thinkingEl.textContent = `Error: ${err.message}. Please try again.`;
+      thinkingEl.classList.remove('thinking');
+    }
+
+    sendBtn.disabled = false;
+    input.focus();
+  });
+
+  input.focus();
+</script>
+
+</body>
+</html>
