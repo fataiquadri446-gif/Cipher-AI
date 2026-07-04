@@ -11,7 +11,7 @@ import operator
 import requests
 import psycopg2
 import psycopg2.extras
-conn = psycopg2.connect(os.environ["DATABASE_URL"])
+
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-secret-key")
