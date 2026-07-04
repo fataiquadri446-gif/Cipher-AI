@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 import math
 import json
 import os
@@ -7,8 +9,11 @@ import random
 import ast
 import operator
 import requests
+import psycopg2
+import psycopg2.extras
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "fallback-secret-key")
 
 # ---------------- SYSTEM ----------------
 
@@ -104,6 +109,147 @@ def ask_ai(message):
     except:
         return "Network error"
 
+# ---------------- DATABASE ----------------
+
+def get_db():
+    conn = psycopg2.connect(os.environ.get("DATABASE_URL"), sslmode="require")
+    return conn
+
+def init_db():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            username VARCHAR(80) UNIQUE NOT NULL,
+            email VARCHAR(120) UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS chats (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+            title VARCHAR(200) DEFAULT 'New Chat',
+            pinned BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS messages (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            chat_id UUID REFERENCES chats(id) ON DELETE CASCADE,
+            role VARCHAR(10) NOT NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+# ---------------- FLASK-LOGIN ----------------
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "home"
+
+class User(UserMixin):
+    def __init__(self, id, username, email):
+        self.id = str(id)
+        self.username = username
+        self.email = email
+
+@login_manager.user_loader
+def load_user(user_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    if row:
+        return User(row["id"], row["username"], row["email"])
+    return None
+
+# ---------------- AUTH ROUTES ----------------
+
+@app.route("/signup", methods=["POST"])
+def signup():
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    email = data.get("email", "").strip()
+    password = data.get("password", "")
+
+    if not username or not email or not password:
+        return jsonify({"error": "All fields are required."}), 400
+
+    if len(password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters."}), 400
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(
+            "INSERT INTO users (username, email, password_hash) VALUES (%s, %s, %s) RETURNING id, username, email",
+            (username, email, generate_password_hash(password))
+        )
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        user = User(row["id"], row["username"], row["email"])
+        login_user(user, remember=True)
+        return jsonify({"success": True, "username": user.username})
+
+    except psycopg2.errors.UniqueViolation:
+        return jsonify({"error": "Username or email already taken."}), 409
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    email = data.get("email", "").strip()
+    password = data.get("password", "")
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not row or not check_password_hash(row["password_hash"], password):
+            return jsonify({"error": "Invalid email or password."}), 401
+
+        user = User(row["id"], row["username"], row["email"])
+        login_user(user, remember=True)
+        return jsonify({"success": True, "username": user.username})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/logout", methods=["POST"])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({"success": True})
+
+@app.route("/me")
+def me():
+    if current_user.is_authenticated:
+        return jsonify({"logged_in": True, "username": current_user.username})
+    return jsonify({"logged_in": False})
+
 # ---------------- ROUTES ----------------
 
 @app.route("/")
@@ -111,6 +257,7 @@ def home():
     return render_template("index.html")
 
 @app.route("/chat", methods=["POST"])
+@login_required
 def chat():
     data = request.json
     message = data.get("message", "")
@@ -132,7 +279,10 @@ def chat():
 
     return jsonify({"reply": reply})
 
-# ---------------- RUN ----------------
+# ---------------- INIT ----------------
+
+with app.app_context():
+    init_db()
 
 if __name__ == "__main__":
     app.run(debug=True)
