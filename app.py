@@ -251,11 +251,110 @@ def me():
         return jsonify({"logged_in": True, "username": current_user.username})
     return jsonify({"logged_in": False})
 
-# ---------------- ROUTES ----------------
+# ---------------- CHAT ROUTES ----------------
 
 @app.route("/")
 def home():
     return render_template("index.html")
+
+@app.route("/chats", methods=["GET"])
+@login_required
+def get_chats():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(
+        "SELECT id, title, pinned, updated_at FROM chats WHERE user_id = %s ORDER BY pinned DESC, updated_at DESC",
+        (current_user.id,)
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    chats = [
+        {
+            "id": str(row["id"]),
+            "title": row["title"],
+            "pinned": row["pinned"],
+            "updated_at": row["updated_at"].isoformat()
+        }
+        for row in rows
+    ]
+    return jsonify(chats)
+
+@app.route("/chats/new", methods=["POST"])
+@login_required
+def new_chat():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(
+        "INSERT INTO chats (user_id, title) VALUES (%s, %s) RETURNING id, title, pinned",
+        (current_user.id, "New Chat")
+    )
+    row = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({
+        "id": str(row["id"]),
+        "title": row["title"],
+        "pinned": row["pinned"]
+    })
+
+@app.route("/chats/<chat_id>/messages", methods=["GET"])
+@login_required
+def get_messages(chat_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    # Verify ownership
+    cur.execute("SELECT id FROM chats WHERE id = %s AND user_id = %s", (chat_id, current_user.id))
+    if not cur.fetchone():
+        cur.close()
+        conn.close()
+        return jsonify({"error": "Not found"}), 404
+
+    cur.execute(
+        "SELECT role, content FROM messages WHERE chat_id = %s ORDER BY created_at ASC",
+        (chat_id,)
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    messages = [{"role": r["role"], "content": r["content"]} for r in rows]
+    return jsonify(messages)
+
+@app.route("/chats/<chat_id>/pin", methods=["POST"])
+@login_required
+def toggle_pin(chat_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(
+        "UPDATE chats SET pinned = NOT pinned WHERE id = %s AND user_id = %s RETURNING pinned",
+        (chat_id, current_user.id)
+    )
+    row = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    if not row:
+        return jsonify({"error": "Not found"}), 404
+
+    return jsonify({"pinned": row["pinned"]})
+
+@app.route("/chats/<chat_id>/delete", methods=["POST"])
+@login_required
+def delete_chat(chat_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM chats WHERE id = %s AND user_id = %s", (chat_id, current_user.id))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({"success": True})
 
 @app.route("/chat", methods=["POST"])
 @login_required
@@ -264,11 +363,13 @@ def chat():
     message = data.get("message", "")
     chat_id = data.get("chat_id")
 
+    if not message:
+        return jsonify({"error": "Empty message"}), 400
+
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    # If a chat_id was passed, make sure it actually belongs to this user.
-    # Otherwise treat this as the start of a brand new chat.
+    # Verify chat ownership if chat_id provided
     if chat_id:
         cur.execute(
             "SELECT id FROM chats WHERE id = %s AND user_id = %s",
@@ -277,8 +378,9 @@ def chat():
         if not cur.fetchone():
             chat_id = None
 
+    # Create new chat if needed
     if not chat_id:
-        title = (message[:40] + "…") if len(message) > 40 else (message or "New Chat")
+        title = (message[:40] + "…") if len(message) > 40 else message
         cur.execute(
             "INSERT INTO chats (user_id, title) VALUES (%s, %s) RETURNING id",
             (current_user.id, title)
@@ -286,15 +388,15 @@ def chat():
         chat_id = str(cur.fetchone()["id"])
         conn.commit()
 
-    # Save the user's message
+    # Save user message
     cur.execute(
         "INSERT INTO messages (chat_id, role, content) VALUES (%s, %s, %s)",
         (chat_id, "user", message)
     )
 
+    # Get reply
     msg = message.lower()
 
-    # simple logic
     if "hello" in msg or "hi" in msg:
         reply = "Hello 👋 I'm Cipher."
     elif "joke" in msg:
@@ -307,13 +409,13 @@ def chat():
     else:
         reply = ask_ai(message)
 
-    # Save the assistant's reply
+    # Save assistant reply
     cur.execute(
         "INSERT INTO messages (chat_id, role, content) VALUES (%s, %s, %s)",
         (chat_id, "assistant", reply)
     )
 
-    # Bump updated_at so this chat floats to the top of the history list
+    # Update chat timestamp
     cur.execute("UPDATE chats SET updated_at = NOW() WHERE id = %s", (chat_id,))
 
     conn.commit()
@@ -321,63 +423,6 @@ def chat():
     conn.close()
 
     return jsonify({"reply": reply, "chat_id": chat_id})
-
-@app.route("/history")
-@login_required
-def history():
-    conn = get_db()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute(
-        "SELECT id, title, updated_at FROM chats WHERE user_id = %s ORDER BY updated_at DESC",
-        (current_user.id,)
-    )
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-
-    chats = [
-        {
-            "id": str(row["id"]),
-            "title": row["title"],
-            "updated_at": row["updated_at"].isoformat()
-        }
-        for row in rows
-    ]
-    return jsonify({"chats": chats})
-
-@app.route("/chat/<chat_id>/messages")
-@login_required
-def chat_messages(chat_id):
-    conn = get_db()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    # Make sure this chat belongs to the logged-in user before returning anything
-    cur.execute(
-        "SELECT id FROM chats WHERE id = %s AND user_id = %s",
-        (chat_id, current_user.id)
-    )
-    if not cur.fetchone():
-        cur.close()
-        conn.close()
-        return jsonify({"error": "Chat not found."}), 404
-
-    cur.execute(
-        "SELECT role, content, created_at FROM messages WHERE chat_id = %s ORDER BY created_at ASC",
-        (chat_id,)
-    )
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-
-    messages = [
-        {
-            "role": row["role"],
-            "content": row["content"],
-            "created_at": row["created_at"].isoformat()
-        }
-        for row in rows
-    ]
-    return jsonify({"messages": messages})
 
 # ---------------- INIT ----------------
 
