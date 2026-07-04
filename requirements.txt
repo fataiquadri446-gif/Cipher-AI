@@ -1,3 +1,6 @@
 flask
 requests
 gunicorn
+flask-login
+psycopg2-binary
+werkzeug
