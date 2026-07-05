@@ -134,45 +134,8 @@
       text-align: center;
       min-height: 18px;
     }
-  </style>
-</head>
-<body>
 
-<!-- ===== AUTH SCREEN ===== -->
-<div id="auth-screen">
-  <div class="auth-box">
-    <div class="auth-logo">
-      <div class="logo-badge">¢</div>
-      <div>
-        <h1>Cipher</h1>
-        <span>created by Fatai Quadri</span>
-      </div>
-    </div>
-
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="showTab('login')">Log in</button>
-      <button class="auth-tab" onclick="showTab('signup')">Sign up</button>
-    </div>
-
-    <!-- Login -->
-    <div id="login-form" class="auth-form">
-      <input type="email" id="login-email" placeholder="Email" autocomplete="email" />
-      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
-      <div class="auth-error" id="login-error"></div>
-      <button class="auth-btn" onclick="doLogin()">Log in</button>
-    </div>
-
-    <!-- Signup -->
-    <div id="signup-form" class="auth-form" style="display:none;">
-      <input type="text" id="signup-username" placeholder="Username" autocomplete="username" />
-      <input type="email" id="signup-email" placeholder="Email" autocomplete="email" />
-      <input type="password" id="signup-password" placeholder="Password (min 6 chars)" autocomplete="new-password" />
-      <div class="auth-error" id="signup-error"></div>
-      <button class="auth-btn" onclick="doSignup()">Create account</button>
-    </div>
-  </div>
-</div>
-/* ===== APP SCREEN ===== */
+    /* ===== APP SCREEN ===== */
     #app-screen {
       display: none;
       flex-direction: row;
@@ -568,6 +531,41 @@
 </head>
 <body>
 
+<!-- ===== AUTH SCREEN ===== -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="logo-badge">¢</div>
+      <div>
+        <h1>Cipher</h1>
+        <span>created by Fatai Quadri</span>
+      </div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="showTab('login')">Log in</button>
+      <button class="auth-tab" onclick="showTab('signup')">Sign up</button>
+    </div>
+
+    <!-- Login -->
+    <div id="login-form" class="auth-form">
+      <input type="email" id="login-email" placeholder="Email" autocomplete="email" />
+      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
+      <div class="auth-error" id="login-error"></div>
+      <button class="auth-btn" onclick="doLogin()">Log in</button>
+    </div>
+
+    <!-- Signup -->
+    <div id="signup-form" class="auth-form" style="display:none;">
+      <input type="text" id="signup-username" placeholder="Username" autocomplete="username" />
+      <input type="email" id="signup-email" placeholder="Email" autocomplete="email" />
+      <input type="password" id="signup-password" placeholder="Password (min 6 chars)" autocomplete="new-password" />
+      <div class="auth-error" id="signup-error"></div>
+      <button class="auth-btn" onclick="doSignup()">Create account</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== APP SCREEN ===== -->
 <div id="app-screen">
 
@@ -603,8 +601,8 @@
     <div id="chat">
       <div class="welcome">
         <div class="welcome-logo">¢</div>
-        <h2 id="welcome-heading">Cipher</h2>
-        <p id="welcome-subtitle">Ask me anything, or give me a calculation to solve.</p>
+        <h2>Cipher</h2>
+        <p>Ask me anything, or give me a calculation to solve.</p>
       </div>
     </div>
 
@@ -618,7 +616,6 @@
   </div>
 </div>
 
-</body>
 <script>
   const chat = document.getElementById('chat');
   const form = document.getElementById('form');
@@ -626,7 +623,6 @@
   const sendBtn = document.getElementById('send');
   let hasMessages = false;
   let currentChatId = null;
-  let currentUsername = null;
 
   // ===== AUTH =====
   function showTab(tab) {
@@ -674,16 +670,10 @@
   }
 
   function enterApp(username) {
-    currentUsername = username;
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'flex';
     document.getElementById('user-name').textContent = username;
     document.getElementById('user-avatar').textContent = username[0].toUpperCase();
-    
-    // Personalized welcome
-    document.getElementById('welcome-heading').textContent = `Welcome back, ${username}`;
-    document.getElementById('welcome-subtitle').textContent = `Ask me anything, ${username}.`;
-    
     loadChats();
     input.focus();
   }
@@ -750,7 +740,6 @@
     const c = await res.json();
     currentChatId = c.id;
     clearChat();
-    showWelcome();
     document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
     await loadChats();
     closeSidebar();
@@ -808,7 +797,7 @@
     welcome.className = 'welcome';
     welcome.innerHTML = `
       <div class="welcome-logo">¢</div>
-      <h2>Welcome back, ${currentUsername || 'User'}</h2>
+      <h2>Cipher</h2>
       <p>Ask me anything, or give me a calculation to solve.</p>
     `;
     chat.appendChild(welcome);
