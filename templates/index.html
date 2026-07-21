@@ -1,866 +1,513 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cipher</title>
-  <style>
-    * { 
-      box-sizing: border-box; 
-      margin: 0;
-      padding: 0;
-    }
 
-    :root {
-      --bg-primary: #0d0d0d;
-      --bg-secondary: #1a1a1a;
-      --bg-tertiary: #262626;
-      --text-primary: #ececec;
-      --text-secondary: #b4b4b4;
-      --accent: #2dd4bf;
-      --accent-dark: #06b6a8;
-      --border: #40414f;
-      --user-bg: #40414f;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    html, body {
-      height: 100%;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-      overflow: hidden;
-    }
+    <title>Cipher</title>
 
-    body {
-      display: flex;
-      flex-direction: column;
-    }
+    <meta name="theme-color" content="#0d0d0d">
 
-    /* ===== AUTH SCREEN ===== */
-    #auth-screen {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: var(--bg-primary);
-    }
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    .auth-box {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 36px 32px;
-      width: 100%;
-      max-width: 380px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
 
-    .auth-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    <!-- Styles -->
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
 
-    .auth-logo h1 { font-size: 22px; font-weight: 700; }
-    .auth-logo span { font-size: 12px; color: var(--text-secondary); display: block; }
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/themes.css') }}">
 
-    .auth-tabs {
-      display: flex;
-      background: var(--bg-tertiary);
-      border-radius: 10px;
-      padding: 4px;
-      gap: 4px;
-    }
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/animations.css') }}">
 
-    .auth-tab {
-      flex: 1;
-      padding: 9px;
-      border: none;
-      border-radius: 8px;
-      background: transparent;
-      color: var(--text-secondary);
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.2s;
-    }
-
-    .auth-tab.active {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-    }
-
-    .auth-form { display: flex; flex-direction: column; gap: 12px; }
-
-    .auth-form input {
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 13px 14px;
-      color: var(--text-primary);
-      font-size: 15px;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.2s;
-      width: 100%;
-    }
-
-    .auth-form input:focus { border-color: var(--accent); }
-    .auth-form input::placeholder { color: var(--text-secondary); }
-
-    .auth-btn {
-      background: var(--accent);
-      color: #05282c;
-      border: none;
-      border-radius: 10px;
-      padding: 13px;
-      font-size: 15px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.2s;
-      margin-top: 4px;
-    }
-
-    .auth-btn:hover { background: var(--accent-dark); }
-    .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .auth-error {
-      color: #ef4444;
-      font-size: 13px;
-      text-align: center;
-      min-height: 18px;
-    }
-
-    /* ===== APP SCREEN ===== */
-    #app-screen {
-      display: none;
-      flex-direction: row;
-      height: 100vh;
-    }
-
-    /* ===== SIDEBAR ===== */
-    #sidebar {
-      width: 260px;
-      background: var(--bg-secondary);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
-      height: 100vh;
-    }
-
-    .sidebar-header {
-      padding: 16px 14px 12px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .sidebar-logo {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: "Courier New", monospace;
-      font-weight: 700;
-      color: #05282c;
-      font-size: 17px;
-      flex-shrink: 0;
-    }
-
-    .sidebar-title { font-size: 16px; font-weight: 600; flex: 1; }
-
-    .new-chat-btn {
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      border-radius: 8px;
-      padding: 9px 12px;
-      font-size: 13px;
-      font-family: inherit;
-      cursor: pointer;
-      margin: 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: background 0.2s;
-    }
-
-    .new-chat-btn:hover {
-      background: var(--border);
-    }
-
-    .chat-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 4px 8px;
-    }
-
-    .chat-list::-webkit-scrollbar { width: 4px; }
-    .chat-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-    .chat-section-label {
-      font-size: 11px;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      padding: 8px 6px 4px;
-    }
-
-    .chat-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 9px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .chat-item:hover { background: var(--bg-tertiary); }
-    .chat-item.active { background: var(--bg-tertiary); }
-
-    .chat-item-title {
-      flex: 1;
-      font-size: 13px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: var(--text-primary);
-    }
-
-    .chat-item-actions {
-      display: flex;
-      gap: 2px;
-      opacity: 0;
-      transition: opacity 0.15s;
-    }
-
-    .chat-item:hover .chat-item-actions { opacity: 1; }
-
-    .chat-action-btn {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      padding: 3px 5px;
-      border-radius: 4px;
-      font-size: 12px;
-      transition: color 0.15s, background 0.15s;
-    }
-
-    .chat-action-btn:hover {
-      color: var(--text-primary);
-      background: var(--border);
-    }
-
-    .chat-action-btn.pinned { color: var(--accent); }
-
-    .sidebar-footer {
-      border-top: 1px solid var(--border);
-      padding: 12px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .user-avatar {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: var(--accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #05282c;
-      font-weight: 700;
-      font-size: 13px;
-      flex-shrink: 0;
-    }
-
-    .user-name { font-size: 13px; font-weight: 500; flex: 1; }
-
-    .sidebar-logout-btn {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      font-size: 13px;
-      padding: 4px 8px;
-      border-radius: 6px;
-      transition: all 0.2s;
-    }
-
-    .sidebar-logout-btn:hover {
-      color: #ef4444;
-      background: rgba(239,68,68,0.1);
-    }
-
-    /* ===== MAIN AREA ===== */
-    #main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* Header */
-    header {
-      height: 60px;
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      gap: 12px;
-      flex-shrink: 0;
-    }
-
-    #sidebar-toggle {
-      background: none;
-      border: none;
-      color: var(--text-primary);
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 6px;
-      display: none;
-    }
-
-    #sidebar-toggle:hover { background: var(--bg-tertiary); }
-
-    .logo-badge {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: "Courier New", monospace;
-      font-weight: 700;
-      color: #05282c;
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-
-    header h1 {
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: -0.3px;
-    }
-
-    .header-spacer { flex: 1; }
-
-    .header-info {
-      font-size: 12px;
-      color: var(--text-secondary);
-      font-family: "Courier New", monospace;
-    }
-
-    /* Chat Container */
-    #chat {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      scroll-behavior: smooth;
-    }
-
-    #chat::-webkit-scrollbar { width: 8px; }
-    #chat::-webkit-scrollbar-track { background: transparent; }
-    #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-    #chat::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
-
-    /* Messages */
-    .msg {
-      max-width: 85%;
-      padding: 12px 16px;
-      border-radius: 12px;
-      line-height: 1.5;
-      font-size: 16px;
-      word-wrap: break-word;
-      white-space: pre-wrap;
-      animation: slideIn 0.3s ease-out;
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .msg.user {
-      align-self: flex-end;
-      background: var(--accent);
-      color: #05282c;
-      border-radius: 18px 18px 4px 18px;
-      font-weight: 500;
-    }
-
-    .msg.bot {
-      align-self: flex-start;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      border-radius: 18px 18px 18px 4px;
-    }
-
-    .msg.bot.thinking {
-      color: var(--text-secondary);
-      font-style: italic;
-    }
-
-    /* Input Area */
-    .input-area {
-      background: var(--bg-primary);
-      border-top: 1px solid var(--border);
-      padding: 16px 20px;
-      flex-shrink: 0;
-    }
-
-    form {
-      display: flex;
-      gap: 12px;
-      max-width: 100%;
-    }
-
-    input {
-      flex: 1;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 16px;
-      color: var(--text-primary);
-      font-size: 16px;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.2s, background-color 0.2s;
-    }
-
-    input:focus {
-      border-color: var(--accent);
-      background: var(--bg-secondary);
-    }
-
-    input::placeholder { color: var(--text-secondary); }
-
-    button {
-      background: var(--accent);
-      color: #05282c;
-      border: none;
-      border-radius: 12px;
-      padding: 0 20px;
-      font-weight: 600;
-      font-size: 16px;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.2s;
-      min-width: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    button:hover { background: var(--accent-dark); transform: translateY(-1px); }
-    button:active { transform: translateY(0); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-    /* Welcome State */
-    .welcome {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      gap: 20px;
-      text-align: center;
-      color: var(--text-secondary);
-    }
-
-    .welcome-logo {
-      width: 64px;
-      height: 64px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: "Courier New", monospace;
-      font-weight: 700;
-      color: #05282c;
-      font-size: 36px;
-    }
-
-    .welcome h2 { font-size: 28px; color: var(--text-primary); font-weight: 600; }
-    .welcome p { font-size: 14px; max-width: 300px; }
-
-    /* ===== MOBILE ===== */
-    @media (max-width: 768px) {
-      #sidebar {
-        position: fixed;
-        left: -260px;
-        top: 0;
-        z-index: 100;
-        transition: left 0.25s ease;
-        box-shadow: 4px 0 20px rgba(0,0,0,0.5);
-        height: 100vh;
-      }
-
-      #sidebar.open { left: 0; }
-
-      #sidebar-toggle { display: flex; }
-
-      .msg { max-width: 95%; padding: 10px 14px; font-size: 15px; }
-      header h1 { font-size: 16px; }
-      .header-info { display: none; }
-      .welcome h2 { font-size: 24px; }
-      .auth-box { margin: 16px; padding: 28px 20px; }
-    }
-  </style>
 </head>
+
 <body>
 
-<!-- ===== AUTH SCREEN ===== -->
+<!-- ========================= -->
+<!-- Authentication Screen -->
+<!-- ========================= -->
+
 <div id="auth-screen">
-  <div class="auth-box">
-    <div class="auth-logo">
-      <div class="logo-badge">¢</div>
-      <div>
-        <h1>Cipher</h1>
-        <span>created by Fatai Quadri</span>
-      </div>
+
+    <div class="auth-background"></div>
+
+    <div class="auth-box">
+
+        <div class="auth-logo">
+
+            <div class="logo-badge">
+                ¢
+            </div>
+
+            <div>
+
+                <h1>Cipher</h1>
+
+                <span>
+                    Created by Fatai Quadri
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="auth-title">
+
+            <h2>
+                Welcome back
+            </h2>
+
+            <p>
+                Sign in to continue your conversations with Cipher.
+            </p>
+
+        </div>
+
+        <div class="auth-tabs">
+
+            <button class="auth-tab active"
+                onclick="showTab('login')">
+
+                Log in
+
+            </button>
+
+            <button class="auth-tab"
+                onclick="showTab('signup')">
+
+                Sign up
+
+            </button>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- Login Form -->
+        <!-- ========================= -->
+
+        <div id="login-form" class="auth-form">
+
+            <input
+                type="email"
+                id="login-email"
+                placeholder="Email address"
+                autocomplete="email">
+
+            <input
+                type="password"
+                id="login-password"
+                placeholder="Password"
+                autocomplete="current-password">
+
+            <div
+                class="auth-error"
+                id="login-error">
+            </div>
+
+            <button
+                class="auth-btn"
+                onclick="doLogin()">
+
+                Log in
+
+            </button>
+
+            <div class="auth-divider">
+
+                <span>or continue with</span>
+
+            </div>
+
+            <!-- Google Sign In -->
+            <button
+                class="google-btn"
+                id="google-login-btn"
+                type="button">
+
+                <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google">
+
+                <span>
+                    Continue with Google
+                </span>
+
+            </button>
+
+        </div>
+
+
+        <!-- ========================= -->
+        <!-- Signup Form -->
+        <!-- ========================= -->
+
+        <div
+            id="signup-form"
+            class="auth-form"
+            style="display:none;">
+
+            <input
+                type="text"
+                id="signup-username"
+                placeholder="Username"
+                autocomplete="username">
+
+            <input
+                type="email"
+                id="signup-email"
+                placeholder="Email address"
+                autocomplete="email">
+
+            <input
+                type="password"
+                id="signup-password"
+                placeholder="Password (minimum 6 characters)"
+                autocomplete="new-password">
+
+            <div
+                class="auth-error"
+                id="signup-error">
+            </div>
+
+            <button
+                class="auth-btn"
+                onclick="doSignup()">
+
+                Create account
+
+            </button>
+
+            <div class="auth-divider">
+
+                <span>or continue with</span>
+
+            </div>
+
+            <button
+                class="google-btn"
+                id="google-signup-btn"
+                type="button">
+
+                <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google">
+
+                <span>
+                    Sign up with Google
+                </span>
+
+            </button>
+
+        </div>
+
     </div>
 
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="showTab('login')">Log in</button>
-      <button class="auth-tab" onclick="showTab('signup')">Sign up</button>
-    </div>
-
-    <!-- Login -->
-    <div id="login-form" class="auth-form">
-      <input type="email" id="login-email" placeholder="Email" autocomplete="email" />
-      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
-      <div class="auth-error" id="login-error"></div>
-      <button class="auth-btn" onclick="doLogin()">Log in</button>
-    </div>
-
-    <!-- Signup -->
-    <div id="signup-form" class="auth-form" style="display:none;">
-      <input type="text" id="signup-username" placeholder="Username" autocomplete="username" />
-      <input type="email" id="signup-email" placeholder="Email" autocomplete="email" />
-      <input type="password" id="signup-password" placeholder="Password (min 6 chars)" autocomplete="new-password" />
-      <div class="auth-error" id="signup-error"></div>
-      <button class="auth-btn" onclick="doSignup()">Create account</button>
-    </div>
-  </div>
 </div>
 
-<!-- ===== APP SCREEN ===== -->
+
+<!-- ========================= -->
+<!-- Main Application -->
+<!-- ========================= -->
+
 <div id="app-screen">
 
-  <!-- Sidebar -->
-  <div id="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-logo">¢</div>
-      <span class="sidebar-title">Cipher</span>
+    <!-- ========================= -->
+    <!-- Sidebar -->
+    <!-- ========================= -->
+
+    <aside id="sidebar">
+
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+
+            <div class="sidebar-logo">
+                ¢
+            </div>
+
+            <div class="sidebar-brand">
+
+                <h2>Cipher</h2>
+
+                <span>
+                    AI Workspace
+                </span>
+
+            </div>
+
+        </div>
+
+        <!-- New Chat -->
+
+        <button
+            class="new-chat-btn"
+            onclick="startNewChat()">
+
+            <span>＋</span>
+
+            <span>New Chat</span>
+
+        </button>
+
+        <!-- Search -->
+
+        <div class="sidebar-search">
+
+            <input
+                type="text"
+                id="chat-search"
+                placeholder="Search conversations...">
+
+        </div>
+
+        <!-- Chat History -->
+
+        <div
+            class="chat-list"
+            id="chat-list">
+
+        </div>
+
+        <!-- Sidebar Footer -->
+
+        <div class="sidebar-footer">
+
+            <div class="user-profile">
+
+                <div
+                    class="user-avatar"
+                    id="user-avatar">
+
+                    ?
+
+                </div>
+
+                <div class="user-details">
+
+                    <span
+                        class="user-name"
+                        id="user-name">
+
+                        User
+
+                    </span>
+
+                    <small>
+                        Online
+                    </small>
+
+                </div>
+
+            </div>
+
+            <div class="sidebar-menu">
+
+                <button
+                    class="sidebar-icon-btn"
+                    id="theme-btn"
+                    title="Themes">
+
+                    🎨
+
+                </button>
+
+                <button
+                    class="sidebar-icon-btn"
+                    id="settings-btn"
+                    title="Settings">
+
+                    ⚙️
+
+                </button>
+
+                <button
+                    class="sidebar-icon-btn logout"
+                    onclick="doLogout()"
+                    title="Sign out">
+
+                    ⎋
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+    <!-- ========================= -->
+    <!-- Main Content -->
+    <!-- ========================= -->
+
+    <main id="main">
+
+<!-- ========================= -->
+<!-- Header -->
+<!-- ========================= -->
+
+<header class="topbar">
+
+    <button id="sidebar-toggle" onclick="toggleSidebar()">
+
+        ☰
+
+    </button>
+
+    <div class="topbar-brand">
+
+        <div class="logo-badge">
+            ¢
+        </div>
+
+        <div>
+
+            <h1>Cipher</h1>
+
+            <small>
+                Created by Fatai Quadri
+            </small>
+
+        </div>
+
     </div>
 
-    <button class="new-chat-btn" onclick="startNewChat()">✏️ New Chat</button>
+    <div class="topbar-actions">
 
-    <div class="chat-list" id="chat-list"></div>
+        <button class="topbar-btn" id="theme-switch">
 
-    <div class="sidebar-footer">
-      <div class="user-avatar" id="user-avatar">?</div>
-      <span class="user-name" id="user-name">User</span>
-      <button class="sidebar-logout-btn" onclick="doLogout()">Sign out</button>
-    </div>
-  </div>
+            Theme
 
-  <!-- Main -->
-  <div id="main">
+        </button>
 
-    <header>
-      <button id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
-      <div class="logo-badge">¢</div>
-      <h1>Cipher</h1>
-      <div class="header-spacer"></div>
-      <div class="header-info">created by Fatai Quadri</div>
-    </header>
-
-    <div id="chat">
-      <div class="welcome">
-        <div class="welcome-logo">¢</div>
-        <h2>Cipher</h2>
-        <p>Ask me anything, or give me a calculation to solve.</p>
-      </div>
     </div>
 
-    <div class="input-area">
-      <form id="form">
-        <input id="input" type="text" placeholder="Message Cipher…" autocomplete="off" />
-        <button id="send" type="submit">Send</button>
-      </form>
+</header>
+
+<!-- ========================= -->
+<!-- Chat Area -->
+<!-- ========================= -->
+
+<section id="chat">
+
+    <div class="welcome">
+
+        <div class="welcome-logo">
+            ¢
+        </div>
+
+        <h2>
+
+            Welcome to Cipher
+
+        </h2>
+
+        <p>
+
+            Ask questions, solve calculations, write code, analyze documents,
+            or start a new project.
+
+        </p>
+
+        <div class="welcome-actions">
+
+            <button class="welcome-card">
+
+                <strong>💬 Chat</strong>
+
+                <span>Start a conversation</span>
+
+            </button>
+
+            <button class="welcome-card">
+
+                <strong>🧠 Research</strong>
+
+                <span>Explore complex topics</span>
+
+            </button>
+
+            <button class="welcome-card">
+
+                <strong>💻 Code</strong>
+
+                <span>Generate and debug code</span>
+
+            </button>
+
+            <button class="welcome-card">
+
+                <strong>📄 Documents</strong>
+
+                <span>Summarize PDFs and files</span>
+
+            </button>
+
+        </div>
+
     </div>
 
-  </div>
+</section>
+
+<!-- ========================= -->
+<!-- Input Area -->
+<!-- ========================= -->
+
+<footer class="input-area">
+
+    <form id="form">
+
+        <button
+            type="button"
+            class="input-tool">
+
+            +
+
+        </button>
+
+        <textarea
+            id="input"
+            rows="1"
+            placeholder="Message Cipher..."></textarea>
+
+        <button
+            id="send"
+            type="submit">
+
+            Send
+
+        </button>
+
+    </form>
+
+    <small class="footer-note">
+
+        Cipher may make mistakes. Verify important information.
+
+    </small>
+
+</footer>
+
+</main>
+
 </div>
 
-<script>
-  const chat = document.getElementById('chat');
-  const form = document.getElementById('form');
-  const input = document.getElementById('input');
-  const sendBtn = document.getElementById('send');
-  let hasMessages = false;
-  let currentChatId = null;
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
-  // ===== AUTH =====
-  function showTab(tab) {
-    document.querySelectorAll('.auth-tab').forEach((t, i) => {
-      t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='signup'));
-    });
-    document.getElementById('login-form').style.display = tab==='login' ? 'flex' : 'none';
-    document.getElementById('signup-form').style.display = tab==='signup' ? 'flex' : 'none';
-  }
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 
-  async function doLogin() {
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    const errEl = document.getElementById('login-error');
-    errEl.textContent = '';
-    const res = await fetch('/login', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({email, password})
-    });
-    const data = await res.json();
-    if (data.success) { enterApp(data.username); }
-    else { errEl.textContent = data.error || 'Login failed.'; }
-  }
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
 
-  async function doSignup() {
-    const username = document.getElementById('signup-username').value.trim();
-    const email = document.getElementById('signup-email').value.trim();
-    const password = document.getElementById('signup-password').value;
-    const errEl = document.getElementById('signup-error');
-    errEl.textContent = '';
-    const res = await fetch('/signup', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({username, email, password})
-    });
-    const data = await res.json();
-    if (data.success) { enterApp(data.username); }
-    else { errEl.textContent = data.error || 'Signup failed.'; }
-  }
+<script src="{{ url_for('static', filename='js/themes.js') }}"></script>
 
-  async function doLogout() {
-    await fetch('/logout', {method: 'POST'});
-    location.reload();
-  }
-
-  function enterApp(username) {
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app-screen').style.display = 'flex';
-    document.getElementById('user-name').textContent = username;
-    document.getElementById('user-avatar').textContent = username[0].toUpperCase();
-    loadChats();
-    input.focus();
-  }
-
-  // Check if already logged in on page load
-  (async () => {
-    const res = await fetch('/me');
-    const data = await res.json();
-    if (data.logged_in) { enterApp(data.username); }
-  })();
-
-  // ===== SIDEBAR =====
-  function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
-  }
-
-  function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('open');
-  }
-
-  // ===== CHAT HISTORY =====
-  async function loadChats() {
-    const res = await fetch('/chats');
-    if (!res.ok) return;
-    const chats = await res.json();
-    renderChatList(chats);
-  }
-
-  function renderChatList(chats) {
-    const list = document.getElementById('chat-list');
-    list.innerHTML = '';
-
-    const pinned = chats.filter(c => c.pinned);
-    const unpinned = chats.filter(c => !c.pinned);
-
-    if (pinned.length) {
-      list.innerHTML += `<div class="chat-section-label">📌 Pinned</div>`;
-      pinned.forEach(c => list.appendChild(makeChatItem(c)));
-    }
-
-    if (unpinned.length) {
-      if (pinned.length) list.innerHTML += `<div class="chat-section-label">Recent</div>`;
-      unpinned.forEach(c => list.appendChild(makeChatItem(c)));
-    }
-  }
-
-  function makeChatItem(c) {
-    const div = document.createElement('div');
-    div.className = 'chat-item' + (c.id === currentChatId ? ' active' : '');
-    div.dataset.id = c.id;
-    div.innerHTML = `
-      <span class="chat-item-title">${escHtml(c.title)}</span>
-      <div class="chat-item-actions">
-        <button class="chat-action-btn ${c.pinned ? 'pinned' : ''}" title="${c.pinned ? 'Unpin' : 'Pin'}" onclick="togglePin(event,'${c.id}')">📌</button>
-        <button class="chat-action-btn" title="Delete" onclick="deleteChat(event,'${c.id}')">🗑</button>
-      </div>
-    `;
-    div.addEventListener('click', () => openChat(c.id, c.title));
-    return div;
-  }
-
-  async function startNewChat() {
-    const res = await fetch('/chats/new', {method: 'POST'});
-    const c = await res.json();
-    currentChatId = c.id;
-    clearChat();
-    document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
-    await loadChats();
-    closeSidebar();
-    input.focus();
-  }
-
-  async function openChat(id, title) {
-    currentChatId = id;
-    clearChat();
-
-    const res = await fetch(`/chats/${id}/messages`);
-    const messages = await res.json();
-
-    if (messages.length === 0) {
-      showWelcome();
-    } else {
-      hasMessages = true;
-      messages.forEach(m => addMessage(m.content, m.role, false));
-    }
-
-    document.querySelectorAll('.chat-item').forEach(el => {
-      el.classList.toggle('active', el.dataset.id === id);
-    });
-
-    closeSidebar();
-  }
-
-  async function togglePin(e, id) {
-    e.stopPropagation();
-    await fetch(`/chats/${id}/pin`, {method: 'POST'});
-    await loadChats();
-  }
-
-  async function deleteChat(e, id) {
-    e.stopPropagation();
-    if (!confirm('Delete this chat?')) return;
-    await fetch(`/chats/${id}/delete`, {method: 'POST'});
-    if (currentChatId === id) {
-      currentChatId = null;
-      clearChat();
-      showWelcome();
-    }
-    await loadChats();
-  }
-
-  // ===== CHAT LOGIC (original) =====
-  function clearChat() {
-    chat.innerHTML = '';
-    hasMessages = false;
-  }
-
-  function showWelcome() {
-    clearChat();
-    const welcome = document.createElement('div');
-    welcome.className = 'welcome';
-    welcome.innerHTML = `
-      <div class="welcome-logo">¢</div>
-      <h2>Cipher</h2>
-      <p>Ask me anything, or give me a calculation to solve.</p>
-    `;
-    chat.appendChild(welcome);
-  }
-
-  function addMessage(text, role, animate = true) {
-    if (!hasMessages) {
-      chat.innerHTML = '';
-      hasMessages = true;
-    }
-    const div = document.createElement('div');
-    div.className = 'msg ' + role;
-    if (!animate) div.style.animation = 'none';
-    div.textContent = text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-    return div;
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!currentChatId) return;
-
-    const message = input.value.trim();
-    if (!message) return;
-
-    addMessage(message, 'user');
-    input.value = '';
-    sendBtn.disabled = true;
-
-    const thinkingEl = addMessage('Thinking…', 'bot thinking');
-
-    try {
-      const res = await fetch('/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, chat_id: currentChatId })
-      });
-
-      if (!res.ok) {
-        throw new Error(`Server error: ${res.status}`);
-      }
-
-      const data = await res.json();
-      thinkingEl.textContent = data.reply || 'No response received.';
-      thinkingEl.classList.remove('thinking');
-
-      await loadChats();
-    } catch (err) {
-      thinkingEl.textContent = `Error: ${err.message}. Please try again.`;
-      thinkingEl.classList.remove('thinking');
-    }
-
-    sendBtn.disabled = false;
-    input.focus();
-  });
-
-  function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  input.focus();
-</script>
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 
 </body>
+
 </html>
