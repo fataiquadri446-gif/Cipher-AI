@@ -1,1 +1,332 @@
 
+/* ===================================================
+   CIPHER THEMES
+=================================================== */
+
+
+/* ===================================================
+   DEFAULT (MIDNIGHT)
+=================================================== */
+
+:root{
+
+    --bg-primary:#0b0f19;
+
+    --bg-secondary:#111827;
+
+    --bg-card:#1a2233;
+
+    --bg-hover:#202b42;
+
+    --border:#2c3b55;
+
+    --accent:#2dd4bf;
+
+    --accent-dark:#14b8a6;
+
+    --text-primary:#ffffff;
+
+    --text-secondary:#9ca3af;
+
+    --text-muted:#6b7280;
+
+}
+
+
+/* ===================================================
+   EMERALD
+=================================================== */
+
+[data-theme="emerald"]{
+
+    --bg-primary:#08110d;
+
+    --bg-secondary:#0f1c16;
+
+    --bg-card:#13251d;
+
+    --bg-hover:#1a3228;
+
+    --border:#29503d;
+
+    --accent:#34d399;
+
+    --accent-dark:#10b981;
+
+    --text-primary:#ffffff;
+
+    --text-secondary:#b5c9c1;
+
+}
+
+
+/* ===================================================
+   CYBER
+=================================================== */
+
+[data-theme="cyber"]{
+
+    --bg-primary:#090812;
+
+    --bg-secondary:#121222;
+
+    --bg-card:#1a1b33;
+
+    --bg-hover:#23264a;
+
+    --border:#40466f;
+
+    --accent:#7c3aed;
+
+    --accent-dark:#9333ea;
+
+    --text-primary:#ffffff;
+
+    --text-secondary:#c6c6e6;
+
+}
+
+
+/* ===================================================
+   AMOLED BLACK
+=================================================== */
+
+[data-theme="amoled"]{
+
+    --bg-primary:#000000;
+
+    --bg-secondary:#050505;
+
+    --bg-card:#0c0c0c;
+
+    --bg-hover:#161616;
+
+    --border:#202020;
+
+    --accent:#2dd4bf;
+
+    --accent-dark:#14b8a6;
+
+    --text-primary:#ffffff;
+
+    --text-secondary:#9ca3af;
+
+}
+
+
+/* ===================================================
+   OCEAN
+=================================================== */
+
+[data-theme="ocean"]{
+
+    --bg-primary:#071923;
+
+    --bg-secondary:#0d2433;
+
+    --bg-card:#163447;
+
+    --bg-hover:#21495f;
+
+    --border:#32627e;
+
+    --accent:#38bdf8;
+
+    --accent-dark:#0ea5e9;
+
+    --text-primary:#ffffff;
+
+    --text-secondary:#c5d7e4;
+
+}
+
+
+/* ===================================================
+   SUNSET
+=================================================== */
+
+[data-theme="sunset"]{
+
+    --bg-primary:#22120d;
+
+    --bg-secondary:#301a13;
+
+    --bg-card:#44241a;
+
+    --bg-hover:#5b3324;
+
+    --border:#7a4b35;
+
+    --accent:#fb923c;
+
+    --accent-dark:#f97316;
+
+    --text-primary:#ffffff;
+
+    --text-secondary:#d8c0b4;
+
+}
+
+
+/* ===================================================
+   LIGHT
+=================================================== */
+
+[data-theme="light"]{
+
+    --bg-primary:#f6f7fb;
+
+    --bg-secondary:#ffffff;
+
+    --bg-card:#f1f5f9;
+
+    --bg-hover:#e5e7eb;
+
+    --border:#d1d5db;
+
+    --accent:#14b8a6;
+
+    --accent-dark:#0f766e;
+
+    --text-primary:#111827;
+
+    --text-secondary:#4b5563;
+
+    --text-muted:#6b7280;
+
+}
+
+
+/* ===================================================
+   THEME TRANSITIONS
+=================================================== */
+
+html,
+body,
+#sidebar,
+#main,
+.topbar,
+.auth-box,
+.card,
+.chat-item,
+.msg,
+button,
+input,
+textarea{
+
+    transition:
+        background-color .35s ease,
+        color .35s ease,
+        border-color .35s ease,
+        box-shadow .35s ease;
+
+}
+
+
+/* ===================================================
+   THEME HELPERS
+=================================================== */
+
+.theme-midnight{
+    color:#2dd4bf;
+}
+
+.theme-emerald{
+    color:#34d399;
+}
+
+.theme-cyber{
+    color:#9333ea;
+}
+
+.theme-ocean{
+    color:#38bdf8;
+}
+
+.theme-sunset{
+    color:#fb923c;
+}
+
+.theme-amoled{
+    color:#ffffff;
+}
+
+.theme-light{
+    color:#0f766e;
+}
+
+
+/* ===================================================
+   THEME BUTTONS
+=================================================== */
+
+.theme-option{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    padding:14px;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+    border:1px solid transparent;
+
+}
+
+.theme-option:hover{
+
+    background:var(--bg-hover);
+
+    border-color:var(--border);
+
+}
+
+.theme-preview{
+
+    width:18px;
+
+    height:18px;
+
+    border-radius:50%;
+
+}
+
+.theme-preview.midnight{
+    background:#2dd4bf;
+}
+
+.theme-preview.emerald{
+    background:#34d399;
+}
+
+.theme-preview.cyber{
+    background:#9333ea;
+}
+
+.theme-preview.ocean{
+    background:#38bdf8;
+}
+
+.theme-preview.sunset{
+    background:#fb923c;
+}
+
+.theme-preview.amoled{
+    background:#000000;
+    border:1px solid #444;
+}
+
+.theme-preview.light{
+    background:#f3f4f6;
+    border:1px solid #bbb;
+}
+
+
+/* ===================================================
+   END OF THEMES.CSS
+=================================================== */
