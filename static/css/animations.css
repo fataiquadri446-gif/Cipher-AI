@@ -1,1 +1,508 @@
+/* ===================================================
+   CIPHER ANIMATIONS
+=================================================== */
+
+
+/* ==========================================
+   Fade
+========================================== */
+
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+
+    }
+
+    to{
+
+        opacity:1;
+
+    }
+
+}
+
+.fade-in{
+
+    animation:fadeIn .35s ease forwards;
+
+}
+
+
+/* ==========================================
+   Fade Up
+========================================== */
+
+@keyframes fadeUp{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(20px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+.fade-up{
+
+    animation:fadeUp .4s ease forwards;
+
+}
+
+
+/* ==========================================
+   Scale
+========================================== */
+
+@keyframes scaleIn{
+
+    from{
+
+        transform:scale(.95);
+
+        opacity:0;
+
+    }
+
+    to{
+
+        transform:scale(1);
+
+        opacity:1;
+
+    }
+
+}
+
+.scale-in{
+
+    animation:scaleIn .35s ease;
+
+}
+
+
+/* ==========================================
+   Sidebar
+========================================== */
+
+@keyframes sidebarSlide{
+
+    from{
+
+        transform:translateX(-100%);
+
+    }
+
+    to{
+
+        transform:translateX(0);
+
+    }
+
+}
+
+.sidebar-open{
+
+    animation:sidebarSlide .3s ease;
+
+}
+
+
+/* ==========================================
+   Message
+========================================== */
+
+.message-enter{
+
+    animation:fadeUp .3s ease;
+
+}
+
+
+/* ===================================================
+   TYPING INDICATOR
+=================================================== */
+
+.typing{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:6px;
+
+    padding:6px 0;
+
+}
+
+.typing span{
+
+    width:8px;
+
+    height:8px;
+
+    border-radius:50%;
+
+    background:var(--accent);
+
+    animation:typingBounce 1.2s infinite ease-in-out;
+
+}
+
+.typing span:nth-child(2){
+
+    animation-delay:.2s;
+
+}
+
+.typing span:nth-child(3){
+
+    animation-delay:.4s;
+
+}
+
+@keyframes typingBounce{
+
+    0%,80%,100%{
+
+        transform:translateY(0);
+
+        opacity:.4;
+
+    }
+
+    40%{
+
+        transform:translateY(-6px);
+
+        opacity:1;
+
+    }
+
+}
+
+
+/* ===================================================
+   LOGO GLOW
+=================================================== */
+
+@keyframes logoGlow{
+
+    0%{
+
+        box-shadow:0 0 8px rgba(45,212,191,.15);
+
+    }
+
+    50%{
+
+        box-shadow:
+            0 0 18px rgba(45,212,191,.35),
+            0 0 36px rgba(45,212,191,.18);
+
+    }
+
+    100%{
+
+        box-shadow:0 0 8px rgba(45,212,191,.15);
+
+    }
+
+}
+
+.logo-glow{
+
+    animation:logoGlow 2.5s ease-in-out infinite;
+
+}
+
+
+/* ===================================================
+   SPINNER
+=================================================== */
+
+@keyframes spinner{
+
+    from{
+
+        transform:rotate(0deg);
+
+    }
+
+    to{
+
+        transform:rotate(360deg);
+
+    }
+
+}
+
+.loading-spinner{
+
+    animation:spinner .8s linear infinite;
+
+}
+
+
+/* ===================================================
+   SEND BUTTON
+=================================================== */
+
+@keyframes sendPop{
+
+    0%{
+
+        transform:scale(1);
+
+    }
+
+    50%{
+
+        transform:scale(.88);
+
+    }
+
+    100%{
+
+        transform:scale(1);
+
+    }
+
+}
+
+.send-animation{
+
+    animation:sendPop .25s ease;
+
+}
+
+
+/* ===================================================
+   BUTTON RIPPLE
+=================================================== */
+
+@keyframes ripple{
+
+    from{
+
+        transform:scale(.2);
+
+        opacity:.45;
+
+    }
+
+    to{
+
+        transform:scale(2);
+
+        opacity:0;
+
+    }
+
+}
+
+.ripple{
+
+    position:absolute;
+
+    border-radius:50%;
+
+    background:rgba(255,255,255,.25);
+
+    animation:ripple .6s linear;
+
+}
+
+
+/* ===================================================
+   SUCCESS ANIMATION
+=================================================== */
+
+@keyframes successPop{
+
+    0%{
+
+        transform:scale(.8);
+
+        opacity:0;
+
+    }
+
+    60%{
+
+        transform:scale(1.08);
+
+        opacity:1;
+
+    }
+
+    100%{
+
+        transform:scale(1);
+
+        opacity:1;
+
+    }
+
+}
+
+.success-animation{
+
+    animation:successPop .45s ease;
+
+}
+
+
+/* ===================================================
+   ERROR SHAKE
+=================================================== */
+
+@keyframes shake{
+
+    0%,100%{
+
+        transform:translateX(0);
+
+    }
+
+    20%{
+
+        transform:translateX(-6px);
+
+    }
+
+    40%{
+
+        transform:translateX(6px);
+
+    }
+
+    60%{
+
+        transform:translateX(-4px);
+
+    }
+
+    80%{
+
+        transform:translateX(4px);
+
+    }
+
+}
+
+.error-animation{
+
+    animation:shake .45s ease;
+
+}
+
+
+/* ===================================================
+   MODAL ANIMATION
+=================================================== */
+
+@keyframes modalFade{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(25px) scale(.96);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0) scale(1);
+
+    }
+
+}
+
+.modal-show{
+
+    animation:modalFade .3s ease;
+
+}
+
+
+/* ===================================================
+   MOBILE DRAWER
+=================================================== */
+
+@keyframes drawerOpen{
+
+    from{
+
+        transform:translateX(-100%);
+
+    }
+
+    to{
+
+        transform:translateX(0);
+
+    }
+
+}
+
+.drawer-open{
+
+    animation:drawerOpen .3s ease;
+
+}
+
+
+/* ===================================================
+   ANIMATION HELPERS
+=================================================== */
+
+.animate{
+
+    animation-fill-mode:both;
+
+}
+
+.animate-fast{
+
+    animation-duration:.2s;
+
+}
+
+.animate-normal{
+
+    animation-duration:.35s;
+
+}
+
+.animate-slow{
+
+    animation-duration:.6s;
+
+}
+
+.hidden{
+
+    display:none !important;
+
+}
+
+
+/* ===================================================
+   END OF ANIMATIONS.CSS
+=================================================== */
 
