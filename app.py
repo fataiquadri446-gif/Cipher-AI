@@ -1207,8 +1207,7 @@ def delete_chat(chat_id):
     )
 
 
-    deleted =
-        cur.rowcount > 0
+    deleted = cur.rowcount > 0
 
 
     conn.commit()
@@ -1371,8 +1370,7 @@ def chat():
     # Generate response
     # -----------------------------------------------------
 
-    msg =
-        message.lower()
+    msg = message.lower()
 
 
     if (
@@ -1569,11 +1567,10 @@ def create_reminder():
 
     try:
 
-        remind_at =
-            datetime.strptime(
-                f"{date} {time}",
-                "%Y-%m-%d %H:%M"
-            )
+        remind_at = datetime.strptime(
+            f"{date} {time}",
+            "%Y-%m-%d %H:%M"
+        )
 
 
     except ValueError:
@@ -2097,8 +2094,7 @@ def delete_reminder(
     )
 
 
-    deleted =
-        cur.rowcount > 0
+    deleted = cur.rowcount > 0
 
 
     conn.commit()
