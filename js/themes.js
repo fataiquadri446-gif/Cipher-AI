@@ -1,137 +1,239 @@
-
-/* ==========================================
+/* =========================================================
    CIPHER THEME SYSTEM
-   Created by Fatai Quadri
-========================================== */
+   Complete Theme & Appearance Controller
+========================================================= */
 
 "use strict";
 
 
-/* ==========================================
+/* =========================================================
+   THEME CONFIGURATION
+========================================================= */
+
+const CipherThemeConfig = {
+
+    storageKey: "cipher-theme",
+
+    themes: {
+
+        midnight: {
+            name: "Midnight",
+            icon: "🌙",
+            preview: "midnight"
+        },
+
+        emerald: {
+            name: "Emerald",
+            icon: "💚",
+            preview: "emerald"
+        },
+
+        cyber: {
+            name: "Cyber",
+            icon: "⚡",
+            preview: "cyber"
+        },
+
+        amoled: {
+            name: "AMOLED Black",
+            icon: "⚫",
+            preview: "amoled"
+        },
+
+        ocean: {
+            name: "Ocean",
+            icon: "🌊",
+            preview: "ocean"
+        },
+
+        sunset: {
+            name: "Sunset",
+            icon: "🌅",
+            preview: "sunset"
+        },
+
+        light: {
+            name: "Light",
+            icon: "☀️",
+            preview: "light"
+        }
+
+    }
+
+};
+
+
+/* =========================================================
    THEME STATE
-========================================== */
+========================================================= */
 
 const ThemeManager = {
 
-    current: "dark",
+    current: "midnight",
 
     initialized: false,
 
-    storageKey: "cipher-theme"
+    menuCreated: false
 
 };
 
 
-/* ==========================================
-   AVAILABLE THEMES
-========================================== */
+/* =========================================================
+   GET SYSTEM THEME
+========================================================= */
 
-const CipherThemes = {
+function getSystemTheme() {
 
-    dark: {
-        name: "Dark",
-        icon: "🌙"
-    },
+    if (
+        window.matchMedia &&
+        window.matchMedia(
+            "(prefers-color-scheme: dark)"
+        ).matches
+    ) {
 
-    light: {
-        name: "Light",
-        icon: "☀️"
-    },
-
-    amoled: {
-        name: "AMOLED",
-        icon: "⚫"
-    },
-
-    ocean: {
-        name: "Ocean",
-        icon: "🌊"
-    },
-
-    emerald: {
-        name: "Emerald",
-        icon: "💚"
-    }
-
-};
-
-
-/* ==========================================
-   APPLY THEME
-========================================== */
-
-function applyTheme(themeName) {
-
-    if (!CipherThemes[themeName]) {
-
-        themeName = "dark";
+        return "midnight";
 
     }
 
-    ThemeManager.current = themeName;
-
-    document.documentElement
-        .setAttribute(
-            "data-theme",
-            themeName
-        );
-
-    localStorage.setItem(
-
-        ThemeManager.storageKey,
-
-        themeName
-
-    );
-
-    updateThemeMeta();
+    return "light";
 
 }
 
 
-/* ==========================================
-   LOAD SAVED THEME
-========================================== */
+/* =========================================================
+   GET SAVED THEME
+========================================================= */
 
-function loadSavedTheme() {
+function getSavedTheme() {
 
-    const savedTheme =
-
+    const saved =
         localStorage.getItem(
-            ThemeManager.storageKey
+            CipherThemeConfig.storageKey
         );
 
     if (
-        savedTheme &&
-        CipherThemes[savedTheme]
+        saved &&
+        CipherThemeConfig.themes[saved]
     ) {
 
-        applyTheme(savedTheme);
+        return saved;
 
     }
-    else {
 
-        applyTheme("dark");
-
-    }
+    return null;
 
 }
 
 
-/* ==========================================
+/* =========================================================
+   APPLY THEME
+========================================================= */
+
+function applyTheme(themeName, save = true) {
+
+    if (
+        !CipherThemeConfig.themes[themeName]
+    ) {
+
+        themeName = "midnight";
+
+    }
+
+
+    /*
+     * Smooth transition.
+     */
+
+    document.documentElement.classList.add(
+        "theme-transition"
+    );
+
+
+    /*
+     * Apply theme.
+     */
+
+    document.documentElement.setAttribute(
+        "data-theme",
+        themeName
+    );
+
+
+    ThemeManager.current =
+        themeName;
+
+
+    /*
+     * Save user's selection.
+     */
+
+    if (save) {
+
+        localStorage.setItem(
+
+            CipherThemeConfig.storageKey,
+
+            themeName
+
+        );
+
+    }
+
+
+    updateThemeMenu();
+
+
+    /*
+     * Remove transition class
+     * after the animation.
+     */
+
+    window.setTimeout(() => {
+
+        document.documentElement.classList.remove(
+            "theme-transition"
+        );
+
+    }, 350);
+
+}
+
+
+/* =========================================================
    CHANGE THEME
-========================================== */
+========================================================= */
 
 function changeTheme(themeName) {
 
-    applyTheme(themeName);
+    applyTheme(
+        themeName,
+        true
+    );
 
 }
 
 
-/* ==========================================
-   GET CURRENT THEME
-========================================== */
+/* =========================================================
+   RESET TO SYSTEM THEME
+========================================================= */
+
+function resetToSystemTheme() {
+
+    localStorage.removeItem(
+        CipherThemeConfig.storageKey
+    );
+
+    applyTheme(
+        getSystemTheme(),
+        false
+    );
+
+}
+
+
+/* =========================================================
+   CURRENT THEME
+========================================================= */
 
 function getCurrentTheme() {
 
@@ -140,92 +242,28 @@ function getCurrentTheme() {
 }
 
 
-/* ==========================================
-   UPDATE THEME META
-========================================== */
-
-function updateThemeMeta() {
-
-    const theme =
-        CipherThemes[
-            ThemeManager.current
-        ];
-
-    if (!theme) return;
-
-    document.title =
-        `Cipher — ${theme.name}`;
-
-}
-
-
-/* ==========================================
-   INITIALIZE THEME SYSTEM
-========================================== */
-
-function initializeThemes() {
-
-    if (ThemeManager.initialized) {
-
-        return;
-
-    }
-
-    ThemeManager.initialized = true;
-
-    loadSavedTheme();
-
-}
-
-
-/* ==========================================
-   START AFTER PAGE LOAD
-========================================== */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        initializeThemes();
-
-    }
-);
-
-
-/* ==========================================
-   EXPOSE THEME MANAGER
-========================================== */
-
-window.CipherThemes = {
-
-    change: changeTheme,
-
-    current: getCurrentTheme,
-
-    available: CipherThemes
-
-};
-
-
-/* ==========================================
-   CIPHER THEME SWITCHER
-========================================== */
-
-
-/* ==========================================
+/* =========================================================
    CREATE THEME MENU
-========================================== */
+========================================================= */
 
 function createThemeMenu() {
 
-    // Don't create it twice.
+    /*
+     * Don't create duplicate menus.
+     */
+
     if (
         document.getElementById(
             "cipher-theme-menu"
         )
     ) {
+
+        ThemeManager.menuCreated = true;
+
         return;
+
     }
+
 
     const menu =
         document.createElement("div");
@@ -241,8 +279,15 @@ function createThemeMenu() {
         "menu"
     );
 
-    Object.entries(CipherThemes)
-        .forEach(([key, theme]) => {
+
+    /*
+     * Create every theme option.
+     */
+
+    Object.entries(
+        CipherThemeConfig.themes
+    ).forEach(
+        ([key, theme]) => {
 
             const button =
                 document.createElement("button");
@@ -257,52 +302,73 @@ function createThemeMenu() {
 
             button.setAttribute(
                 "role",
-                "menuitem"
+                "menuitemradio"
             );
+
 
             button.innerHTML = `
 
-                <span class="theme-option-icon">
+                <span
+                    class="theme-preview ${theme.preview}"
+                    aria-hidden="true">
+                </span>
+
+                <span
+                    class="theme-option-icon"
+                    aria-hidden="true">
                     ${theme.icon}
                 </span>
 
-                <span class="theme-option-name">
-                    ${escapeHTML(theme.name)}
+                <span
+                    class="theme-option-name">
+                    ${theme.name}
                 </span>
 
-                <span class="theme-option-check">
+                <span
+                    class="theme-option-check"
+                    aria-hidden="true">
                     ✓
                 </span>
 
             `;
 
+
             button.addEventListener(
                 "click",
-                () => {
+                event => {
+
+                    event.stopPropagation();
 
                     changeTheme(key);
-
-                    updateThemeMenu();
 
                     closeThemeMenu();
 
                 }
             );
 
-            menu.appendChild(button);
 
-        });
+            menu.appendChild(
+                button
+            );
 
-    document.body.appendChild(menu);
+        }
+    );
+
+
+    document.body.appendChild(
+        menu
+    );
+
+    ThemeManager.menuCreated = true;
 
     updateThemeMenu();
 
 }
 
 
-/* ==========================================
+/* =========================================================
    UPDATE ACTIVE THEME
-========================================== */
+========================================================= */
 
 function updateThemeMenu() {
 
@@ -313,36 +379,108 @@ function updateThemeMenu() {
 
     if (!menu) return;
 
+
     menu
         .querySelectorAll(
             ".theme-option"
         )
-        .forEach(option => {
+        .forEach(
+            option => {
 
-            const active =
-                option.dataset.theme ===
-                ThemeManager.current;
+                const isActive =
+                    option.dataset.theme ===
+                    ThemeManager.current;
 
-            option.classList.toggle(
-                "active",
-                active
-            );
 
-            option.setAttribute(
-                "aria-checked",
-                active
-            );
+                option.classList.toggle(
+                    "active",
+                    isActive
+                );
 
-        });
+
+                option.setAttribute(
+                    "aria-checked",
+                    isActive
+                        ? "true"
+                        : "false"
+                );
+
+            }
+        );
 
 }
 
 
-/* ==========================================
-   OPEN THEME MENU
-========================================== */
+/* =========================================================
+   POSITION THEME MENU
+========================================================= */
 
-function openThemeMenu(anchor) {
+function positionThemeMenu(anchor) {
+
+    const menu =
+        document.getElementById(
+            "cipher-theme-menu"
+        );
+
+    if (!menu) return;
+
+
+    if (!anchor) {
+
+        menu.style.top = "";
+        menu.style.right = "";
+
+        return;
+
+    }
+
+
+    const rect =
+        anchor.getBoundingClientRect();
+
+
+    const menuWidth =
+        Math.min(
+            210,
+            window.innerWidth - 20
+        );
+
+
+    let right =
+        window.innerWidth -
+        rect.right;
+
+
+    /*
+     * Keep menu inside screen.
+     */
+
+    right =
+        Math.max(
+            10,
+            Math.min(
+                right,
+                window.innerWidth -
+                menuWidth -
+                10
+            )
+        );
+
+
+    menu.style.right =
+        `${right}px`;
+
+    menu.style.top =
+        `${rect.bottom + 8}px`;
+
+}
+
+
+/* =========================================================
+   OPEN THEME MENU
+========================================================= */
+
+function openThemeMenu(anchor = null) {
 
     createThemeMenu();
 
@@ -353,34 +491,25 @@ function openThemeMenu(anchor) {
 
     if (!menu) return;
 
-    menu.classList.add("open");
 
-    if (anchor) {
+    positionThemeMenu(
+        anchor
+    );
 
-        const rect =
-            anchor.getBoundingClientRect();
 
-        menu.style.position = "fixed";
+    menu.classList.add(
+        "open"
+    );
 
-        menu.style.top =
-            `${rect.bottom + 8}px`;
-
-        menu.style.right =
-            `${Math.max(
-                8,
-                window.innerWidth - rect.right
-            )}px`;
-
-    }
 
     updateThemeMenu();
 
 }
 
 
-/* ==========================================
+/* =========================================================
    CLOSE THEME MENU
-========================================== */
+========================================================= */
 
 function closeThemeMenu() {
 
@@ -391,21 +520,25 @@ function closeThemeMenu() {
 
     if (!menu) return;
 
-    menu.classList.remove("open");
+
+    menu.classList.remove(
+        "open"
+    );
 
 }
 
 
-/* ==========================================
+/* =========================================================
    TOGGLE THEME MENU
-========================================== */
+========================================================= */
 
-function toggleThemeMenu(anchor) {
+function toggleThemeMenu(anchor = null) {
 
     const menu =
         document.getElementById(
             "cipher-theme-menu"
         );
+
 
     if (
         menu &&
@@ -417,278 +550,200 @@ function toggleThemeMenu(anchor) {
     }
     else {
 
-        openThemeMenu(anchor);
+        openThemeMenu(
+            anchor
+        );
 
     }
 
 }
 
 
-/* ==========================================
-   CLOSE WHEN CLICKING OUTSIDE
-========================================== */
+/* =========================================================
+   THEME TRIGGER
+========================================================= */
 
-document.addEventListener(
-    "click",
-    event => {
+function setupThemeTriggers() {
 
-        const menu =
-            document.getElementById(
-                "cipher-theme-menu"
+    const triggers =
+        document.querySelectorAll(
+            "[data-theme-trigger]"
+        );
+
+
+    triggers.forEach(
+        trigger => {
+
+            trigger.addEventListener(
+                "click",
+                event => {
+
+                    event.stopPropagation();
+
+                    toggleThemeMenu(
+                        trigger
+                    );
+
+                }
             );
-
-        if (!menu) return;
-
-        const clickedThemeButton =
-            event.target.closest(
-                ".theme-option"
-            );
-
-        const clickedThemeTrigger =
-            event.target.closest(
-                "[data-theme-trigger]"
-            );
-
-        if (
-            !clickedThemeButton &&
-            !clickedThemeTrigger &&
-            !menu.contains(event.target)
-        ) {
-
-            closeThemeMenu();
 
         }
+    );
 
-    }
-);
-
-
-/* ==========================================
-   UPDATE MENU WHEN THEME CHANGES
-========================================== */
-
-const originalApplyTheme =
-    applyTheme;
-
-applyTheme = function(themeName) {
-
-    originalApplyTheme(themeName);
-
-    updateThemeMenu();
-
-};
+}
 
 
-/* ==========================================
-   EXPOSE THEME MENU
-========================================== */
+/* =========================================================
+   CLOSE MENU WHEN CLICKING OUTSIDE
+========================================================= */
 
-window.CipherThemeMenu = {
+function setupOutsideClick() {
 
-    open: openThemeMenu,
+    document.addEventListener(
+        "click",
+        event => {
 
-    close: closeThemeMenu,
+            const menu =
+                document.getElementById(
+                    "cipher-theme-menu"
+                );
 
-    toggle: toggleThemeMenu
-
-};
+            if (!menu) return;
 
 
-/* ==========================================
+            const insideMenu =
+                menu.contains(
+                    event.target
+                );
+
+
+            const trigger =
+                event.target.closest(
+                    "[data-theme-trigger]"
+                );
+
+
+            if (
+                !insideMenu &&
+                !trigger
+            ) {
+
+                closeThemeMenu();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE MENU WITH ESCAPE
+========================================================= */
+
+function setupEscapeKey() {
+
+    document.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key === "Escape"
+            ) {
+
+                closeThemeMenu();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
    SYSTEM THEME DETECTION
-========================================== */
+========================================================= */
 
-const SystemTheme = {
+function setupSystemThemeListener() {
 
-    mediaQuery: window.matchMedia(
-        "(prefers-color-scheme: dark)"
-    ),
-
-    listenerAttached: false
-
-};
+    if (!window.matchMedia) return;
 
 
-/* ==========================================
-   GET SYSTEM THEME
-========================================== */
-
-function getSystemTheme() {
-
-    return SystemTheme.mediaQuery.matches
-        ? "dark"
-        : "light";
-
-}
-
-
-/* ==========================================
-   CHECK IF USER HAS SAVED A THEME
-========================================== */
-
-function hasSavedTheme() {
-
-    return Boolean(
-        localStorage.getItem(
-            ThemeManager.storageKey
-        )
-    );
-
-}
-
-
-/* ==========================================
-   APPLY INITIAL THEME
-========================================== */
-
-function applyInitialTheme() {
-
-    const savedTheme =
-        localStorage.getItem(
-            ThemeManager.storageKey
+    const mediaQuery =
+        window.matchMedia(
+            "(prefers-color-scheme: dark)"
         );
 
 
+    const handleChange =
+        event => {
+
+            /*
+             * Only follow the system if
+             * the user hasn't selected
+             * a theme manually.
+             */
+
+            const saved =
+                getSavedTheme();
+
+
+            if (saved) return;
+
+
+            applyTheme(
+                event.matches
+                    ? "midnight"
+                    : "light",
+                false
+            );
+
+        };
+
+
     /*
-     * If the user already selected
-     * a theme, use it.
+     * Modern browsers.
      */
 
     if (
-        savedTheme &&
-        CipherThemes[savedTheme]
+        mediaQuery.addEventListener
     ) {
 
-        applyTheme(savedTheme);
-
-        return;
-
-    }
-
-
-    /*
-     * Otherwise follow the device
-     * system preference.
-     */
-
-    const systemTheme =
-        getSystemTheme();
-
-    applyTheme(systemTheme);
-
-}
-
-
-/* ==========================================
-   SYSTEM THEME CHANGE
-========================================== */
-
-function handleSystemThemeChange(event) {
-
-    /*
-     * Don't override a theme that
-     * the user manually selected.
-     */
-
-    if (hasSavedTheme()) {
-
-        return;
-
-    }
-
-    const newTheme =
-        event.matches
-            ? "dark"
-            : "light";
-
-    applyTheme(newTheme);
-
-}
-
-
-/* ==========================================
-   WATCH SYSTEM THEME
-========================================== */
-
-function watchSystemTheme() {
-
-    if (
-        SystemTheme.listenerAttached
-    ) {
-
-        return;
-
-    }
-
-    if (
-        SystemTheme.mediaQuery &&
-        SystemTheme.mediaQuery.addEventListener
-    ) {
-
-        SystemTheme.mediaQuery.addEventListener(
+        mediaQuery.addEventListener(
             "change",
-            handleSystemThemeChange
+            handleChange
         );
 
-        SystemTheme.listenerAttached = true;
+    }
+
+
+    /*
+     * Older browser support.
+     */
+
+    else if (
+        mediaQuery.addListener
+    ) {
+
+        mediaQuery.addListener(
+            handleChange
+        );
 
     }
 
 }
 
 
-/* ==========================================
-   RESET TO SYSTEM THEME
-========================================== */
+/* =========================================================
+   APPEARANCE SETTINGS
+========================================================= */
 
-function resetToSystemTheme() {
+const AppearanceManager = {
 
-    localStorage.removeItem(
-        ThemeManager.storageKey
-    );
-
-    applyTheme(
-        getSystemTheme()
-    );
-
-    updateThemeMenu();
-
-}
-
-
-/* ==========================================
-   INITIALIZE SYSTEM THEME
-========================================== */
-
-function initializeSystemTheme() {
-
-    applyInitialTheme();
-
-    watchSystemTheme();
-
-}
-
-
-/* ==========================================
-   EXPOSE SYSTEM THEME CONTROLS
-========================================== */
-
-window.CipherSystemTheme = {
-
-    current: getSystemTheme,
-
-    reset: resetToSystemTheme
-
-};
-
-
-/* ==========================================
-   CIPHER CUSTOM APPEARANCE SETTINGS
-========================================== */
-
-const AppearanceSettings = {
-
-    storageKey: "cipher-appearance",
+    storageKey:
+        "cipher-appearance",
 
     defaults: {
 
@@ -707,33 +762,36 @@ const AppearanceSettings = {
 };
 
 
-/* ==========================================
-   LOAD APPEARANCE SETTINGS
-========================================== */
+/* =========================================================
+   LOAD APPEARANCE
+========================================================= */
 
 function loadAppearanceSettings() {
 
     const saved =
         localStorage.getItem(
-            AppearanceSettings.storageKey
+            AppearanceManager.storageKey
         );
+
 
     if (!saved) {
 
         return {
-            ...AppearanceSettings.defaults
+            ...AppearanceManager.defaults
         };
 
     }
+
 
     try {
 
         const parsed =
             JSON.parse(saved);
 
+
         return {
 
-            ...AppearanceSettings.defaults,
+            ...AppearanceManager.defaults,
 
             ...parsed
 
@@ -748,8 +806,9 @@ function loadAppearanceSettings() {
             error
         );
 
+
         return {
-            ...AppearanceSettings.defaults
+            ...AppearanceManager.defaults
         };
 
     }
@@ -757,15 +816,17 @@ function loadAppearanceSettings() {
 }
 
 
-/* ==========================================
-   SAVE APPEARANCE SETTINGS
-========================================== */
+/* =========================================================
+   SAVE APPEARANCE
+========================================================= */
 
-function saveAppearanceSettings(settings) {
+function saveAppearanceSettings(
+    settings
+) {
 
     localStorage.setItem(
 
-        AppearanceSettings.storageKey,
+        AppearanceManager.storageKey,
 
         JSON.stringify(settings)
 
@@ -774,62 +835,33 @@ function saveAppearanceSettings(settings) {
 }
 
 
-/* ==========================================
-   SET APPEARANCE OPTION
-========================================== */
-
-function setAppearanceOption(
-    option,
-    value
-) {
-
-    const settings =
-        loadAppearanceSettings();
-
-    if (
-        !Object.prototype.hasOwnProperty.call(
-            AppearanceSettings.defaults,
-            option
-        )
-    ) {
-
-        console.warn(
-            `Unknown appearance option: ${option}`
-        );
-
-        return;
-
-    }
-
-    settings[option] = value;
-
-    saveAppearanceSettings(settings);
-
-    applyAppearanceSettings(settings);
-
-}
-
-
-/* ==========================================
+/* =========================================================
    APPLY APPEARANCE
-========================================== */
+========================================================= */
 
-function applyAppearanceSettings(settings) {
+function applyAppearanceSettings(
+    settings
+) {
 
     const root =
         document.documentElement;
 
+
     root.dataset.accent =
         settings.accent;
+
 
     root.dataset.density =
         settings.density;
 
+
     root.dataset.fontSize =
         settings.fontSize;
 
+
     root.dataset.messageStyle =
         settings.messageStyle;
+
 
     root.dataset.background =
         settings.background;
@@ -837,174 +869,298 @@ function applyAppearanceSettings(settings) {
 }
 
 
-/* ==========================================
+/* =========================================================
+   CHANGE APPEARANCE OPTION
+========================================================= */
+
+function setAppearanceOption(
+    option,
+    value
+) {
+
+    const allowed = {
+
+        accent: [
+            "teal",
+            "green",
+            "blue",
+            "purple",
+            "orange"
+        ],
+
+        density: [
+            "compact",
+            "comfortable",
+            "spacious"
+        ],
+
+        fontSize: [
+            "small",
+            "medium",
+            "large"
+        ],
+
+        messageStyle: [
+            "rounded",
+            "soft",
+            "square"
+        ],
+
+        background: [
+            "standard",
+            "soft",
+            "deep"
+        ]
+
+    };
+
+
+    if (
+        !allowed[option] ||
+        !allowed[option].includes(value)
+    ) {
+
+        console.warn(
+            `Invalid Cipher appearance option: ${option} = ${value}`
+        );
+
+        return;
+
+    }
+
+
+    const settings =
+        loadAppearanceSettings();
+
+
+    settings[option] =
+        value;
+
+
+    saveAppearanceSettings(
+        settings
+    );
+
+
+    applyAppearanceSettings(
+        settings
+    );
+
+}
+
+
+/* =========================================================
    RESET APPEARANCE
-========================================== */
+========================================================= */
 
 function resetAppearanceSettings() {
 
     const defaults = {
 
-        ...AppearanceSettings.defaults
+        ...AppearanceManager.defaults
 
     };
 
-    saveAppearanceSettings(defaults);
 
-    applyAppearanceSettings(defaults);
+    saveAppearanceSettings(
+        defaults
+    );
+
+
+    applyAppearanceSettings(
+        defaults
+    );
 
 }
 
 
-/* ==========================================
+/* =========================================================
    INITIALIZE APPEARANCE
-========================================== */
+========================================================= */
 
-function initializeAppearanceSettings() {
+function initializeAppearance() {
 
     const settings =
         loadAppearanceSettings();
 
-    applyAppearanceSettings(settings);
 
-}
-
-
-/* ==========================================
-   EXPOSE APPEARANCE CONTROLS
-========================================== */
-
-window.CipherAppearance = {
-
-    get: loadAppearanceSettings,
-
-    set: setAppearanceOption,
-
-    reset: resetAppearanceSettings
-
-};
-
-
-/* ==========================================
-   FINAL THEME INITIALIZATION
-========================================== */
-
-function finalizeThemeSystem() {
-
-    initializeThemes();
-
-    initializeSystemTheme();
-
-    initializeAppearanceSettings();
-
-    updateThemeMenu();
-
-}
-
-
-/* ==========================================
-   THEME TRANSITION
-========================================== */
-
-function enableThemeTransition() {
-
-    document.documentElement.classList.add(
-        "theme-transition"
+    applyAppearanceSettings(
+        settings
     );
 
-    setTimeout(() => {
+}
 
-        document.documentElement.classList.remove(
-            "theme-transition"
+
+/* =========================================================
+   INITIALIZE THEME
+========================================================= */
+
+function initializeTheme() {
+
+    if (
+        ThemeManager.initialized
+    ) {
+
+        return;
+
+    }
+
+
+    ThemeManager.initialized =
+        true;
+
+
+    const savedTheme =
+        getSavedTheme();
+
+
+    /*
+     * Saved theme gets priority.
+     */
+
+    if (savedTheme) {
+
+        applyTheme(
+            savedTheme,
+            false
         );
 
-    }, 350);
+    }
+
+    else {
+
+        /*
+         * New users follow their
+         * phone/computer preference.
+         */
+
+        applyTheme(
+            getSystemTheme(),
+            false
+        );
+
+    }
+
+
+    initializeAppearance();
+
+    createThemeMenu();
+
+    setupThemeTriggers();
+
+    setupOutsideClick();
+
+    setupEscapeKey();
+
+    setupSystemThemeListener();
 
 }
 
 
-/* ==========================================
-   SMOOTH THEME CHANGE
-========================================== */
+/* =========================================================
+   WINDOW RESIZE
+========================================================= */
 
-const originalChangeTheme =
-    changeTheme;
+window.addEventListener(
+    "resize",
+    () => {
 
-changeTheme = function(themeName) {
+        const menu =
+            document.getElementById(
+                "cipher-theme-menu"
+            );
 
-    enableThemeTransition();
-
-    originalChangeTheme(themeName);
-
-    updateThemeMenu();
-
-};
-
-
-/* ==========================================
-   KEYBOARD SHORTCUT
-========================================== */
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        /*
-         * Ctrl + Shift + T
-         * opens Cipher's theme menu.
-         */
 
         if (
-            event.ctrlKey &&
-            event.shiftKey &&
-            event.key.toLowerCase() === "t"
+            !menu ||
+            !menu.classList.contains("open")
         ) {
 
-            event.preventDefault();
-
-            const trigger =
-                document.querySelector(
-                    "[data-theme-trigger]"
-                );
-
-            toggleThemeMenu(trigger);
+            return;
 
         }
 
-    }
-);
+
+        const trigger =
+            document.querySelector(
+                "[data-theme-trigger]"
+            );
 
 
-/* ==========================================
-   FINAL STARTUP
-========================================== */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        finalizeThemeSystem();
+        positionThemeMenu(
+            trigger
+        );
 
     }
 );
 
 
-/* ==========================================
-   EXPOSE THEME SYSTEM
-========================================== */
+/* =========================================================
+   PUBLIC CIPHER THEME API
+========================================================= */
 
-window.CipherThemeSystem = {
-
-    apply: applyTheme,
+window.CipherThemes = {
 
     change: changeTheme,
 
+    apply: applyTheme,
+
     current: getCurrentTheme,
 
-    resetToSystem:
-        resetToSystemTheme,
+    available:
+        CipherThemeConfig.themes,
 
-    appearance:
-        window.CipherAppearance
+    openMenu:
+        openThemeMenu,
+
+    closeMenu:
+        closeThemeMenu,
+
+    toggleMenu:
+        toggleThemeMenu,
+
+    resetToSystem:
+        resetToSystemTheme
 
 };
+
+
+window.CipherAppearance = {
+
+    get:
+        loadAppearanceSettings,
+
+    set:
+        setAppearanceOption,
+
+    reset:
+        resetAppearanceSettings
+
+};
+
+
+/* =========================================================
+   START
+========================================================= */
+
+if (
+    document.readyState ===
+    "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        initializeTheme
+    );
+
+}
+else {
+
+    initializeTheme();
+
+}
+
+
+/* =========================================================
+   END OF THEMES.JS
+========================================================= */
