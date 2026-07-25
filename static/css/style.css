@@ -44,7 +44,6 @@
 
     margin:0;
     padding:0;
-
     box-sizing:border-box;
 
 }
@@ -77,7 +76,6 @@ body{
 a{
 
     text-decoration:none;
-
     color:inherit;
 
 }
@@ -90,9 +88,7 @@ a{
 button{
 
     font-family:inherit;
-
     cursor:pointer;
-
     transition:.25s ease;
 
 }
@@ -106,9 +102,7 @@ input,
 textarea{
 
     font-family:inherit;
-
     color:var(--text-primary);
-
     outline:none;
 
 }
@@ -121,7 +115,6 @@ textarea{
 img{
 
     display:block;
-
     max-width:100%;
 
 }
@@ -145,18 +138,23 @@ img{
 #auth-screen{
 
     position:fixed;
-
     inset:0;
 
     display:flex;
-
     align-items:center;
-
     justify-content:center;
 
     background:
-        radial-gradient(circle at top left,#16304d 0%,transparent 45%),
-        radial-gradient(circle at bottom right,#0f766e 0%,transparent 45%),
+        radial-gradient(
+            circle at top left,
+            #16304d 0%,
+            transparent 45%
+        ),
+        radial-gradient(
+            circle at bottom right,
+            #0f766e 0%,
+            transparent 45%
+        ),
         var(--bg-primary);
 
     overflow:hidden;
@@ -164,12 +162,9 @@ img{
 }
 
 
-/* Background Glow */
-
 .auth-background{
 
     position:absolute;
-
     inset:0;
 
     opacity:.35;
@@ -179,12 +174,9 @@ img{
 }
 
 
-/* Login Card */
-
 .auth-box{
 
     position:relative;
-
     z-index:2;
 
     width:min(430px,92%);
@@ -196,6 +188,7 @@ img{
     background:rgba(20,25,38,.88);
 
     backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
 
     border:1px solid rgba(255,255,255,.08);
 
@@ -205,12 +198,14 @@ img{
 }
 
 
-/* Logo */
+/* ===================================================
+   LOGO
+   THE ORIGINAL ¢ LOGO
+=================================================== */
 
 .auth-logo{
 
     display:flex;
-
     align-items:center;
 
     gap:16px;
@@ -220,18 +215,17 @@ img{
 }
 
 
+/* Main ¢ Logo */
+
 .logo-badge{
 
     width:58px;
-
     height:58px;
 
     border-radius:18px;
 
     display:flex;
-
     align-items:center;
-
     justify-content:center;
 
     background:linear-gradient(
@@ -243,16 +237,79 @@ img{
     color:#08121d;
 
     font-size:28px;
-
     font-weight:700;
+
+    flex-shrink:0;
 
 }
 
 
+/* Sidebar ¢ Logo */
+
+.sidebar-logo{
+
+    width:46px;
+    height:46px;
+
+    border-radius:14px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:linear-gradient(
+        135deg,
+        var(--accent),
+        var(--accent-dark)
+    );
+
+    color:#08121d;
+
+    font-size:23px;
+    font-weight:700;
+
+    flex-shrink:0;
+
+}
+
+
+/* Welcome ¢ Logo */
+
+.welcome-logo{
+
+    width:90px;
+    height:90px;
+
+    border-radius:24px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    margin:0 auto 24px;
+
+    background:linear-gradient(
+        135deg,
+        var(--accent),
+        var(--accent-dark)
+    );
+
+    color:#08121d;
+
+    font-size:42px;
+    font-weight:700;
+
+    box-shadow:
+        0 15px 40px rgba(45,212,191,.18);
+
+}
+
+
+/* Auth Logo Text */
+
 .auth-logo h1{
 
     font-size:28px;
-
     font-weight:700;
 
 }
@@ -267,7 +324,9 @@ img{
 }
 
 
-/* Heading */
+/* ===================================================
+   AUTH HEADING
+=================================================== */
 
 .auth-title{
 
@@ -294,7 +353,9 @@ img{
 }
 
 
-/* Tabs */
+/* ===================================================
+   AUTH TABS
+=================================================== */
 
 .auth-tabs{
 
@@ -339,7 +400,9 @@ img{
 }
 
 
-/* Form */
+/* ===================================================
+   AUTH FORM
+=================================================== */
 
 .auth-form{
 
@@ -353,6 +416,8 @@ img{
 
 
 .auth-form input{
+
+    width:100%;
 
     background:var(--bg-card);
 
@@ -371,10 +436,15 @@ img{
 
     border-color:var(--accent);
 
+    box-shadow:
+        0 0 0 3px rgba(45,212,191,.10);
+
 }
 
 
-/* Error */
+/* ===================================================
+   ERROR
+=================================================== */
 
 .auth-error{
 
@@ -387,7 +457,9 @@ img{
 }
 
 
-/* Main Button */
+/* ===================================================
+   MAIN AUTH BUTTON
+=================================================== */
 
 .auth-btn{
 
@@ -419,7 +491,58 @@ img{
 }
 
 
-/* Divider */
+/* ===================================================
+   GOOGLE BUTTON
+=================================================== */
+
+.google-btn{
+
+    width:100%;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:10px;
+
+    padding:13px 16px;
+
+    border-radius:14px;
+
+    border:1px solid var(--border);
+
+    background:#ffffff;
+
+    color:#111827;
+
+    font-size:14px;
+
+    font-weight:600;
+
+}
+
+
+.google-btn img{
+
+    width:20px;
+    height:20px;
+
+}
+
+
+.google-btn:hover{
+
+    background:#f3f4f6;
+
+    transform:translateY(-1px);
+
+}
+
+
+/* ===================================================
+   DIVIDER
+=================================================== */
 
 .auth-divider{
 
@@ -458,7 +581,7 @@ img{
 
 
 /* ===================================================
-   SIDEBAR
+   APPLICATION
 =================================================== */
 
 #app-screen{
@@ -466,7 +589,6 @@ img{
     display:none;
 
     width:100vw;
-
     height:100vh;
 
     overflow:hidden;
@@ -474,10 +596,13 @@ img{
 }
 
 
+/* ===================================================
+   SIDEBAR
+=================================================== */
+
 #sidebar{
 
     width:290px;
-
     height:100vh;
 
     background:var(--bg-secondary);
@@ -485,7 +610,6 @@ img{
     border-right:1px solid var(--border);
 
     display:flex;
-
     flex-direction:column;
 
     transition:.3s ease;
@@ -495,9 +619,9 @@ img{
 }
 
 
-/* =========================
-   Header
-========================= */
+/* ===================================================
+   SIDEBAR HEADER
+=================================================== */
 
 .sidebar-header{
 
@@ -541,9 +665,9 @@ img{
 }
 
 
-/* =========================
-   New Chat
-========================= */
+/* ===================================================
+   NEW CHAT
+=================================================== */
 
 .new-chat-btn{
 
@@ -583,9 +707,9 @@ img{
 }
 
 
-/* =========================
-   Search
-========================= */
+/* ===================================================
+   SEARCH
+=================================================== */
 
 .sidebar-search{
 
@@ -609,9 +733,9 @@ img{
 }
 
 
-/* =========================
-   Chat List
-========================= */
+/* ===================================================
+   CHAT LIST
+=================================================== */
 
 .chat-list{
 
@@ -740,9 +864,9 @@ img{
 }
 
 
-/* =========================
-   Footer
-========================= */
+/* ===================================================
+   SIDEBAR FOOTER
+=================================================== */
 
 .sidebar-footer{
 
@@ -767,7 +891,6 @@ img{
 .user-avatar{
 
     width:46px;
-
     height:46px;
 
     border-radius:50%;
@@ -781,7 +904,6 @@ img{
     display:flex;
 
     align-items:center;
-
     justify-content:center;
 
     color:#07121d;
@@ -830,7 +952,6 @@ img{
 .sidebar-icon-btn{
 
     width:44px;
-
     height:44px;
 
     border:none;
@@ -861,6 +982,309 @@ img{
 
 
 /* ===================================================
+   MAIN CONTENT
+=================================================== */
+
+#main{
+
+    flex:1;
+
+    min-width:0;
+
+    height:100vh;
+
+    display:flex;
+
+    flex-direction:column;
+
+    background:var(--bg-primary);
+
+}
+
+
+/* ===================================================
+   TOPBAR
+=================================================== */
+
+.topbar{
+
+    height:76px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    padding:0 24px;
+
+    border-bottom:1px solid var(--border);
+
+    background:rgba(11,15,25,.82);
+
+    backdrop-filter:blur(18px);
+
+    -webkit-backdrop-filter:blur(18px);
+
+    flex-shrink:0;
+
+}
+
+
+#sidebar-toggle{
+
+    display:none;
+
+    width:42px;
+    height:42px;
+
+    align-items:center;
+    justify-content:center;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:var(--bg-card);
+
+    color:var(--text-primary);
+
+    font-size:20px;
+
+}
+
+
+#sidebar-toggle:hover{
+
+    background:var(--bg-hover);
+
+}
+
+
+.topbar-brand{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    margin-right:auto;
+
+    margin-left:12px;
+
+}
+
+
+.topbar-brand .logo-badge{
+
+    width:42px;
+    height:42px;
+
+    border-radius:13px;
+
+    font-size:21px;
+
+}
+
+
+.topbar-brand h1{
+
+    font-size:20px;
+
+    font-weight:700;
+
+}
+
+
+.topbar-brand small{
+
+    display:block;
+
+    color:var(--text-secondary);
+
+    font-size:11px;
+
+    margin-top:2px;
+
+}
+
+
+.topbar-actions{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+
+.topbar-btn{
+
+    border:1px solid var(--border);
+
+    background:var(--bg-card);
+
+    color:var(--text-primary);
+
+    border-radius:12px;
+
+    padding:10px 15px;
+
+}
+
+
+.topbar-btn:hover{
+
+    background:var(--bg-hover);
+
+}
+
+
+/* ===================================================
+   CHAT AREA
+=================================================== */
+
+#chat{
+
+    flex:1;
+
+    min-height:0;
+
+    overflow-y:auto;
+
+    padding:35px 30px;
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+
+#chat::-webkit-scrollbar{
+
+    width:7px;
+
+}
+
+
+#chat::-webkit-scrollbar-thumb{
+
+    background:var(--border);
+
+    border-radius:10px;
+
+}
+
+
+/* ===================================================
+   WELCOME
+=================================================== */
+
+.welcome{
+
+    width:min(900px,100%);
+
+    margin:auto;
+
+    text-align:center;
+
+    padding:30px 10px;
+
+}
+
+
+.welcome h2{
+
+    font-size:34px;
+
+    margin-bottom:12px;
+
+}
+
+
+.welcome p{
+
+    max-width:680px;
+
+    margin:0 auto;
+
+    color:var(--text-secondary);
+
+    line-height:1.7;
+
+    font-size:16px;
+
+}
+
+
+.welcome-actions{
+
+    margin-top:30px;
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:14px;
+
+}
+
+
+.welcome-card{
+
+    text-align:left;
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    background:var(--bg-card);
+
+    color:var(--text-primary);
+
+    padding:20px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:7px;
+
+}
+
+
+.welcome-card:hover{
+
+    background:var(--bg-hover);
+
+    transform:translateY(-3px);
+
+    border-color:rgba(45,212,191,.35);
+
+}
+
+
+.welcome-card strong{
+
+    font-size:15px;
+
+}
+
+
+.welcome-card span{
+
+    color:var(--text-secondary);
+
+    font-size:13px;
+
+}
+
+
+/* ===================================================
    CHAT MESSAGES
 =================================================== */
 
@@ -884,6 +1308,7 @@ img{
 
 }
 
+
 .msg.user{
 
     align-self:flex-end;
@@ -902,6 +1327,7 @@ img{
 
 }
 
+
 .msg.bot{
 
     align-self:flex-start;
@@ -914,6 +1340,7 @@ img{
 
 }
 
+
 .msg.bot.thinking{
 
     color:var(--text-secondary);
@@ -921,6 +1348,7 @@ img{
     font-style:italic;
 
 }
+
 
 .message-actions{
 
@@ -936,11 +1364,13 @@ img{
 
 }
 
+
 .msg:hover .message-actions{
 
     opacity:1;
 
 }
+
 
 .message-btn{
 
@@ -956,6 +1386,7 @@ img{
 
 }
 
+
 .message-btn:hover{
 
     background:var(--bg-hover);
@@ -963,6 +1394,7 @@ img{
     color:var(--text-primary);
 
 }
+
 
 .msg pre{
 
@@ -978,9 +1410,10 @@ img{
 
 }
 
+
 .msg code{
 
-    font-family:Consolas, monospace;
+    font-family:Consolas,monospace;
 
 }
 
@@ -997,11 +1430,14 @@ img{
 
     backdrop-filter:blur(18px);
 
+    -webkit-backdrop-filter:blur(18px);
+
     border-top:1px solid var(--border);
 
     flex-shrink:0;
 
 }
+
 
 #form{
 
@@ -1027,18 +1463,20 @@ img{
 
 }
 
+
 #form:focus-within{
 
     border-color:var(--accent);
 
-    box-shadow:0 0 0 3px rgba(45,212,191,.15);
+    box-shadow:
+        0 0 0 3px rgba(45,212,191,.15);
 
 }
+
 
 .input-tool{
 
     width:46px;
-
     height:46px;
 
     border:none;
@@ -1053,6 +1491,7 @@ img{
 
 }
 
+
 .input-tool:hover{
 
     background:var(--bg-hover);
@@ -1060,6 +1499,7 @@ img{
     color:var(--text-primary);
 
 }
+
 
 #input{
 
@@ -1085,16 +1525,17 @@ img{
 
 }
 
+
 #input::placeholder{
 
     color:var(--text-secondary);
 
 }
 
+
 #send{
 
     width:52px;
-
     height:52px;
 
     border:none;
@@ -1115,11 +1556,13 @@ img{
 
 }
 
+
 #send:hover{
 
     transform:translateY(-2px);
 
 }
+
 
 #send:disabled{
 
@@ -1128,6 +1571,7 @@ img{
     cursor:not-allowed;
 
 }
+
 
 .footer-note{
 
@@ -1160,9 +1604,11 @@ img{
 
         z-index:1000;
 
-        box-shadow:0 20px 50px rgba(0,0,0,.45);
+        box-shadow:
+            0 20px 50px rgba(0,0,0,.45);
 
     }
+
 
     #sidebar.open{
 
@@ -1170,15 +1616,13 @@ img{
 
     }
 
+
     #sidebar-toggle{
 
         display:flex;
 
-        align-items:center;
-
-        justify-content:center;
-
     }
+
 
     .topbar{
 
@@ -1186,11 +1630,20 @@ img{
 
     }
 
+
+    .topbar-brand{
+
+        margin-left:10px;
+
+    }
+
+
     #chat{
 
         padding:24px 18px;
 
     }
+
 
     .msg{
 
@@ -1198,11 +1651,13 @@ img{
 
     }
 
+
     .welcome h2{
 
         font-size:30px;
 
     }
+
 
     .welcome p{
 
@@ -1210,17 +1665,20 @@ img{
 
     }
 
+
     .welcome-actions{
 
         grid-template-columns:1fr;
 
     }
 
+
     .input-area{
 
         padding:16px;
 
     }
+
 
     #form{
 
@@ -1231,6 +1689,10 @@ img{
 }
 
 
+/* ===================================================
+   SMALL MOBILE
+=================================================== */
+
 @media (max-width:600px){
 
     .auth-box{
@@ -1239,7 +1701,12 @@ img{
 
         padding:24px;
 
+        max-height:94vh;
+
+        overflow-y:auto;
+
     }
+
 
     .logo-badge{
 
@@ -1251,11 +1718,20 @@ img{
 
     }
 
+
     .auth-logo h1{
 
         font-size:24px;
 
     }
+
+
+    .auth-logo{
+
+        gap:12px;
+
+    }
+
 
     .topbar-brand h1{
 
@@ -1263,11 +1739,24 @@ img{
 
     }
 
+
+    .topbar-brand .logo-badge{
+
+        width:38px;
+
+        height:38px;
+
+        font-size:19px;
+
+    }
+
+
     .topbar-brand small{
 
         display:none;
 
     }
+
 
     .welcome-logo{
 
@@ -1279,11 +1768,13 @@ img{
 
     }
 
+
     .welcome h2{
 
         font-size:26px;
 
     }
+
 
     .welcome-card{
 
@@ -1291,9 +1782,28 @@ img{
 
     }
 
+
     #input{
 
         font-size:15px;
+
+    }
+
+
+    .input-tool{
+
+        width:40px;
+
+        height:40px;
+
+    }
+
+
+    #send{
+
+        width:46px;
+
+        height:46px;
 
     }
 
@@ -1304,13 +1814,12 @@ img{
    UTILITIES
 =================================================== */
 
-/* Flex */
-
 .flex{
 
     display:flex;
 
 }
+
 
 .flex-center{
 
@@ -1321,6 +1830,7 @@ img{
     justify-content:center;
 
 }
+
 
 .flex-between{
 
@@ -1333,8 +1843,6 @@ img{
 }
 
 
-/* Grid */
-
 .grid{
 
     display:grid;
@@ -1342,19 +1850,19 @@ img{
 }
 
 
-/* Text */
-
 .text-center{
 
     text-align:center;
 
 }
 
+
 .text-muted{
 
     color:var(--text-muted);
 
 }
+
 
 .text-secondary{
 
@@ -1363,7 +1871,9 @@ img{
 }
 
 
-/* Spacing */
+/* ===================================================
+   SPACING
+=================================================== */
 
 .mt-1{margin-top:8px;}
 .mt-2{margin-top:16px;}
@@ -1376,7 +1886,9 @@ img{
 .mb-4{margin-bottom:32px;}
 
 
-/* Card */
+/* ===================================================
+   CARD
+=================================================== */
 
 .card{
 
@@ -1391,14 +1903,15 @@ img{
 }
 
 
-/* Badge */
+/* ===================================================
+   BADGE
+=================================================== */
 
 .badge{
 
     display:inline-flex;
 
     align-items:center;
-
     justify-content:center;
 
     padding:6px 12px;
@@ -1416,7 +1929,9 @@ img{
 }
 
 
-/* Divider */
+/* ===================================================
+   DIVIDER
+=================================================== */
 
 .divider{
 
@@ -1429,12 +1944,13 @@ img{
 }
 
 
-/* Loading Spinner */
+/* ===================================================
+   LOADING SPINNER
+=================================================== */
 
 .spinner{
 
     width:24px;
-
     height:24px;
 
     border:3px solid rgba(255,255,255,.12);
@@ -1448,7 +1964,9 @@ img{
 }
 
 
-/* Disabled */
+/* ===================================================
+   DISABLED
+=================================================== */
 
 .disabled{
 
@@ -1459,13 +1977,16 @@ img{
 }
 
 
-/* Hide Scrollbar */
+/* ===================================================
+   HIDE SCROLLBAR
+=================================================== */
 
 .no-scrollbar{
 
     scrollbar-width:none;
 
 }
+
 
 .no-scrollbar::-webkit-scrollbar{
 
@@ -1477,22 +1998,6 @@ img{
 /* ===================================================
    PREMIUM EFFECTS
 =================================================== */
-
-/* Smooth transitions */
-
-*{
-
-    transition:
-        background-color .25s ease,
-        border-color .25s ease,
-        color .25s ease,
-        box-shadow .25s ease,
-        transform .25s ease;
-
-}
-
-
-/* Glass Cards */
 
 .glass{
 
@@ -1507,18 +2012,15 @@ img{
 }
 
 
-/* Hover Lift */
-
 .hover-lift:hover{
 
     transform:translateY(-4px);
 
-    box-shadow:0 18px 40px rgba(0,0,0,.28);
+    box-shadow:
+        0 18px 40px rgba(0,0,0,.28);
 
 }
 
-
-/* Accent Glow */
 
 .glow{
 
@@ -1528,8 +2030,6 @@ img{
 
 }
 
-
-/* Focus Ring */
 
 .focus-ring:focus{
 
@@ -1541,8 +2041,6 @@ img{
 }
 
 
-/* Fade */
-
 .fade{
 
     opacity:.8;
@@ -1550,26 +2048,28 @@ img{
 }
 
 
-/* Status */
+/* ===================================================
+   STATUS
+=================================================== */
 
 .status-online{
 
     width:10px;
-
     height:10px;
 
     border-radius:50%;
 
     background:#22c55e;
 
-    box-shadow:0 0 10px #22c55e;
+    box-shadow:
+        0 0 10px #22c55e;
 
 }
+
 
 .status-away{
 
     width:10px;
-
     height:10px;
 
     border-radius:50%;
@@ -1578,10 +2078,10 @@ img{
 
 }
 
+
 .status-offline{
 
     width:10px;
-
     height:10px;
 
     border-radius:50%;
@@ -1591,18 +2091,18 @@ img{
 }
 
 
-/* Notification Badge */
+/* ===================================================
+   NOTIFICATION BADGE
+=================================================== */
 
 .notification-badge{
 
     position:absolute;
 
     top:-4px;
-
     right:-4px;
 
     min-width:18px;
-
     height:18px;
 
     padding:0 5px;
@@ -1618,13 +2118,14 @@ img{
     display:flex;
 
     align-items:center;
-
     justify-content:center;
 
 }
 
 
-/* Selection */
+/* ===================================================
+   SELECTION
+=================================================== */
 
 ::selection{
 
@@ -1635,7 +2136,9 @@ img{
 }
 
 
-/* Placeholder */
+/* ===================================================
+   PLACEHOLDER
+=================================================== */
 
 ::placeholder{
 
@@ -1668,6 +2171,7 @@ img{
 
 }
 
+
 @keyframes fadeIn{
 
     from{
@@ -1683,6 +2187,7 @@ img{
     }
 
 }
+
 
 @keyframes slideLeft{
 
@@ -1704,6 +2209,7 @@ img{
 
 }
 
+
 @keyframes slideRight{
 
     from{
@@ -1723,6 +2229,7 @@ img{
     }
 
 }
+
 
 @keyframes scaleIn{
 
@@ -1744,6 +2251,7 @@ img{
 
 }
 
+
 @keyframes spin{
 
     from{
@@ -1759,6 +2267,7 @@ img{
     }
 
 }
+
 
 @keyframes pulse{
 
@@ -1782,11 +2291,13 @@ img{
 
 }
 
+
 @keyframes glow{
 
     0%{
 
-        box-shadow:0 0 8px rgba(45,212,191,.15);
+        box-shadow:
+            0 0 8px rgba(45,212,191,.15);
 
     }
 
@@ -1800,11 +2311,13 @@ img{
 
     100%{
 
-        box-shadow:0 0 8px rgba(45,212,191,.15);
+        box-shadow:
+            0 0 8px rgba(45,212,191,.15);
 
     }
 
 }
+
 
 .animate-fade{
 
@@ -1812,11 +2325,13 @@ img{
 
 }
 
+
 .animate-up{
 
     animation:fadeUp .35s ease;
 
 }
+
 
 .animate-scale{
 
@@ -1824,11 +2339,13 @@ img{
 
 }
 
+
 .animate-slide-left{
 
     animation:slideLeft .35s ease;
 
 }
+
 
 .animate-slide-right{
 
@@ -1836,11 +2353,13 @@ img{
 
 }
 
+
 .animate-pulse{
 
     animation:pulse 2s infinite;
 
 }
+
 
 .animate-glow{
 
@@ -1848,7 +2367,7 @@ img{
 
 }
 
+
 /* ===================================================
    END OF STYLE.CSS
 =================================================== */
-
