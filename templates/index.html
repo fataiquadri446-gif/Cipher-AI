@@ -1,5 +1,1129 @@
-<meta charset="UTF-8">   <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Cipher</title>    <meta name="theme-color" content="#0d0d0d">    <!-- Fonts -->   <link rel="preconnect" href="https://fonts.googleapis.com">   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"       rel="stylesheet">    <!-- Styles -->   <link rel="stylesheet"       href="{{ url_for('static', filename='css/style.css') }}">    <link rel="stylesheet"       href="{{ url_for('static', filename='css/themes.css') }}">    <link rel="stylesheet"       href="{{ url_for('static', filename='css/animations.css') }}">   
-<div class="auth-background"></div>    <div class="auth-box">        <div class="auth-logo">            <div class="logo-badge">               ¢           </div>            <div>                <h1>Cipher</h1>                <span>                   Created by Fatai Quadri               </span>            </div>        </div>        <div class="auth-title">            <h2>               Welcome back           </h2>            <p>               Sign in to continue your conversations with Cipher.           </p>        </div>        <div class="auth-tabs">            <button class="auth-tab active"               onclick="showTab('login')">                Log in            </button>            <button class="auth-tab"               onclick="showTab('signup')">                Sign up            </button>        </div>        <!-- ========================= -->       <!-- Login Form -->       <!-- ========================= -->        <div id="login-form" class="auth-form">            <input               type="email"               id="login-email"               placeholder="Email address"               autocomplete="email">            <input               type="password"               id="login-password"               placeholder="Password"               autocomplete="current-password">            <div               class="auth-error"               id="login-error">           </div>            <button               class="auth-btn"               onclick="doLogin()">                Log in            </button>            <div class="auth-divider">                <span>or continue with</span>            </div>            <!-- Google Sign In -->           <button               class="google-btn"               id="google-login-btn"               type="button">                <img                   src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"                   alt="Google">                <span>                   Continue with Google               </span>            </button>        </div>         <!-- ========================= -->       <!-- Signup Form -->       <!-- ========================= -->        <div           id="signup-form"           class="auth-form"           style="display:none;">            <input               type="text"               id="signup-username"               placeholder="Username"               autocomplete="username">            <input               type="email"               id="signup-email"               placeholder="Email address"               autocomplete="email">            <input               type="password"               id="signup-password"               placeholder="Password (minimum 6 characters)"               autocomplete="new-password">            <div               class="auth-error"               id="signup-error">           </div>            <button               class="auth-btn"               onclick="doSignup()">                Create account            </button>            <div class="auth-divider">                <span>or continue with</span>            </div>            <button               class="google-btn"               id="google-signup-btn"               type="button">                <img                   src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"                   alt="Google">                <span>                   Sign up with Google               </span>            </button>        </div>    </div>   
+<!DOCTYPE html>
+<html lang="en">
 
-<!-- ========================= -->   <!-- Sidebar -->   <!-- ========================= -->    <aside id="sidebar">        <!-- Sidebar Header -->       <div class="sidebar-header">            <div class="sidebar-logo">               ¢           </div>            <div class="sidebar-brand">                <h2>Cipher</h2>                <span>                   AI Workspace               </span>            </div>        </div>        <!-- New Chat -->        <button           class="new-chat-btn"           onclick="startNewChat()">            <span>＋</span>            <span>New Chat</span>        </button>        <!-- Search -->        <div class="sidebar-search">            <input               type="text"               id="chat-search"               placeholder="Search conversations...">        </div>        <!-- Chat History -->        <div           class="chat-list"           id="chat-list">        </div>        <!-- Sidebar Footer -->        <div class="sidebar-footer">            <div class="user-profile">                <div                   class="user-avatar"                   id="user-avatar">                    ?                </div>                <div class="user-details">                    <span                       class="user-name"                       id="user-name">                        User                    </span>                    <small>                       Online                   </small>                </div>            </div>            <div class="sidebar-menu">                <button                   class="sidebar-icon-btn"                   id="theme-btn"                   title="Themes">                    🎨                </button>                <button                   class="sidebar-icon-btn"                   id="settings-btn"                   title="Settings">                    ⚙️                </button>                <button                   class="sidebar-icon-btn logout"                   onclick="doLogout()"                   title="Sign out">                    ⎋                </button>            </div>        </div>    </aside>    <!-- ========================= -->   <!-- Main Content -->   <!-- ========================= -->    <main id="main">                <button id="sidebar-toggle" onclick="toggleSidebar()">        ☰    </button>    <div class="topbar-brand">        <div class="logo-badge">           ¢       </div>        <div>            <h1>Cipher</h1>            <small>               Created by Fatai Quadri           </small>        </div>    </div>    <div class="topbar-actions">        <button class="topbar-btn" id="theme-switch">            Theme        </button>    </div>                   <div class="welcome">        <div class="welcome-logo">           ¢       </div>        <h2>            Welcome to Cipher        </h2>        <p>            Ask questions, solve calculations, write code, analyze documents,           or start a new project.        </p>        <div class="welcome-actions">            <button class="welcome-card">                <strong>💬 Chat</strong>                <span>Start a conversation</span>            </button>            <button class="welcome-card">                <strong>🧠 Research</strong>                <span>Explore complex topics</span>            </button>            <button class="welcome-card">                <strong>💻 Code</strong>                <span>Generate and debug code</span>            </button>            <button class="welcome-card">                <strong>📄 Documents</strong>                <span>Summarize PDFs and files</span>            </button>        </div>    </div>                   <form id="form">        <button           type="button"           class="input-tool">            +        </button>        <textarea           id="input"           rows="1"           placeholder="Message Cipher..."></textarea>        <button           id="send"           type="submit">            Send        </button>    </form>    <small class="footer-note">        Cipher may make mistakes. Verify important information.    </small>   
+<head>
 
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Cipher</title>
+
+    <meta name="theme-color"
+          content="#0d0d0d">
+
+    <!-- Fonts -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+
+
+    <!-- Styles -->
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/themes.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/animations.css') }}">
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     AUTHENTICATION SCREEN
+===================================================== -->
+
+<div id="auth-screen">
+
+    <div class="auth-background"></div>
+
+    <div class="auth-box">
+
+
+        <!-- AUTH LOGO -->
+
+        <div class="auth-logo">
+
+            <div class="logo-badge">
+                ¢
+            </div>
+
+            <div>
+
+                <h1>
+                    Cipher
+                </h1>
+
+                <span>
+                    Created by Fatai Quadri
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- AUTH TITLE -->
+
+        <div class="auth-title">
+
+            <h2>
+                Welcome back
+            </h2>
+
+            <p>
+                Sign in to continue your conversations with Cipher.
+            </p>
+
+        </div>
+
+
+        <!-- AUTH TABS -->
+
+        <div class="auth-tabs">
+
+            <button
+                class="auth-tab active"
+                onclick="showTab('login')">
+
+                Log in
+
+            </button>
+
+
+            <button
+                class="auth-tab"
+                onclick="showTab('signup')">
+
+                Sign up
+
+            </button>
+
+        </div>
+
+
+
+        <!-- =================================================
+             LOGIN FORM
+        ================================================== -->
+
+        <div
+            id="login-form"
+            class="auth-form">
+
+
+            <input
+                type="email"
+                id="login-email"
+                placeholder="Email address"
+                autocomplete="email">
+
+
+            <input
+                type="password"
+                id="login-password"
+                placeholder="Password"
+                autocomplete="current-password">
+
+
+            <div
+                class="auth-error"
+                id="login-error">
+            </div>
+
+
+            <button
+                class="auth-btn"
+                onclick="doLogin()">
+
+                Log in
+
+            </button>
+
+
+            <div class="auth-divider">
+
+                <span>
+                    or continue with
+                </span>
+
+            </div>
+
+
+            <!-- GOOGLE -->
+
+            <button
+                class="google-btn"
+                id="google-login-btn"
+                type="button">
+
+                <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google">
+
+                <span>
+                    Continue with Google
+                </span>
+
+            </button>
+
+        </div>
+
+
+
+        <!-- =================================================
+             SIGNUP FORM
+        ================================================== -->
+
+        <div
+            id="signup-form"
+            class="auth-form"
+            style="display:none;">
+
+
+            <input
+                type="text"
+                id="signup-username"
+                placeholder="Username"
+                autocomplete="username">
+
+
+            <input
+                type="email"
+                id="signup-email"
+                placeholder="Email address"
+                autocomplete="email">
+
+
+            <input
+                type="password"
+                id="signup-password"
+                placeholder="Password (minimum 6 characters)"
+                autocomplete="new-password">
+
+
+            <div
+                class="auth-error"
+                id="signup-error">
+            </div>
+
+
+            <button
+                class="auth-btn"
+                onclick="doSignup()">
+
+                Create account
+
+            </button>
+
+
+            <div class="auth-divider">
+
+                <span>
+                    or continue with
+                </span>
+
+            </div>
+
+
+            <button
+                class="google-btn"
+                id="google-signup-btn"
+                type="button">
+
+                <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google">
+
+                <span>
+                    Sign up with Google
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     MAIN APPLICATION
+===================================================== -->
+
+<div id="app-screen">
+
+
+    <!-- =================================================
+         SIDEBAR
+    ================================================== -->
+
+    <aside id="sidebar">
+
+
+        <!-- SIDEBAR HEADER -->
+
+        <div class="sidebar-header">
+
+            <div class="sidebar-logo">
+                ¢
+            </div>
+
+
+            <div class="sidebar-brand">
+
+                <h2>
+                    Cipher
+                </h2>
+
+                <span>
+                    AI Workspace
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- NEW CHAT -->
+
+        <button
+            class="new-chat-btn"
+            onclick="startNewChat()">
+
+            <span>
+                ＋
+            </span>
+
+            <span>
+                New Chat
+            </span>
+
+        </button>
+
+
+
+        <!-- SEARCH -->
+
+        <div class="sidebar-search">
+
+            <input
+                type="text"
+                id="chat-search"
+                placeholder="Search conversations..."
+                autocomplete="off">
+
+        </div>
+
+
+
+        <!-- CHAT HISTORY -->
+
+        <div
+            class="chat-list"
+            id="chat-list">
+
+        </div>
+
+
+
+        <!-- SIDEBAR FOOTER -->
+
+        <div class="sidebar-footer">
+
+
+            <!-- USER -->
+
+            <div class="user-profile">
+
+                <div
+                    class="user-avatar"
+                    id="user-avatar">
+
+                    ?
+
+                </div>
+
+
+                <div class="user-details">
+
+                    <span
+                        class="user-name"
+                        id="user-name">
+
+                        User
+
+                    </span>
+
+                    <small>
+                        Online
+                    </small>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- SIDEBAR ACTIONS -->
+
+            <div class="sidebar-menu">
+
+
+                <button
+                    class="sidebar-icon-btn"
+                    id="theme-btn"
+                    title="Themes"
+                    type="button">
+
+                    🎨
+
+                </button>
+
+
+                <button
+                    class="sidebar-icon-btn"
+                    id="settings-btn"
+                    title="Settings"
+                    type="button">
+
+                    ⚙️
+
+                </button>
+
+
+                <button
+                    class="sidebar-icon-btn logout"
+                    onclick="doLogout()"
+                    title="Sign out"
+                    type="button">
+
+                    ⎋
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- =================================================
+         MAIN CONTENT
+    ================================================== -->
+
+    <main id="main">
+
+
+        <!-- =================================================
+             TOPBAR
+        ================================================== -->
+
+        <header class="topbar">
+
+
+            <!-- MOBILE SIDEBAR BUTTON -->
+
+            <button
+                id="sidebar-toggle"
+                onclick="toggleSidebar()"
+                type="button"
+                aria-label="Open sidebar">
+
+                ☰
+
+            </button>
+
+
+
+            <!-- TOPBAR BRAND -->
+
+            <div class="topbar-brand">
+
+                <div class="logo-badge">
+                    ¢
+                </div>
+
+
+                <div>
+
+                    <h1>
+                        Cipher
+                    </h1>
+
+                    <small>
+                        Created by Fatai Quadri
+                    </small>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- TOPBAR ACTIONS -->
+
+            <div class="topbar-actions">
+
+
+                <button
+                    class="topbar-btn"
+                    id="theme-switch"
+                    type="button">
+
+                    Theme
+
+                </button>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =================================================
+             CHAT AREA
+        ================================================== -->
+
+        <section
+            id="chat"
+            aria-live="polite">
+
+
+            <!-- WELCOME -->
+
+            <div class="welcome">
+
+
+                <div class="welcome-logo">
+                    ¢
+                </div>
+
+
+                <h2>
+                    Welcome to Cipher
+                </h2>
+
+
+                <p>
+                    Ask questions, solve calculations,
+                    analyze documents, or start a new project.
+                </p>
+
+
+
+                <!-- QUICK ACTIONS -->
+
+                <div class="welcome-actions">
+
+
+                    <button
+                        class="welcome-card"
+                        type="button"
+                        onclick="startNewChat()">
+
+                        <strong>
+                            💬 Chat
+                        </strong>
+
+                        <span>
+                            Start a conversation
+                        </span>
+
+                    </button>
+
+
+
+                    <button
+                        class="welcome-card"
+                        type="button">
+
+                        <strong>
+                            🧠 Research
+                        </strong>
+
+                        <span>
+                            Explore complex topics
+                        </span>
+
+                    </button>
+
+
+
+                    <button
+                        class="welcome-card"
+                        type="button"
+                        onclick="document.getElementById('file-input').click()">
+
+                        <strong>
+                            📄 Documents
+                        </strong>
+
+                        <span>
+                            Upload and analyze files
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             INPUT AREA
+        ================================================== -->
+
+        <footer class="input-area">
+
+
+            <form id="form">
+
+
+                <!-- FILE INPUT -->
+
+                <input
+                    type="file"
+                    id="file-input"
+                    hidden
+                    multiple
+                    accept="image/*,.pdf,.txt,.doc,.docx,.csv">
+
+
+                <!-- ATTACHMENT BUTTON -->
+
+                <button
+                    type="button"
+                    class="input-tool"
+                    id="upload-btn"
+                    title="Attach files"
+                    aria-label="Attach files">
+
+                    +
+
+                </button>
+
+
+
+                <!-- MESSAGE INPUT -->
+
+                <textarea
+                    id="input"
+                    rows="1"
+                    placeholder="Message Cipher..."
+                    autocomplete="off"></textarea>
+
+
+
+                <!-- SEND -->
+
+                <button
+                    id="send"
+                    type="submit"
+                    aria-label="Send message">
+
+                    Send
+
+                </button>
+
+            </form>
+
+
+
+            <!-- ATTACHMENT PREVIEW -->
+
+            <div
+                id="attachment-preview"
+                class="attachment-preview"
+                aria-live="polite">
+
+            </div>
+
+
+
+            <!-- FOOTER NOTE -->
+
+            <small class="footer-note">
+
+                Cipher may make mistakes.
+                Verify important information.
+
+            </small>
+
+        </footer>
+
+    </main>
+
+</div>
+
+
+
+<!-- =====================================================
+     THEME PANEL
+===================================================== -->
+
+<div
+    id="theme-panel"
+    class="modal-panel"
+    style="display:none;">
+
+
+    <div class="panel-header">
+
+        <div>
+
+            <h3>
+                Appearance
+            </h3>
+
+            <span>
+                Choose your Cipher theme
+            </span>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="panel-close"
+            data-close-panel="theme-panel">
+
+            ×
+
+        </button>
+
+    </div>
+
+
+
+    <div class="theme-options">
+
+
+        <button
+            class="theme-option"
+            data-theme="midnight"
+            type="button">
+
+            <span class="theme-preview midnight"></span>
+
+            <span>
+                Midnight
+            </span>
+
+        </button>
+
+
+        <button
+            class="theme-option"
+            data-theme="emerald"
+            type="button">
+
+            <span class="theme-preview emerald"></span>
+
+            <span>
+                Emerald
+            </span>
+
+        </button>
+
+
+        <button
+            class="theme-option"
+            data-theme="cyber"
+            type="button">
+
+            <span class="theme-preview cyber"></span>
+
+            <span>
+                Cyber
+            </span>
+
+        </button>
+
+
+        <button
+            class="theme-option"
+            data-theme="amoled"
+            type="button">
+
+            <span class="theme-preview amoled"></span>
+
+            <span>
+                AMOLED Black
+            </span>
+
+        </button>
+
+
+        <button
+            class="theme-option"
+            data-theme="ocean"
+            type="button">
+
+            <span class="theme-preview ocean"></span>
+
+            <span>
+                Ocean
+            </span>
+
+        </button>
+
+
+        <button
+            class="theme-option"
+            data-theme="sunset"
+            type="button">
+
+            <span class="theme-preview sunset"></span>
+
+            <span>
+                Sunset
+            </span>
+
+        </button>
+
+
+        <button
+            class="theme-option"
+            data-theme="light"
+            type="button">
+
+            <span class="theme-preview light"></span>
+
+            <span>
+                Light
+            </span>
+
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     SETTINGS PANEL
+===================================================== -->
+
+<div
+    id="settings-panel"
+    class="modal-panel"
+    style="display:none;">
+
+
+    <div class="panel-header">
+
+        <div>
+
+            <h3>
+                Settings
+            </h3>
+
+            <span>
+                Manage your Cipher workspace
+            </span>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="panel-close"
+            data-close-panel="settings-panel">
+
+            ×
+
+        </button>
+
+    </div>
+
+
+
+    <div class="settings-content">
+
+
+        <!-- ACCOUNT -->
+
+        <div class="settings-section">
+
+            <h4>
+                Account
+            </h4>
+
+
+            <div class="setting-row">
+
+                <div>
+
+                    <strong>
+                        Username
+                    </strong>
+
+                    <small
+                        id="settings-username">
+                        User
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <div class="setting-row">
+
+                <div>
+
+                    <strong>
+                        Email
+                    </strong>
+
+                    <small
+                        id="settings-email">
+                        —
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- APPEARANCE -->
+
+        <div class="settings-section">
+
+            <h4>
+                Appearance
+            </h4>
+
+
+            <button
+                class="settings-action"
+                id="settings-theme-btn"
+                type="button">
+
+                <span>
+                    🎨 Theme
+                </span>
+
+                <span>
+                    →
+                </span>
+
+            </button>
+
+        </div>
+
+
+
+        <!-- REMINDERS -->
+
+        <div class="settings-section">
+
+            <h4>
+                Productivity
+            </h4>
+
+
+            <button
+                class="settings-action"
+                id="open-reminder-btn"
+                type="button">
+
+                <span>
+                    🔔 Reminders
+                </span>
+
+                <span>
+                    →
+                </span>
+
+            </button>
+
+        </div>
+
+
+
+        <!-- SIGN OUT -->
+
+        <div class="settings-section">
+
+            <button
+                class="settings-action danger"
+                onclick="doLogout()"
+                type="button">
+
+                <span>
+                    ⎋ Sign out
+                </span>
+
+                <span>
+                    →
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     REMINDER PANEL
+===================================================== -->
+
+<div
+    id="reminder-panel"
+    class="modal-panel"
+    style="display:none;">
+
+
+    <div class="panel-header">
+
+        <div>
+
+            <h3>
+                Create Reminder
+            </h3>
+
+            <span>
+                Let Cipher remind you later
+            </span>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="panel-close"
+            data-close-panel="reminder-panel">
+
+            ×
+
+        </button>
+
+    </div>
+
+
+
+    <div class="reminder-form">
+
+
+        <label for="reminder-title">
+            Reminder
+        </label>
+
+
+        <input
+            type="text"
+            id="reminder-title"
+            placeholder="What should Cipher remind you about?">
+
+
+        <label for="reminder-date">
+            Date
+        </label>
+
+
+        <input
+            type="date"
+            id="reminder-date">
+
+
+        <label for="reminder-time">
+            Time
+        </label>
+
+
+        <input
+            type="time"
+            id="reminder-time">
+
+
+        <button
+            type="button"
+            class="auth-btn"
+            id="save-reminder-btn">
+
+            Create Reminder
+
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     MODAL OVERLAY
+===================================================== -->
+
+<div
+    id="modal-overlay"
+    class="modal-overlay"
+    style="display:none;">
+
+</div>
+
+
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+<script
+    src="{{ url_for('static', filename='js/app.js') }}">
+</script>
+
+
+<script
+    src="{{ url_for('static', filename='js/chat.js') }}">
+</script>
+
+
+<script
+    src="{{ url_for('static', filename='js/sidebar.js') }}">
+</script>
+
+
+<script
+    src="{{ url_for('static', filename='js/themes.js') }}">
+</script>
+
+
+<script
+    src="{{ url_for('static', filename='js/auth.js') }}">
+</script>
+
+</body>
+
+</html>
