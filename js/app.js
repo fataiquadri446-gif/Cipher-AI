@@ -1,14 +1,15 @@
-
-/* ==========================================
+/* =========================================================
    CIPHER APP
    Created by Fatai Quadri
-========================================== */
+   Main Application Controller
+========================================================= */
 
 "use strict";
 
-/* ==========================================
-   Global State
-========================================== */
+
+/* =========================================================
+   GLOBAL STATE
+========================================================= */
 
 const Cipher = {
 
@@ -20,95 +21,323 @@ const Cipher = {
 
     initialized: false,
 
-    theme: localStorage.getItem("cipher-theme") || "midnight"
+    theme:
+        localStorage.getItem("cipher-theme")
+        || "midnight",
+
+    sidebarOpen: false,
+
+    settingsOpen: false,
+
+    reminderOpen: false,
+
+    online:
+        navigator.onLine
 
 };
 
 
-/* ==========================================
-   DOM
-========================================== */
+/* =========================================================
+   DOM REFERENCES
+========================================================= */
 
 const App = {
 
-    authScreen: document.getElementById("auth-screen"),
+    authScreen:
+        document.getElementById("auth-screen"),
 
-    appScreen: document.getElementById("app-screen"),
+    appScreen:
+        document.getElementById("app-screen"),
 
-    chat: document.getElementById("chat"),
+    chat:
+        document.getElementById("chat"),
 
-    form: document.getElementById("form"),
+    form:
+        document.getElementById("form"),
 
-    input: document.getElementById("input"),
+    input:
+        document.getElementById("input"),
 
-    send: document.getElementById("send"),
+    send:
+        document.getElementById("send"),
 
-    sidebar: document.getElementById("sidebar"),
+    sidebar:
+        document.getElementById("sidebar"),
 
-    sidebarToggle: document.getElementById("sidebar-toggle"),
+    sidebarToggle:
+        document.getElementById("sidebar-toggle"),
 
-    chatList: document.getElementById("chat-list"),
+    chatList:
+        document.getElementById("chat-list"),
 
-    userName: document.getElementById("user-name"),
+    userName:
+        document.getElementById("user-name"),
 
-    userAvatar: document.getElementById("user-avatar")
+    userAvatar:
+        document.getElementById("user-avatar"),
+
+    userStatus:
+        document.getElementById("user-status"),
+
+    themeButton:
+        document.getElementById("theme-btn"),
+
+    themeSwitch:
+        document.getElementById("theme-switch"),
+
+    settingsButton:
+        document.getElementById("settings-btn"),
+
+    reminderButton:
+        document.getElementById("reminder-btn"),
+
+    attachmentButton:
+        document.getElementById("attachment-btn"),
+
+    fileInput:
+        document.getElementById("file-input"),
+
+    reminderModal:
+        document.getElementById("reminder-modal"),
+
+    reminderForm:
+        document.getElementById("reminder-form"),
+
+    reminderText:
+        document.getElementById("reminder-text"),
+
+    reminderDate:
+        document.getElementById("reminder-date"),
+
+    reminderTime:
+        document.getElementById("reminder-time"),
+
+    reminderNotification:
+        document.getElementById(
+            "reminder-notification"
+        ),
+
+    reminderError:
+        document.getElementById("reminder-error"),
+
+    closeReminder:
+        document.getElementById("close-reminder"),
+
+    cancelReminder:
+        document.getElementById("cancel-reminder"),
+
+    settingsModal:
+        document.getElementById("settings-modal"),
+
+    closeSettings:
+        document.getElementById("close-settings"),
+
+    closeSettingsBottom:
+        document.getElementById(
+            "close-settings-bottom"
+        ),
+
+    fontSizeSetting:
+        document.getElementById(
+            "font-size-setting"
+        ),
+
+    densitySetting:
+        document.getElementById(
+            "density-setting"
+        ),
+
+    messageStyleSetting:
+        document.getElementById(
+            "message-style-setting"
+        ),
+
+    memorySettingsButton:
+        document.getElementById(
+            "memory-settings-btn"
+        ),
+
+    resetPreferencesButton:
+        document.getElementById(
+            "reset-preferences-btn"
+        )
 
 };
 
 
-/* ==========================================
-   Initialize
-========================================== */
+/* =========================================================
+   DOM REFRESH
+   Useful if another script modifies the page.
+========================================================= */
 
-document.addEventListener("DOMContentLoaded", () => {
+function refreshAppDOM() {
 
-    initializeCipher();
+    App.authScreen =
+        document.getElementById("auth-screen");
 
-});
+    App.appScreen =
+        document.getElementById("app-screen");
 
+    App.chat =
+        document.getElementById("chat");
 
-async function initializeCipher(){
+    App.form =
+        document.getElementById("form");
 
-    applyTheme(Cipher.theme);
+    App.input =
+        document.getElementById("input");
 
-    await checkLogin();
+    App.send =
+        document.getElementById("send");
 
-    registerGlobalEvents();
+    App.sidebar =
+        document.getElementById("sidebar");
 
-    Cipher.initialized = true;
+    App.sidebarToggle =
+        document.getElementById("sidebar-toggle");
 
 }
 
 
-/* ==========================================
-   STARTUP
-========================================== */
+/* =========================================================
+   INITIALIZATION
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    initializeCipher
+);
+
+
+async function initializeCipher() {
+
+    if (Cipher.initialized) {
+
+        return;
+
+    }
+
+
+    /*
+     * Theme system is controlled by themes.js.
+     */
+
+    if (
+        window.CipherThemes &&
+        typeof window.CipherThemes.apply === "function"
+    ) {
+
+        window.CipherThemes.apply(
+            Cipher.theme,
+            false
+        );
+
+    }
+
+
+    /*
+     * Set initial date for reminder.
+     */
+
+    setMinimumReminderDate();
+
+
+    /*
+     * Connect application events.
+     */
+
+    registerGlobalEvents();
+
+
+    /*
+     * Check authentication.
+     */
+
+    await checkLogin();
+
+
+    Cipher.initialized = true;
+
+
+    console.log(
+        "Cipher application initialized."
+    );
+
+}
+
+
+/* =========================================================
+   AUTHENTICATION CHECK
+========================================================= */
 
 async function checkLogin() {
 
     try {
 
-        const res = await fetch("/me");
+        const response =
+            await fetch(
+                "/me",
+                {
+                    method: "GET",
 
-        const data = await res.json();
+                    credentials: "same-origin",
+
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Authentication request failed: ${response.status}`
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
 
         if (data.logged_in) {
 
-            Cipher.user = data;
+            Cipher.user =
+                data;
 
-            enterApp(data.username);
 
-        } else {
+            enterApp(
+                data.username
+                || data.email
+                || "User"
+            );
+
+        }
+
+        else {
 
             showAuthScreen();
 
         }
 
-    } catch (err) {
+    }
 
-        console.error(err);
+    catch (error) {
 
-        showNotification("Unable to connect to Cipher.", "error");
+        logError(
+            error,
+            "Authentication Check"
+        );
+
+
+        showNotification(
+            "Unable to connect to Cipher.",
+            "error"
+        );
+
 
         showAuthScreen();
 
@@ -117,169 +346,644 @@ async function checkLogin() {
 }
 
 
-/* ==========================================
-   AUTH / APP VIEW
-========================================== */
+/* =========================================================
+   SHOW AUTH SCREEN
+========================================================= */
 
 function showAuthScreen() {
 
-    App.authScreen.style.display = "flex";
+    if (!App.authScreen ||
+        !App.appScreen) {
 
-    App.appScreen.style.display = "none";
+        return;
+
+    }
+
+
+    App.authScreen.style.display =
+        "flex";
+
+    App.appScreen.style.display =
+        "none";
 
 }
 
+
+/* =========================================================
+   ENTER APPLICATION
+========================================================= */
 
 function enterApp(username) {
 
-    App.authScreen.style.display = "none";
+    if (!App.authScreen ||
+        !App.appScreen) {
 
-    App.appScreen.style.display = "flex";
+        return;
 
-    App.userName.textContent = username;
+    }
 
-    App.userAvatar.textContent = username.charAt(0).toUpperCase();
 
-    loadChats();
+    App.authScreen.style.display =
+        "none";
 
-    App.input.focus();
+    App.appScreen.style.display =
+        "flex";
+
+
+    const displayName =
+        username || "User";
+
+
+    if (App.userName) {
+
+        App.userName.textContent =
+            displayName;
+
+    }
+
+
+    if (App.userAvatar) {
+
+        App.userAvatar.textContent =
+            displayName
+                .charAt(0)
+                .toUpperCase();
+
+    }
+
+
+    /*
+     * Load chat history through chat.js.
+     */
+
+    if (
+        typeof loadChats === "function"
+    ) {
+
+        safeExecute(
+            () => loadChats(),
+            "Load Chats"
+        );
+
+    }
+
+
+    /*
+     * Focus the message box.
+     */
+
+    setTimeout(() => {
+
+        if (App.input) {
+
+            App.input.focus();
+
+        }
+
+    }, 150);
 
 }
 
 
-/* ==========================================
-   LOADING
-========================================== */
+/* =========================================================
+   LOADING STATE
+========================================================= */
 
 function showLoading() {
 
-    App.send.disabled = true;
+    if (!App.send) return;
+
+
+    App.send.disabled =
+        true;
+
+
+    App.send.dataset.originalText =
+        App.send.innerHTML;
+
 
     App.send.innerHTML = `
-        <span class="loading-spinner"></span>
+
+        <span
+            class="loading-spinner"
+            aria-label="Sending">
+        </span>
+
     `;
 
 }
 
+
+/* =========================================================
+   HIDE LOADING
+========================================================= */
 
 function hideLoading() {
 
-    App.send.disabled = false;
+    if (!App.send) return;
+
+
+    App.send.disabled =
+        false;
+
 
     App.send.innerHTML = `
-        <svg width="20" height="20"
-             viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
 
-            <path d="M22 2L11 13"></path>
+        <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true">
 
-            <path d="M22 2L15 22L11 13L2 9L22 2"></path>
+            <path
+                d="M22 2L11 13">
+            </path>
+
+            <path
+                d="M22 2L15 22L11 13L2 9L22 2">
+            </path>
 
         </svg>
+
     `;
 
 }
 
 
-/* ==========================================
+/* =========================================================
    GLOBAL EVENTS
-========================================== */
+========================================================= */
 
 function registerGlobalEvents() {
 
-    /* Send message */
-    App.form.addEventListener("submit", handleSendMessage);
+    /*
+     * Prevent duplicate registration.
+     */
 
-    /* Enter to send
-       Shift + Enter = new line */
-    App.input.addEventListener("keydown", (e) => {
+    if (
+        document.body.dataset
+            .cipherEventsRegistered === "true"
+    ) {
 
-        if (
-            e.key === "Enter" &&
-            !e.shiftKey
-        ) {
+        return;
 
-            e.preventDefault();
+    }
+
+
+    document.body.dataset
+        .cipherEventsRegistered = "true";
+
+
+    /* =====================================================
+       MESSAGE FORM
+    ===================================================== */
+
+    if (App.form) {
+
+        App.form.addEventListener(
+            "submit",
+            handleSendMessage
+        );
+
+    }
+
+
+    /* =====================================================
+       ENTER TO SEND
+    ===================================================== */
+
+    if (App.input) {
+
+        App.input.addEventListener(
+            "keydown",
+            handleInputKeydown
+        );
+
+
+        App.input.addEventListener(
+            "input",
+            autoResizeInput
+        );
+
+    }
+
+
+    /* =====================================================
+       SIDEBAR TOGGLE
+    ===================================================== */
+
+    if (App.sidebarToggle) {
+
+        App.sidebarToggle.addEventListener(
+            "click",
+            event => {
+
+                event.stopPropagation();
+
+                toggleSidebar();
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       SETTINGS
+    ===================================================== */
+
+    if (App.settingsButton) {
+
+        App.settingsButton.addEventListener(
+            "click",
+            openSettings
+        );
+
+    }
+
+
+    if (App.closeSettings) {
+
+        App.closeSettings.addEventListener(
+            "click",
+            closeSettings
+        );
+
+    }
+
+
+    if (App.closeSettingsBottom) {
+
+        App.closeSettingsBottom
+            .addEventListener(
+                "click",
+                closeSettings
+            );
+
+    }
+
+
+    /* =====================================================
+       REMINDER
+    ===================================================== */
+
+    if (App.reminderButton) {
+
+        App.reminderButton.addEventListener(
+            "click",
+            openReminder
+        );
+
+    }
+
+
+    if (App.closeReminder) {
+
+        App.closeReminder.addEventListener(
+            "click",
+            closeReminder
+        );
+
+    }
+
+
+    if (App.cancelReminder) {
+
+        App.cancelReminder.addEventListener(
+            "click",
+            closeReminder
+        );
+
+    }
+
+
+    if (App.reminderForm) {
+
+        App.reminderForm.addEventListener(
+            "submit",
+            handleReminderSubmit
+        );
+
+    }
+
+
+    /* =====================================================
+       FILE ATTACHMENT
+    ===================================================== */
+
+    if (App.attachmentButton) {
+
+        App.attachmentButton
+            .addEventListener(
+                "click",
+                openFilePicker
+            );
+
+    }
+
+
+    if (App.fileInput) {
+
+        App.fileInput.addEventListener(
+            "change",
+            handleFileSelection
+        );
+
+    }
+
+
+    /* =====================================================
+       SETTINGS CONTROLS
+    ===================================================== */
+
+    if (App.fontSizeSetting) {
+
+        App.fontSizeSetting
+            .addEventListener(
+                "change",
+                event => {
+
+                    if (
+                        window.CipherAppearance
+                    ) {
+
+                        window.CipherAppearance
+                            .set(
+                                "fontSize",
+                                event.target.value
+                            );
+
+                    }
+
+                }
+            );
+
+    }
+
+
+    if (App.densitySetting) {
+
+        App.densitySetting
+            .addEventListener(
+                "change",
+                event => {
+
+                    if (
+                        window.CipherAppearance
+                    ) {
+
+                        window.CipherAppearance
+                            .set(
+                                "density",
+                                event.target.value
+                            );
+
+                    }
+
+                }
+            );
+
+    }
+
+
+    if (App.messageStyleSetting) {
+
+        App.messageStyleSetting
+            .addEventListener(
+                "change",
+                event => {
+
+                    if (
+                        window.CipherAppearance
+                    ) {
+
+                        window.CipherAppearance
+                            .set(
+                                "messageStyle",
+                                event.target.value
+                            );
+
+                    }
+
+                }
+            );
+
+    }
+
+
+    /* =====================================================
+       MEMORY
+    ===================================================== */
+
+    if (App.memorySettingsButton) {
+
+        App.memorySettingsButton
+            .addEventListener(
+                "click",
+                openMemorySettings
+            );
+
+    }
+
+
+    /* =====================================================
+       RESET PREFERENCES
+    ===================================================== */
+
+    if (App.resetPreferencesButton) {
+
+        App.resetPreferencesButton
+            .addEventListener(
+                "click",
+                resetPreferences
+            );
+
+    }
+
+
+    /* =====================================================
+       CLICK OUTSIDE
+    ===================================================== */
+
+    document.addEventListener(
+        "click",
+        handleDocumentClick
+    );
+
+
+    /* =====================================================
+       ESCAPE
+    ===================================================== */
+
+    document.addEventListener(
+        "keydown",
+        handleGlobalKeydown
+    );
+
+
+    /* =====================================================
+       WINDOW RESIZE
+    ===================================================== */
+
+    window.addEventListener(
+        "resize",
+        handleWindowResize
+    );
+
+
+    /* =====================================================
+       WELCOME CARDS
+    ===================================================== */
+
+    document
+        .querySelectorAll(
+            ".welcome-card"
+        )
+        .forEach(card => {
+
+            card.addEventListener(
+                "click",
+                handleWelcomeCard
+            );
+
+        });
+
+
+    /*
+     * Load appearance settings.
+     */
+
+    loadAppearanceIntoSettings();
+
+}
+
+
+/* =========================================================
+   INPUT KEYBOARD
+========================================================= */
+
+function handleInputKeydown(event) {
+
+    if (
+        event.key === "Enter" &&
+        !event.shiftKey
+    ) {
+
+        event.preventDefault();
+
+
+        if (App.form) {
 
             App.form.requestSubmit();
 
         }
 
-    });
-
-    /* Mobile sidebar */
-
-    if (App.sidebarToggle) {
-
-        App.sidebarToggle.addEventListener("click", () => {
-
-            App.sidebar.classList.toggle("open");
-
-        });
-
     }
-
-    /* Close sidebar when clicking outside */
-
-    document.addEventListener("click", (e) => {
-
-        if (window.innerWidth > 900) return;
-
-        if (
-            !App.sidebar.contains(e.target) &&
-            !App.sidebarToggle.contains(e.target)
-        ) {
-
-            App.sidebar.classList.remove("open");
-
-        }
-
-    });
-
-    /* Window resized */
-
-    window.addEventListener("resize", () => {
-
-        if (window.innerWidth > 900) {
-
-            App.sidebar.classList.remove("open");
-
-        }
-
-    });
 
 }
 
 
-/* ==========================================
+/* =========================================================
+   AUTO RESIZE MESSAGE INPUT
+========================================================= */
+
+function autoResizeInput() {
+
+    if (!App.input) return;
+
+
+    App.input.style.height =
+        "auto";
+
+
+    const maxHeight = 180;
+
+
+    App.input.style.height =
+        Math.min(
+            App.input.scrollHeight,
+            maxHeight
+        ) + "px";
+
+}
+
+
+/* =========================================================
    SEND MESSAGE
-========================================== */
+========================================================= */
 
-async function handleSendMessage(e) {
+async function handleSendMessage(event) {
 
-    e.preventDefault();
+    event.preventDefault();
 
-    if (!Cipher.currentChat) return;
 
-    const message = App.input.value.trim();
+    if (!Cipher.currentChat) {
+
+        showInfo(
+            "Start a new chat before sending a message."
+        );
+
+        return;
+
+    }
+
+
+    if (!App.input) return;
+
+
+    const message =
+        App.input.value.trim();
+
 
     if (!message) return;
 
+
+    if (!isOnline()) {
+
+        showWarning(
+            "You're offline. Check your connection and try again."
+        );
+
+        return;
+
+    }
+
+
     showLoading();
+
 
     try {
 
-        if (typeof sendMessage === "function") {
+        if (
+            typeof sendMessage === "function"
+        ) {
 
-            await sendMessage(message);
+            await sendMessage(
+                message
+            );
 
         }
 
-    } catch (err) {
+        else {
 
-        console.error(err);
+            throw new Error(
+                "chat.js sendMessage() is unavailable."
+            );
+
+        }
+
+    }
+
+    catch (error) {
+
+        logError(
+            error,
+            "Send Message"
+        );
+
 
         showNotification(
             "Failed to send message.",
@@ -288,142 +992,1162 @@ async function handleSendMessage(e) {
 
     }
 
-    hideLoading();
+    finally {
 
-    App.input.focus();
-
-}
+        hideLoading();
 
 
-/* ==========================================
-   NOTIFICATION SYSTEM
-========================================== */
+        if (App.input) {
 
-function showNotification(message, type = "info", duration = 3500) {
+            App.input.focus();
 
-    let container = document.getElementById("notification-container");
-
-    if (!container) {
-
-        container = document.createElement("div");
-
-        container.id = "notification-container";
-
-        container.style.position = "fixed";
-        container.style.top = "20px";
-        container.style.right = "20px";
-        container.style.zIndex = "9999";
-
-        document.body.appendChild(container);
+        }
 
     }
 
-    const notification = document.createElement("div");
+}
 
-    notification.className = `notification ${type}`;
 
-    notification.innerHTML = `
+/* =========================================================
+   SIDEBAR
+========================================================= */
 
-        <span>${message}</span>
+function toggleSidebar(force = null) {
 
-        <button class="notification-close">&times;</button>
+    if (!App.sidebar) return;
 
-    `;
 
-    container.appendChild(notification);
+    const shouldOpen =
+        force !== null
+            ? Boolean(force)
+            : !App.sidebar.classList.contains("open");
 
-    requestAnimationFrame(() => {
 
-        notification.classList.add("show");
+    App.sidebar.classList.toggle(
+        "open",
+        shouldOpen
+    );
 
-    });
 
-    const removeNotification = () => {
+    Cipher.sidebarOpen =
+        shouldOpen;
 
-        notification.classList.remove("show");
+
+    document.body.classList.toggle(
+        "sidebar-open",
+        shouldOpen
+    );
+
+}
+
+
+function closeSidebar() {
+
+    toggleSidebar(false);
+
+}
+
+
+/* =========================================================
+   MOBILE SIDEBAR
+========================================================= */
+
+function handleWindowResize() {
+
+    if (
+        window.innerWidth > 900
+    ) {
+
+        closeSidebar();
+
+    }
+
+
+    if (
+        window.CipherThemes &&
+        typeof window.CipherThemes.closeMenu ===
+            "function"
+    ) {
+
+        window.CipherThemes.closeMenu();
+
+    }
+
+}
+
+
+function handleDocumentClick(event) {
+
+    /*
+     * Mobile sidebar.
+     */
+
+    if (
+        window.innerWidth <= 900 &&
+        App.sidebar &&
+        App.sidebarToggle
+    ) {
+
+        const clickedSidebar =
+            App.sidebar.contains(
+                event.target
+            );
+
+
+        const clickedToggle =
+            App.sidebarToggle.contains(
+                event.target
+            );
+
+
+        if (
+            !clickedSidebar &&
+            !clickedToggle &&
+            App.sidebar.classList.contains(
+                "open"
+            )
+        ) {
+
+            closeSidebar();
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+function openSettings() {
+
+    if (!App.settingsModal) return;
+
+
+    loadAppearanceIntoSettings();
+
+
+    App.settingsModal.classList.add(
+        "open"
+    );
+
+
+    App.settingsModal.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+
+    Cipher.settingsOpen =
+        true;
+
+
+    document.body.classList.add(
+        "modal-open"
+    );
+
+}
+
+
+function closeSettings() {
+
+    if (!App.settingsModal) return;
+
+
+    App.settingsModal.classList.remove(
+        "open"
+    );
+
+
+    App.settingsModal.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+
+    Cipher.settingsOpen =
+        false;
+
+
+    if (!Cipher.reminderOpen) {
+
+        document.body.classList.remove(
+            "modal-open"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD APPEARANCE SETTINGS
+========================================================= */
+
+function loadAppearanceIntoSettings() {
+
+    if (
+        !window.CipherAppearance
+    ) {
+
+        return;
+
+    }
+
+
+    const settings =
+        window.CipherAppearance.get();
+
+
+    if (App.fontSizeSetting) {
+
+        App.fontSizeSetting.value =
+            settings.fontSize;
+
+    }
+
+
+    if (App.densitySetting) {
+
+        App.densitySetting.value =
+            settings.density;
+
+    }
+
+
+    if (App.messageStyleSetting) {
+
+        App.messageStyleSetting.value =
+            settings.messageStyle;
+
+    }
+
+}
+
+
+/* =========================================================
+   RESET PREFERENCES
+========================================================= */
+
+function resetPreferences() {
+
+    const confirmed =
+        confirmAction(
+            "Reset your saved appearance and theme preferences?"
+        );
+
+
+    if (!confirmed) return;
+
+
+    if (
+        window.CipherAppearance &&
+        typeof window.CipherAppearance.reset ===
+            "function"
+    ) {
+
+        window.CipherAppearance.reset();
+
+    }
+
+
+    if (
+        window.CipherThemes &&
+        typeof window.CipherThemes.resetToSystem ===
+            "function"
+    ) {
+
+        window.CipherThemes.resetToSystem();
+
+    }
+
+
+    Cipher.theme =
+        localStorage.getItem(
+            "cipher-theme"
+        ) || "midnight";
+
+
+    loadAppearanceIntoSettings();
+
+
+    showSuccess(
+        "Your appearance preferences have been reset."
+    );
+
+}
+
+
+/* =========================================================
+   MEMORY SETTINGS
+========================================================= */
+
+function openMemorySettings() {
+
+    showInfo(
+        "Memory management will be connected to Cipher's memory system."
+    );
+
+}
+
+
+/* =========================================================
+   REMINDER SYSTEM
+========================================================= */
+
+function openReminder() {
+
+    if (!App.reminderModal) return;
+
+
+    closeSettings();
+
+
+    setMinimumReminderDate();
+
+
+    App.reminderModal.classList.add(
+        "open"
+    );
+
+
+    App.reminderModal.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+
+    Cipher.reminderOpen =
+        true;
+
+
+    document.body.classList.add(
+        "modal-open"
+    );
+
+
+    if (App.reminderText) {
 
         setTimeout(() => {
 
-            notification.remove();
+            App.reminderText.focus();
 
-        }, 300);
+        }, 100);
+
+    }
+
+}
+
+
+function closeReminder() {
+
+    if (!App.reminderModal) return;
+
+
+    App.reminderModal.classList.remove(
+        "open"
+    );
+
+
+    App.reminderModal.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+
+    Cipher.reminderOpen =
+        false;
+
+
+    if (!Cipher.settingsOpen) {
+
+        document.body.classList.remove(
+            "modal-open"
+        );
+
+    }
+
+
+    clearReminderError();
+
+}
+
+
+/* =========================================================
+   REMINDER DATE
+========================================================= */
+
+function setMinimumReminderDate() {
+
+    if (!App.reminderDate) return;
+
+
+    const today =
+        new Date();
+
+
+    const year =
+        today.getFullYear();
+
+
+    const month =
+        String(
+            today.getMonth() + 1
+        ).padStart(2, "0");
+
+
+    const day =
+        String(
+            today.getDate()
+        ).padStart(2, "0");
+
+
+    const dateString =
+        `${year}-${month}-${day}`;
+
+
+    App.reminderDate.min =
+        dateString;
+
+
+    if (!App.reminderDate.value) {
+
+        App.reminderDate.value =
+            dateString;
+
+    }
+
+}
+
+
+/* =========================================================
+   REMINDER FORM
+========================================================= */
+
+async function handleReminderSubmit(event) {
+
+    event.preventDefault();
+
+
+    clearReminderError();
+
+
+    const text =
+        App.reminderText
+            ? App.reminderText.value.trim()
+            : "";
+
+
+    const date =
+        App.reminderDate
+            ? App.reminderDate.value
+            : "";
+
+
+    const time =
+        App.reminderTime
+            ? App.reminderTime.value
+            : "";
+
+
+    const notificationType =
+        App.reminderNotification
+            ? App.reminderNotification.value
+            : "in_app";
+
+
+    if (!text) {
+
+        showReminderError(
+            "Please enter what you want Cipher to remind you about."
+        );
+
+        return;
+
+    }
+
+
+    if (!date || !time) {
+
+        showReminderError(
+            "Please select a date and time."
+        );
+
+        return;
+
+    }
+
+
+    const reminderDateTime =
+        new Date(
+            `${date}T${time}`
+        );
+
+
+    if (
+        Number.isNaN(
+            reminderDateTime.getTime()
+        )
+    ) {
+
+        showReminderError(
+            "Please enter a valid reminder date and time."
+        );
+
+        return;
+
+    }
+
+
+    if (
+        reminderDateTime.getTime()
+        <= Date.now()
+    ) {
+
+        showReminderError(
+            "Please choose a future date and time."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * The backend endpoint will be
+     * connected in the reminder backend.
+     */
+
+    const reminder = {
+
+        text: text,
+
+        date: date,
+
+        time: time,
+
+        notification_type:
+            notificationType
 
     };
 
-    notification
-        .querySelector(".notification-close")
-        .addEventListener("click", removeNotification);
 
-    setTimeout(removeNotification, duration);
+    try {
+
+        const response =
+            await fetch(
+                "/api/reminders",
+                {
+
+                    method: "POST",
+
+                    credentials:
+                        "same-origin",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Accept":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify(
+                            reminder
+                        )
+
+                }
+            );
+
+
+        if (!response.ok) {
+
+            let errorMessage =
+                "Unable to create reminder.";
+
+
+            try {
+
+                const errorData =
+                    await response.json();
+
+
+                if (
+                    errorData.message
+                ) {
+
+                    errorMessage =
+                        errorData.message;
+
+                }
+
+            }
+
+            catch {
+
+                /* Keep default message. */
+
+            }
+
+
+            throw new Error(
+                errorMessage
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        closeReminder();
+
+
+        if (
+            App.reminderForm
+        ) {
+
+            App.reminderForm.reset();
+
+        }
+
+
+        setMinimumReminderDate();
+
+
+        showSuccess(
+            data.message
+            || "Reminder set successfully."
+        );
+
+
+    }
+
+    catch (error) {
+
+        logError(
+            error,
+            "Reminder"
+        );
+
+
+        /*
+         * If the backend reminder endpoint
+         * hasn't been added yet, give a
+         * clear message instead of silently
+         * pretending the reminder was saved.
+         */
+
+        showReminderError(
+            error.message
+            || "Unable to set reminder."
+        );
+
+    }
 
 }
 
 
-/* ==========================================
-   CONFIRM DIALOG
-========================================== */
+/* =========================================================
+   REMINDER ERROR
+========================================================= */
 
-function confirmAction(message) {
+function showReminderError(message) {
 
-    return window.confirm(message);
+    if (!App.reminderError) {
+
+        showError(message);
+
+        return;
+
+    }
+
+
+    App.reminderError.textContent =
+        message;
+
+
+    App.reminderError.style.display =
+        "block";
 
 }
 
 
-/* ==========================================
-   SUCCESS / ERROR HELPERS
-========================================== */
+function clearReminderError() {
+
+    if (!App.reminderError) return;
+
+
+    App.reminderError.textContent =
+        "";
+
+
+    App.reminderError.style.display =
+        "none";
+
+}
+
+
+/* =========================================================
+   FILE ATTACHMENT
+========================================================= */
+
+function openFilePicker() {
+
+    if (!App.fileInput) return;
+
+
+    App.fileInput.click();
+
+}
+
+
+function handleFileSelection(event) {
+
+    const files =
+        Array.from(
+            event.target.files || []
+        );
+
+
+    if (!files.length) return;
+
+
+    /*
+     * File processing will be connected
+     * to the document system.
+     */
+
+    const names =
+        files
+            .map(file => file.name)
+            .join(", ");
+
+
+    showInfo(
+        `${files.length} file${files.length === 1 ? "" : "s"} selected: ${names}`
+    );
+
+
+    /*
+     * Reset input so the same file can
+     * be selected again later.
+     */
+
+    event.target.value = "";
+
+}
+
+
+/* =========================================================
+   WELCOME CARDS
+========================================================= */
+
+function handleWelcomeCard(event) {
+
+    const card =
+        event.currentTarget;
+
+
+    const action =
+        card.dataset.action;
+
+
+    switch (action) {
+
+        case "chat":
+
+            focusMessageInput();
+
+            break;
+
+
+        case "research":
+
+            setMessagePrompt(
+                "What would you like Cipher to research?"
+            );
+
+            break;
+
+
+        case "documents":
+
+            openFilePicker();
+
+            break;
+
+
+        case "reminder":
+
+            openReminder();
+
+            break;
+
+
+        default:
+
+            break;
+
+    }
+
+}
+
+
+/* =========================================================
+   FOCUS MESSAGE INPUT
+========================================================= */
+
+function focusMessageInput() {
+
+    if (!App.input) return;
+
+
+    App.input.focus();
+
+
+    App.input.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+    });
+
+}
+
+
+/* =========================================================
+   MESSAGE PROMPT
+========================================================= */
+
+function setMessagePrompt(prompt) {
+
+    if (!App.input) return;
+
+
+    App.input.value =
+        prompt;
+
+
+    autoResizeInput();
+
+
+    focusMessageInput();
+
+
+    App.input.setSelectionRange(
+        0,
+        0
+    );
+
+}
+
+
+/* =========================================================
+   GLOBAL KEYBOARD
+========================================================= */
+
+function handleGlobalKeydown(event) {
+
+    if (
+        event.key === "Escape"
+    ) {
+
+        if (Cipher.reminderOpen) {
+
+            closeReminder();
+
+            return;
+
+        }
+
+
+        if (Cipher.settingsOpen) {
+
+            closeSettings();
+
+            return;
+
+        }
+
+
+        if (
+            window.CipherThemes &&
+            typeof window.CipherThemes.closeMenu ===
+                "function"
+        ) {
+
+            window.CipherThemes.closeMenu();
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   NOTIFICATION SYSTEM
+========================================================= */
+
+function showNotification(
+    message,
+    type = "info",
+    duration = 3500
+) {
+
+    let container =
+        document.getElementById(
+            "notification-container"
+        );
+
+
+    if (!container) {
+
+        container =
+            document.createElement(
+                "div"
+            );
+
+
+        container.id =
+            "notification-container";
+
+
+        document.body.appendChild(
+            container
+        );
+
+    }
+
+
+    const notification =
+        document.createElement(
+            "div"
+        );
+
+
+    notification.className =
+        `notification ${type}`;
+
+
+    notification.setAttribute(
+        "role",
+        "status"
+    );
+
+
+    const messageSpan =
+        document.createElement(
+            "span"
+        );
+
+
+    messageSpan.textContent =
+        message;
+
+
+    const closeButton =
+        document.createElement(
+            "button"
+        );
+
+
+    closeButton.type =
+        "button";
+
+
+    closeButton.className =
+        "notification-close";
+
+
+    closeButton.setAttribute(
+        "aria-label",
+        "Close notification"
+    );
+
+
+    closeButton.innerHTML =
+        "&times;";
+
+
+    notification.appendChild(
+        messageSpan
+    );
+
+
+    notification.appendChild(
+        closeButton
+    );
+
+
+    container.appendChild(
+        notification
+    );
+
+
+    requestAnimationFrame(() => {
+
+        notification.classList.add(
+            "show"
+        );
+
+    });
+
+
+    let removed = false;
+
+
+    const removeNotification =
+        () => {
+
+            if (removed) return;
+
+
+            removed = true;
+
+
+            notification.classList.remove(
+                "show"
+            );
+
+
+            setTimeout(() => {
+
+                if (
+                    notification.parentNode
+                ) {
+
+                    notification.remove();
+
+                }
+
+            }, 300);
+
+        };
+
+
+    closeButton.addEventListener(
+        "click",
+        removeNotification
+    );
+
+
+    setTimeout(
+        removeNotification,
+        duration
+    );
+
+}
+
+
+/* =========================================================
+   NOTIFICATION HELPERS
+========================================================= */
 
 function showSuccess(message) {
 
-    showNotification(message, "success");
+    showNotification(
+        message,
+        "success"
+    );
 
 }
+
 
 function showError(message) {
 
-    showNotification(message, "error");
+    showNotification(
+        message,
+        "error"
+    );
 
 }
+
 
 function showWarning(message) {
 
-    showNotification(message, "warning");
+    showNotification(
+        message,
+        "warning"
+    );
 
 }
+
 
 function showInfo(message) {
 
-    showNotification(message, "info");
+    showNotification(
+        message,
+        "info"
+    );
 
 }
 
 
-/* ==========================================
+/* =========================================================
+   CONFIRMATION
+========================================================= */
+
+function confirmAction(message) {
+
+    return window.confirm(
+        message
+    );
+
+}
+
+
+/* =========================================================
    SPLASH SCREEN
-========================================== */
+========================================================= */
 
-async function showSplashScreen(duration = 1800) {
+async function showSplashScreen(
+    duration = 1200
+) {
 
-    let splash = document.getElementById("cipher-splash");
+    let splash =
+        document.getElementById(
+            "cipher-splash"
+        );
+
 
     if (!splash) {
 
-        splash = document.createElement("div");
+        splash =
+            document.createElement(
+                "div"
+            );
 
-        splash.id = "cipher-splash";
+
+        splash.id =
+            "cipher-splash";
+
 
         splash.innerHTML = `
 
             <div class="splash-content">
 
-                <div class="splash-logo animate-glow">
-                    ¢
+                <div class="splash-logo">
+
+                    <img
+                        src="/static/images/logo.jpg"
+                        alt="Cipher logo"
+                        class="cipher-logo">
+
                 </div>
 
-                <h1>Cipher</h1>
+                <h1>
+                    Cipher
+                </h1>
 
-                <p>Initializing Cipher...</p>
+                <p>
+                    Initializing Cipher...
+                </p>
 
                 <div class="splash-loader">
 
@@ -435,163 +2159,147 @@ async function showSplashScreen(duration = 1800) {
 
         `;
 
-        document.body.appendChild(splash);
+
+        document.body.appendChild(
+            splash
+        );
 
     }
 
-    splash.style.display = "flex";
 
-    await new Promise(resolve => setTimeout(resolve, duration));
+    splash.style.display =
+        "flex";
+
+
+    await sleep(
+        duration
+    );
 
 }
 
 
 function hideSplashScreen() {
 
-    const splash = document.getElementById("cipher-splash");
+    const splash =
+        document.getElementById(
+            "cipher-splash"
+        );
+
 
     if (!splash) return;
 
-    splash.style.opacity = "0";
+
+    splash.style.opacity =
+        "0";
+
 
     setTimeout(() => {
 
-        splash.remove();
+        if (
+            splash.parentNode
+        ) {
+
+            splash.remove();
+
+        }
 
     }, 500);
 
 }
 
 
-/* ==========================================
-   STARTUP SEQUENCE
-========================================== */
+/* =========================================================
+   START APPLICATION
+========================================================= */
 
 async function startApplication() {
 
+    /*
+     * Authentication is handled once
+     * by initializeCipher().
+     *
+     * This function is kept as a public
+     * startup helper for compatibility.
+     */
+
     await showSplashScreen();
 
-    await checkLogin();
+
+    if (!Cipher.user) {
+
+        await checkLogin();
+
+    }
+
 
     hideSplashScreen();
 
 }
 
 
-/* ==========================================
-   UTILITY FUNCTIONS
-========================================== */
+/* =========================================================
+   LOCAL STORAGE HELPERS
+========================================================= */
 
-/**
- * Shortcut for querySelector
- */
-function $(selector) {
-
-    return document.querySelector(selector);
-
-}
-
-/**
- * Shortcut for querySelectorAll
- */
-function $$(selector) {
-
-    return document.querySelectorAll(selector);
-
-}
-
-/**
- * Create DOM element
- */
-function createElement(tag, className = "", html = "") {
-
-    const element = document.createElement(tag);
-
-    if (className) {
-
-        element.className = className;
-
-    }
-
-    if (html) {
-
-        element.innerHTML = html;
-
-    }
-
-    return element;
-
-}
-
-/**
- * Escape HTML
- */
-function escapeHTML(text) {
-
-    const div = document.createElement("div");
-
-    div.textContent = text;
-
-    return div.innerHTML;
-
-}
-
-/**
- * Delay helper
- */
-function sleep(ms) {
-
-    return new Promise(resolve => setTimeout(resolve, ms));
-
-}
-
-/**
- * Generate random ID
- */
-function generateId() {
-
-    return crypto.randomUUID();
-
-}
-
-/**
- * Format date
- */
-function formatDate(date) {
-
-    return new Date(date).toLocaleString();
-
-}
-
-/**
- * Save locally
- */
-function saveLocal(key, value) {
-
-    localStorage.setItem(
-
-        key,
-
-        JSON.stringify(value)
-
-    );
-
-}
-
-/**
- * Load locally
- */
-function loadLocal(key, fallback = null) {
-
-    const value = localStorage.getItem(key);
-
-    if (!value) return fallback;
+function saveLocal(
+    key,
+    value
+) {
 
     try {
 
-        return JSON.parse(value);
+        localStorage.setItem(
+            key,
+            JSON.stringify(value)
+        );
 
-    } catch {
+    }
+
+    catch (error) {
+
+        logError(
+            error,
+            "Local Storage Save"
+        );
+
+    }
+
+}
+
+
+function loadLocal(
+    key,
+    fallback = null
+) {
+
+    try {
+
+        const value =
+            localStorage.getItem(
+                key
+            );
+
+
+        if (!value) {
+
+            return fallback;
+
+        }
+
+
+        return JSON.parse(
+            value
+        );
+
+    }
+
+    catch (error) {
+
+        logError(
+            error,
+            "Local Storage Load"
+        );
+
 
         return fallback;
 
@@ -600,51 +2308,266 @@ function loadLocal(key, fallback = null) {
 }
 
 
-/* ==========================================
-   GLOBAL ERROR HANDLING
-========================================== */
+/* =========================================================
+   UTILITY FUNCTIONS
+========================================================= */
 
-/**
- * Log application errors
- */
-function logError(error, source = "Unknown") {
+function $(selector) {
 
-    console.error(`[${source}]`, error);
+    return document.querySelector(
+        selector
+    );
 
 }
 
-/**
- * Handle unexpected errors
- */
-window.addEventListener("error", (event) => {
 
-    logError(event.error || event.message, "Window");
+function $$(selector) {
 
-    showError(
-        "An unexpected error occurred."
+    return document.querySelectorAll(
+        selector
     );
 
-});
+}
 
 
-/**
- * Handle Promise rejections
- */
-window.addEventListener("unhandledrejection", (event) => {
+function createElement(
+    tag,
+    className = "",
+    html = ""
+) {
 
-    logError(event.reason, "Promise");
+    const element =
+        document.createElement(
+            tag
+        );
 
-    showError(
-        "Something went wrong while processing your request."
+
+    if (className) {
+
+        element.className =
+            className;
+
+    }
+
+
+    if (html) {
+
+        element.innerHTML =
+            html;
+
+    }
+
+
+    return element;
+
+}
+
+
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.textContent =
+        text == null
+            ? ""
+            : String(text);
+
+
+    return div.innerHTML;
+
+}
+
+
+/* =========================================================
+   DELAY
+========================================================= */
+
+function sleep(ms) {
+
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                ms
+            )
     );
 
-});
+}
 
 
-/**
- * Safe async wrapper
- */
-async function safeExecute(fn, source = "Unknown") {
+/* =========================================================
+   RANDOM ID
+========================================================= */
+
+function generateId() {
+
+    if (
+        window.crypto &&
+        typeof window.crypto.randomUUID ===
+            "function"
+    ) {
+
+        return window.crypto.randomUUID();
+
+    }
+
+
+    return (
+        Date.now().toString(36)
+        + Math.random()
+            .toString(36)
+            .substring(2)
+    );
+
+}
+
+
+/* =========================================================
+   DATE FORMAT
+========================================================= */
+
+function formatDate(date) {
+
+    try {
+
+        return new Date(
+            date
+        ).toLocaleString();
+
+    }
+
+    catch {
+
+        return "";
+
+    }
+
+}
+
+
+/* =========================================================
+   NETWORK STATUS
+========================================================= */
+
+function isOnline() {
+
+    return navigator.onLine;
+
+}
+
+
+function updateNetworkStatus() {
+
+    Cipher.online =
+        navigator.onLine;
+
+
+    if (App.userStatus) {
+
+        App.userStatus.textContent =
+            navigator.onLine
+                ? "Online"
+                : "Offline";
+
+    }
+
+}
+
+
+window.addEventListener(
+    "offline",
+    () => {
+
+        updateNetworkStatus();
+
+
+        showWarning(
+            "You're offline. Cipher will reconnect when your connection returns."
+        );
+
+    }
+);
+
+
+window.addEventListener(
+    "online",
+    () => {
+
+        updateNetworkStatus();
+
+
+        showSuccess(
+            "Connection restored."
+        );
+
+    }
+);
+
+
+/* =========================================================
+   ERROR LOGGING
+========================================================= */
+
+function logError(
+    error,
+    source = "Unknown"
+) {
+
+    console.error(
+        `[Cipher:${source}]`,
+        error
+    );
+
+}
+
+
+/* =========================================================
+   GLOBAL ERROR HANDLING
+========================================================= */
+
+window.addEventListener(
+    "error",
+    event => {
+
+        logError(
+            event.error ||
+            event.message,
+            "Window"
+        );
+
+    }
+);
+
+
+window.addEventListener(
+    "unhandledrejection",
+    event => {
+
+        logError(
+            event.reason,
+            "Promise"
+        );
+
+    }
+);
+
+
+/* =========================================================
+   SAFE EXECUTION
+========================================================= */
+
+async function safeExecute(
+    fn,
+    source = "Unknown"
+) {
 
     try {
 
@@ -652,13 +2575,18 @@ async function safeExecute(fn, source = "Unknown") {
 
     }
 
-    catch(error){
+    catch (error) {
 
-        logError(error, source);
+        logError(
+            error,
+            source
+        );
+
 
         showError(
             "Operation failed."
         );
+
 
         return null;
 
@@ -667,116 +2595,143 @@ async function safeExecute(fn, source = "Unknown") {
 }
 
 
-/**
- * Network status
- */
+/* =========================================================
+   APPLICATION CLEANUP
+========================================================= */
 
-window.addEventListener("offline", () => {
+window.addEventListener(
+    "beforeunload",
+    () => {
 
-    showWarning(
-        "You're offline. Cipher will reconnect automatically."
-    );
+        /*
+         * Keep the current theme
+         * synchronized.
+         */
 
-});
+        if (
+            window.CipherThemes &&
+            typeof window.CipherThemes.current ===
+                "function"
+        ) {
 
+            Cipher.theme =
+                window.CipherThemes.current();
 
-window.addEventListener("online", () => {
-
-    showSuccess(
-        "Connection restored."
-    );
-
-});
-
-
-/**
- * Check if online
- */
-
-function isOnline(){
-
-    return navigator.onLine;
-
-}
+        }
 
 
-/* ==========================================
-   FINAL INITIALIZATION
-========================================== */
-
-async function bootCipher() {
-
-    try {
-
-        console.log("Starting Cipher...");
-
-        await startApplication();
-
-        console.log("Cipher Ready.");
+        saveLocal(
+            "last-chat",
+            Cipher.currentChat
+        );
 
     }
-
-    catch(error){
-
-        logError(error, "Boot");
-
-        showError("Cipher failed to start.");
-
-    }
-
-}
+);
 
 
-/* ==========================================
-   APP CLEANUP
-========================================== */
-
-window.addEventListener("beforeunload", () => {
-
-    saveLocal("cipher-theme", Cipher.theme);
-
-});
-
-
-/* ==========================================
+/* =========================================================
    AUTO SAVE
-========================================== */
+========================================================= */
 
-setInterval(() => {
+setInterval(
+    () => {
 
-    if(Cipher.initialized){
+        if (
+            Cipher.initialized
+        ) {
 
-        saveLocal("last-chat", Cipher.currentChat);
+            saveLocal(
+                "last-chat",
+                Cipher.currentChat
+            );
 
-    }
+        }
 
-},30000);
+    },
+    30000
+);
 
 
-/* ==========================================
+/* =========================================================
    APPLICATION INFO
-========================================== */
+========================================================= */
 
-Cipher.version = "2.0.0";
+Cipher.version =
+    "2.0.0";
 
-Cipher.build = "Prototype";
 
-Cipher.creator = "Fatai Quadri";
+Cipher.build =
+    "Prototype";
+
+
+Cipher.creator =
+    "Fatai Quadri";
 
 
 console.log(`
+
 =========================================
              CIPHER AI
 =========================================
 Version : ${Cipher.version}
 Creator : ${Cipher.creator}
-Status  : Ready
+Status  : Initializing
 =========================================
+
 `);
 
 
-/* ==========================================
-   START APPLICATION
-========================================== */
+/* =========================================================
+   PUBLIC APP API
+========================================================= */
 
-bootCipher();
+window.CipherApp = {
+
+    state:
+        Cipher,
+
+    openSettings:
+        openSettings,
+
+    closeSettings:
+        closeSettings,
+
+    openReminder:
+        openReminder,
+
+    closeReminder:
+        closeReminder,
+
+    toggleSidebar:
+        toggleSidebar,
+
+    closeSidebar:
+        closeSidebar,
+
+    showNotification:
+        showNotification,
+
+    showSuccess:
+        showSuccess,
+
+    showError:
+        showError,
+
+    showWarning:
+        showWarning,
+
+    showInfo:
+        showInfo,
+
+    focusInput:
+        focusMessageInput,
+
+    openFilePicker:
+        openFilePicker
+
+};
+
+
+/* =========================================================
+   END OF APP.JS
+========================================================= */
