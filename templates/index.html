@@ -4,16 +4,16 @@
 <head>
 
     <meta charset="UTF-8">
+
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
     <title>Cipher</title>
 
-    <meta name="theme-color" content="#0d0d0d">
+    <meta name="theme-color"
+          content="#0d0d0d">
 
-    <!-- =========================
-         FONTS
-    ========================== -->
+    <!-- Fonts -->
 
     <link rel="preconnect"
           href="https://fonts.googleapis.com">
@@ -22,14 +22,11 @@
           href="https://fonts.gstatic.com"
           crossorigin>
 
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
 
 
-    <!-- =========================
-         STYLES
-    ========================== -->
+    <!-- Styles -->
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
@@ -46,21 +43,18 @@
 <body>
 
 
-<!-- =========================================================
+<!-- =====================================================
      AUTHENTICATION SCREEN
-========================================================= -->
+===================================================== -->
 
 <div id="auth-screen">
 
     <div class="auth-background"></div>
 
-
     <div class="auth-box">
 
 
-        <!-- =========================
-             AUTH BRAND
-        ========================== -->
+        <!-- AUTH LOGO -->
 
         <div class="auth-logo">
 
@@ -70,7 +64,9 @@
 
             <div>
 
-                <h1>Cipher</h1>
+                <h1>
+                    Cipher
+                </h1>
 
                 <span>
                     Created by Fatai Quadri
@@ -81,9 +77,7 @@
         </div>
 
 
-        <!-- =========================
-             AUTH TITLE
-        ========================== -->
+        <!-- AUTH TITLE -->
 
         <div class="auth-title">
 
@@ -98,9 +92,7 @@
         </div>
 
 
-        <!-- =========================
-             AUTH TABS
-        ========================== -->
+        <!-- AUTH TABS -->
 
         <div class="auth-tabs">
 
@@ -125,9 +117,9 @@
 
 
 
-        <!-- =====================================================
+        <!-- =================================================
              LOGIN FORM
-        ====================================================== -->
+        ================================================== -->
 
         <div
             id="login-form"
@@ -172,7 +164,7 @@
             </div>
 
 
-            <!-- Google -->
+            <!-- GOOGLE -->
 
             <button
                 class="google-btn"
@@ -193,9 +185,9 @@
 
 
 
-        <!-- =====================================================
+        <!-- =================================================
              SIGNUP FORM
-        ====================================================== -->
+        ================================================== -->
 
         <div
             id="signup-form"
@@ -271,26 +263,23 @@
 
 
 
-<!-- =========================================================
+<!-- =====================================================
      MAIN APPLICATION
-========================================================= -->
+===================================================== -->
 
 <div id="app-screen">
 
 
-    <!-- =====================================================
+    <!-- =================================================
          SIDEBAR
-    ====================================================== -->
+    ================================================== -->
 
     <aside id="sidebar">
 
 
-        <!-- =========================
-             SIDEBAR HEADER
-        ========================== -->
+        <!-- SIDEBAR HEADER -->
 
         <div class="sidebar-header">
-
 
             <div class="sidebar-logo">
                 ¢
@@ -313,9 +302,7 @@
 
 
 
-        <!-- =========================
-             NEW CHAT
-        ========================== -->
+        <!-- NEW CHAT -->
 
         <button
             class="new-chat-btn"
@@ -333,9 +320,7 @@
 
 
 
-        <!-- =========================
-             SEARCH
-        ========================== -->
+        <!-- SEARCH -->
 
         <div class="sidebar-search">
 
@@ -349,9 +334,7 @@
 
 
 
-        <!-- =========================
-             CHAT HISTORY
-        ========================== -->
+        <!-- CHAT HISTORY -->
 
         <div
             class="chat-list"
@@ -361,15 +344,14 @@
 
 
 
-        <!-- =========================
-             SIDEBAR FOOTER
-        ========================== -->
+        <!-- SIDEBAR FOOTER -->
 
         <div class="sidebar-footer">
 
 
-            <div class="user-profile">
+            <!-- USER -->
 
+            <div class="user-profile">
 
                 <div
                     class="user-avatar"
@@ -400,14 +382,10 @@
 
 
 
-            <!-- =========================
-                 SIDEBAR CONTROLS
-            ========================== -->
+            <!-- SIDEBAR ACTIONS -->
 
             <div class="sidebar-menu">
 
-
-                <!-- Themes -->
 
                 <button
                     class="sidebar-icon-btn"
@@ -420,8 +398,6 @@
                 </button>
 
 
-                <!-- Settings -->
-
                 <button
                     class="sidebar-icon-btn"
                     id="settings-btn"
@@ -432,8 +408,6 @@
 
                 </button>
 
-
-                <!-- Logout -->
 
                 <button
                     class="sidebar-icon-btn logout"
@@ -453,25 +427,25 @@
 
 
 
-    <!-- =====================================================
+    <!-- =================================================
          MAIN CONTENT
-    ====================================================== -->
+    ================================================== -->
 
     <main id="main">
 
 
-
         <!-- =================================================
-             TOP BAR
+             TOPBAR
         ================================================== -->
 
         <header class="topbar">
 
 
-            <!-- Mobile sidebar -->
+            <!-- MOBILE SIDEBAR BUTTON -->
 
             <button
                 id="sidebar-toggle"
+                onclick="toggleSidebar()"
                 type="button"
                 aria-label="Open sidebar">
 
@@ -481,12 +455,9 @@
 
 
 
-            <!-- =========================
-                 TOPBAR BRAND
-            ========================== -->
+            <!-- TOPBAR BRAND -->
 
             <div class="topbar-brand">
-
 
                 <div class="logo-badge">
                     ¢
@@ -509,9 +480,7 @@
 
 
 
-            <!-- =========================
-                 TOPBAR ACTIONS
-            ========================== -->
+            <!-- TOPBAR ACTIONS -->
 
             <div class="topbar-actions">
 
@@ -535,12 +504,12 @@
              CHAT AREA
         ================================================== -->
 
-        <section id="chat">
+        <section
+            id="chat"
+            aria-live="polite">
 
 
-            <!-- =========================
-                 WELCOME SCREEN
-            ========================== -->
+            <!-- WELCOME -->
 
             <div class="welcome">
 
@@ -556,20 +525,16 @@
 
 
                 <p>
-                    Ask questions, solve calculations, research topics,
+                    Ask questions, solve calculations,
                     analyze documents, or start a new project.
                 </p>
 
 
 
-                <!-- =========================
-                     WELCOME ACTIONS
-                ========================== -->
+                <!-- QUICK ACTIONS -->
 
                 <div class="welcome-actions">
 
-
-                    <!-- Chat -->
 
                     <button
                         class="welcome-card"
@@ -588,8 +553,6 @@
 
 
 
-                    <!-- Research -->
-
                     <button
                         class="welcome-card"
                         type="button">
@@ -606,37 +569,17 @@
 
 
 
-                    <!-- Documents -->
-
                     <button
                         class="welcome-card"
-                        type="button">
+                        type="button"
+                        onclick="document.getElementById('file-input').click()">
 
                         <strong>
                             📄 Documents
                         </strong>
 
                         <span>
-                            Summarize PDFs and files
-                        </span>
-
-                    </button>
-
-
-
-                    <!-- Reminder -->
-
-                    <button
-                        class="welcome-card"
-                        type="button"
-                        id="reminder-card">
-
-                        <strong>
-                            ⏰ Reminders
-                        </strong>
-
-                        <span>
-                            Set a reminder for later
+                            Upload and analyze files
                         </span>
 
                     </button>
@@ -659,13 +602,24 @@
             <form id="form">
 
 
-                <!-- Attachment / Tools -->
+                <!-- FILE INPUT -->
+
+                <input
+                    type="file"
+                    id="file-input"
+                    hidden
+                    multiple
+                    accept="image/*,.pdf,.txt,.doc,.docx,.csv">
+
+
+                <!-- ATTACHMENT BUTTON -->
 
                 <button
                     type="button"
                     class="input-tool"
-                    id="input-tool"
-                    title="More options">
+                    id="upload-btn"
+                    title="Attach files"
+                    aria-label="Attach files">
 
                     +
 
@@ -673,7 +627,7 @@
 
 
 
-                <!-- Message -->
+                <!-- MESSAGE INPUT -->
 
                 <textarea
                     id="input"
@@ -683,7 +637,7 @@
 
 
 
-                <!-- Send -->
+                <!-- SEND -->
 
                 <button
                     id="send"
@@ -698,6 +652,19 @@
 
 
 
+            <!-- ATTACHMENT PREVIEW -->
+
+            <div
+                id="attachment-preview"
+                class="attachment-preview"
+                aria-live="polite">
+
+            </div>
+
+
+
+            <!-- FOOTER NOTE -->
+
             <small class="footer-note">
 
                 Cipher may make mistakes.
@@ -707,16 +674,431 @@
 
         </footer>
 
-
     </main>
 
 </div>
 
 
 
-<!-- =========================================================
+<!-- =====================================================
+     THEME PANEL
+===================================================== -->
+
+<div
+    id="theme-panel"
+    class="modal-panel"
+    style="display:none;">
+
+
+    <div class="panel-header">
+
+        <div>
+
+            <h3>
+                Appearance
+            </h3>
+
+            <span>
+                Choose your Cipher theme
+            </span>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="panel-close"
+            data-close-panel="theme-panel">
+
+            ×
+
+        </button>
+
+    </div>
+
+
+
+    <div class="theme-options">
+
+
+        <button
+            class="theme-option"
+            data-theme="midnight"
+            type="button">
+
+            <span class="theme-preview midnight"></span>
+
+            <span>
+                Midnight
+            </span>
+
+        </button>
+
+
+        <button
+            class="theme-option"
+            data-theme="emerald"
+            type="button">
+
+            <span class="theme-preview emerald"></span>
+
+            <span>
+                Emerald
+            </span>
+
+        </button>
+
+
+        <button
+            class="theme-option"
+            data-theme="cyber"
+            type="button">
+
+            <span class="theme-preview cyber"></span>
+
+            <span>
+                Cyber
+            </span>
+
+        </button>
+
+
+        <button
+            class="theme-option"
+            data-theme="amoled"
+            type="button">
+
+            <span class="theme-preview amoled"></span>
+
+            <span>
+                AMOLED Black
+            </span>
+
+        </button>
+
+
+        <button
+            class="theme-option"
+            data-theme="ocean"
+            type="button">
+
+            <span class="theme-preview ocean"></span>
+
+            <span>
+                Ocean
+            </span>
+
+        </button>
+
+
+        <button
+            class="theme-option"
+            data-theme="sunset"
+            type="button">
+
+            <span class="theme-preview sunset"></span>
+
+            <span>
+                Sunset
+            </span>
+
+        </button>
+
+
+        <button
+            class="theme-option"
+            data-theme="light"
+            type="button">
+
+            <span class="theme-preview light"></span>
+
+            <span>
+                Light
+            </span>
+
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     SETTINGS PANEL
+===================================================== -->
+
+<div
+    id="settings-panel"
+    class="modal-panel"
+    style="display:none;">
+
+
+    <div class="panel-header">
+
+        <div>
+
+            <h3>
+                Settings
+            </h3>
+
+            <span>
+                Manage your Cipher workspace
+            </span>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="panel-close"
+            data-close-panel="settings-panel">
+
+            ×
+
+        </button>
+
+    </div>
+
+
+
+    <div class="settings-content">
+
+
+        <!-- ACCOUNT -->
+
+        <div class="settings-section">
+
+            <h4>
+                Account
+            </h4>
+
+
+            <div class="setting-row">
+
+                <div>
+
+                    <strong>
+                        Username
+                    </strong>
+
+                    <small
+                        id="settings-username">
+                        User
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <div class="setting-row">
+
+                <div>
+
+                    <strong>
+                        Email
+                    </strong>
+
+                    <small
+                        id="settings-email">
+                        —
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- APPEARANCE -->
+
+        <div class="settings-section">
+
+            <h4>
+                Appearance
+            </h4>
+
+
+            <button
+                class="settings-action"
+                id="settings-theme-btn"
+                type="button">
+
+                <span>
+                    🎨 Theme
+                </span>
+
+                <span>
+                    →
+                </span>
+
+            </button>
+
+        </div>
+
+
+
+        <!-- REMINDERS -->
+
+        <div class="settings-section">
+
+            <h4>
+                Productivity
+            </h4>
+
+
+            <button
+                class="settings-action"
+                id="open-reminder-btn"
+                type="button">
+
+                <span>
+                    🔔 Reminders
+                </span>
+
+                <span>
+                    →
+                </span>
+
+            </button>
+
+        </div>
+
+
+
+        <!-- SIGN OUT -->
+
+        <div class="settings-section">
+
+            <button
+                class="settings-action danger"
+                onclick="doLogout()"
+                type="button">
+
+                <span>
+                    ⎋ Sign out
+                </span>
+
+                <span>
+                    →
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     REMINDER PANEL
+===================================================== -->
+
+<div
+    id="reminder-panel"
+    class="modal-panel"
+    style="display:none;">
+
+
+    <div class="panel-header">
+
+        <div>
+
+            <h3>
+                Create Reminder
+            </h3>
+
+            <span>
+                Let Cipher remind you later
+            </span>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="panel-close"
+            data-close-panel="reminder-panel">
+
+            ×
+
+        </button>
+
+    </div>
+
+
+
+    <div class="reminder-form">
+
+
+        <label for="reminder-title">
+            Reminder
+        </label>
+
+
+        <input
+            type="text"
+            id="reminder-title"
+            placeholder="What should Cipher remind you about?">
+
+
+        <label for="reminder-date">
+            Date
+        </label>
+
+
+        <input
+            type="date"
+            id="reminder-date">
+
+
+        <label for="reminder-time">
+            Time
+        </label>
+
+
+        <input
+            type="time"
+            id="reminder-time">
+
+
+        <button
+            type="button"
+            class="auth-btn"
+            id="save-reminder-btn">
+
+            Create Reminder
+
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     MODAL OVERLAY
+===================================================== -->
+
+<div
+    id="modal-overlay"
+    class="modal-overlay"
+    style="display:none;">
+
+</div>
+
+
+
+<!-- =====================================================
      JAVASCRIPT
-========================================================= -->
+===================================================== -->
 
 <script
     src="{{ url_for('static', filename='js/app.js') }}">
@@ -741,7 +1123,6 @@
 <script
     src="{{ url_for('static', filename='js/auth.js') }}">
 </script>
-
 
 </body>
 
