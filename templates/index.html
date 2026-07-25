@@ -4,90 +4,41 @@
 <head>
 
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0">
-
-    <meta
-        name="theme-color"
-        content="#0b0f19">
-
-    <meta
-        name="description"
-        content="Cipher — an AI workspace created by Fatai Quadri.">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>Cipher</title>
 
+    <meta name="theme-color" content="#0d0d0d">
 
-    <!-- =================================================
+    <!-- =========================
          FONTS
-    ================================================== -->
+    ========================== -->
 
     <link rel="preconnect"
-        href="https://fonts.googleapis.com">
+          href="https://fonts.googleapis.com">
 
     <link rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin>
+          href="https://fonts.gstatic.com"
+          crossorigin>
 
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 
 
-    <!-- =================================================
+    <!-- =========================
          STYLES
-    ================================================== -->
+    ========================== -->
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/themes.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/themes.css') }}">
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/animations.css') }}">
-
-
-    <!-- =================================================
-         PREVENT THEME FLASH
-    ================================================== -->
-
-    <script>
-
-        (function () {
-
-            try {
-
-                const savedTheme =
-                    localStorage.getItem("cipher-theme");
-
-                if (savedTheme) {
-
-                    document.documentElement
-                        .setAttribute(
-                            "data-theme",
-                            savedTheme
-                        );
-
-                }
-
-            } catch (error) {
-
-                console.warn(
-                    "Cipher theme preload failed.",
-                    error
-                );
-
-            }
-
-        })();
-
-    </script>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/animations.css') }}">
 
 </head>
 
@@ -95,9 +46,9 @@
 <body>
 
 
-<!-- =====================================================
+<!-- =========================================================
      AUTHENTICATION SCREEN
-====================================================== -->
+========================================================= -->
 
 <div id="auth-screen">
 
@@ -107,27 +58,19 @@
     <div class="auth-box">
 
 
-        <!-- =================================================
-             AUTH LOGO
-        ================================================== -->
+        <!-- =========================
+             AUTH BRAND
+        ========================== -->
 
         <div class="auth-logo">
 
             <div class="logo-badge">
-
-                <img
-                    src="{{ url_for('static', filename='images/logo.jpg') }}"
-                    alt="Cipher logo"
-                    class="cipher-logo">
-
+                ¢
             </div>
-
 
             <div>
 
-                <h1>
-                    Cipher
-                </h1>
+                <h1>Cipher</h1>
 
                 <span>
                     Created by Fatai Quadri
@@ -138,9 +81,9 @@
         </div>
 
 
-        <!-- =================================================
+        <!-- =========================
              AUTH TITLE
-        ================================================== -->
+        ========================== -->
 
         <div class="auth-title">
 
@@ -155,15 +98,14 @@
         </div>
 
 
-        <!-- =================================================
+        <!-- =========================
              AUTH TABS
-        ================================================== -->
+        ========================== -->
 
         <div class="auth-tabs">
 
             <button
                 class="auth-tab active"
-                type="button"
                 onclick="showTab('login')">
 
                 Log in
@@ -173,7 +115,6 @@
 
             <button
                 class="auth-tab"
-                type="button"
                 onclick="showTab('signup')">
 
                 Sign up
@@ -183,9 +124,10 @@
         </div>
 
 
-        <!-- =================================================
+
+        <!-- =====================================================
              LOGIN FORM
-        ================================================== -->
+        ====================================================== -->
 
         <div
             id="login-form"
@@ -214,7 +156,6 @@
 
             <button
                 class="auth-btn"
-                type="button"
                 onclick="doLogin()">
 
                 Log in
@@ -231,20 +172,16 @@
             </div>
 
 
-            <!-- Google Login -->
+            <!-- Google -->
 
             <button
                 class="google-btn"
                 id="google-login-btn"
                 type="button">
 
-                <span
-                    class="google-icon"
-                    aria-hidden="true">
-
-                    G
-
-                </span>
+                <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google">
 
                 <span>
                     Continue with Google
@@ -255,9 +192,10 @@
         </div>
 
 
-        <!-- =================================================
+
+        <!-- =====================================================
              SIGNUP FORM
-        ================================================== -->
+        ====================================================== -->
 
         <div
             id="signup-form"
@@ -294,7 +232,6 @@
 
             <button
                 class="auth-btn"
-                type="button"
                 onclick="doSignup()">
 
                 Create account
@@ -311,20 +248,14 @@
             </div>
 
 
-            <!-- Google Signup -->
-
             <button
                 class="google-btn"
                 id="google-signup-btn"
                 type="button">
 
-                <span
-                    class="google-icon"
-                    aria-hidden="true">
-
-                    G
-
-                </span>
+                <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google">
 
                 <span>
                     Sign up with Google
@@ -340,34 +271,29 @@
 
 
 
-<!-- =====================================================
+<!-- =========================================================
      MAIN APPLICATION
-====================================================== -->
+========================================================= -->
 
 <div id="app-screen">
 
 
-    <!-- =================================================
+    <!-- =====================================================
          SIDEBAR
-    ================================================== -->
+    ====================================================== -->
 
     <aside id="sidebar">
 
 
-        <!-- =================================================
+        <!-- =========================
              SIDEBAR HEADER
-        ================================================== -->
+        ========================== -->
 
         <div class="sidebar-header">
 
 
             <div class="sidebar-logo">
-
-                <img
-                    src="{{ url_for('static', filename='images/logo.jpg') }}"
-                    alt="Cipher logo"
-                    class="cipher-logo">
-
+                ¢
             </div>
 
 
@@ -386,14 +312,13 @@
         </div>
 
 
-        <!-- =================================================
+
+        <!-- =========================
              NEW CHAT
-        ================================================== -->
+        ========================== -->
 
         <button
             class="new-chat-btn"
-            id="new-chat-btn"
-            type="button"
             onclick="startNewChat()">
 
             <span>
@@ -407,9 +332,10 @@
         </button>
 
 
-        <!-- =================================================
+
+        <!-- =========================
              SEARCH
-        ================================================== -->
+        ========================== -->
 
         <div class="sidebar-search">
 
@@ -422,9 +348,10 @@
         </div>
 
 
-        <!-- =================================================
+
+        <!-- =========================
              CHAT HISTORY
-        ================================================== -->
+        ========================== -->
 
         <div
             class="chat-list"
@@ -433,14 +360,13 @@
         </div>
 
 
-        <!-- =================================================
+
+        <!-- =========================
              SIDEBAR FOOTER
-        ================================================== -->
+        ========================== -->
 
         <div class="sidebar-footer">
 
-
-            <!-- USER PROFILE -->
 
             <div class="user-profile">
 
@@ -464,12 +390,8 @@
 
                     </span>
 
-
-                    <small
-                        id="user-status">
-
+                    <small>
                         Online
-
                     </small>
 
                 </div>
@@ -477,20 +399,21 @@
             </div>
 
 
-            <!-- SIDEBAR CONTROLS -->
+
+            <!-- =========================
+                 SIDEBAR CONTROLS
+            ========================== -->
 
             <div class="sidebar-menu">
 
 
-                <!-- Theme -->
+                <!-- Themes -->
 
                 <button
                     class="sidebar-icon-btn"
                     id="theme-btn"
-                    type="button"
-                    data-theme-trigger
                     title="Themes"
-                    aria-label="Open themes">
+                    type="button">
 
                     🎨
 
@@ -502,9 +425,8 @@
                 <button
                     class="sidebar-icon-btn"
                     id="settings-btn"
-                    type="button"
                     title="Settings"
-                    aria-label="Open settings">
+                    type="button">
 
                     ⚙️
 
@@ -515,11 +437,9 @@
 
                 <button
                     class="sidebar-icon-btn logout"
-                    id="logout-btn"
-                    type="button"
                     onclick="doLogout()"
                     title="Sign out"
-                    aria-label="Sign out">
+                    type="button">
 
                     ⎋
 
@@ -533,45 +453,43 @@
 
 
 
-    <!-- =================================================
+    <!-- =====================================================
          MAIN CONTENT
-    ================================================== -->
+    ====================================================== -->
 
     <main id="main">
 
 
+
         <!-- =================================================
-             TOPBAR
+             TOP BAR
         ================================================== -->
 
         <header class="topbar">
 
 
-            <!-- Sidebar Toggle -->
+            <!-- Mobile sidebar -->
 
             <button
                 id="sidebar-toggle"
                 type="button"
-                onclick="toggleSidebar()"
-                aria-label="Toggle sidebar">
+                aria-label="Open sidebar">
 
                 ☰
 
             </button>
 
 
-            <!-- Brand -->
+
+            <!-- =========================
+                 TOPBAR BRAND
+            ========================== -->
 
             <div class="topbar-brand">
 
 
                 <div class="logo-badge">
-
-                    <img
-                        src="{{ url_for('static', filename='images/logo.jpg') }}"
-                        alt="Cipher logo"
-                        class="cipher-logo">
-
+                    ¢
                 </div>
 
 
@@ -590,40 +508,20 @@
             </div>
 
 
-            <!-- Topbar Actions -->
+
+            <!-- =========================
+                 TOPBAR ACTIONS
+            ========================== -->
 
             <div class="topbar-actions">
 
 
-                <!-- Theme -->
-
                 <button
                     class="topbar-btn"
                     id="theme-switch"
-                    type="button"
-                    data-theme-trigger
-                    title="Change theme">
+                    type="button">
 
-                    🎨
-                    <span>
-                        Theme
-                    </span>
-
-                </button>
-
-
-                <!-- Reminder -->
-
-                <button
-                    class="topbar-btn"
-                    id="reminder-btn"
-                    type="button"
-                    title="Set a reminder">
-
-                    ⏰
-                    <span>
-                        Reminder
-                    </span>
+                    Theme
 
                 </button>
 
@@ -637,25 +535,18 @@
              CHAT AREA
         ================================================== -->
 
-        <section
-            id="chat"
-            aria-live="polite">
+        <section id="chat">
 
 
-            <!-- =================================================
-                 WELCOME
-            ================================================== -->
+            <!-- =========================
+                 WELCOME SCREEN
+            ========================== -->
 
             <div class="welcome">
 
 
                 <div class="welcome-logo">
-
-                    <img
-                        src="{{ url_for('static', filename='images/logo.jpg') }}"
-                        alt="Cipher logo"
-                        class="cipher-logo">
-
+                    ¢
                 </div>
 
 
@@ -665,14 +556,15 @@
 
 
                 <p>
-                    Ask questions, solve calculations, analyze documents,
-                    research complex topics, or start a new project.
+                    Ask questions, solve calculations, research topics,
+                    analyze documents, or start a new project.
                 </p>
 
 
-                <!-- =================================================
+
+                <!-- =========================
                      WELCOME ACTIONS
-                ================================================== -->
+                ========================== -->
 
                 <div class="welcome-actions">
 
@@ -682,7 +574,7 @@
                     <button
                         class="welcome-card"
                         type="button"
-                        data-action="chat">
+                        onclick="startNewChat()">
 
                         <strong>
                             💬 Chat
@@ -695,12 +587,12 @@
                     </button>
 
 
+
                     <!-- Research -->
 
                     <button
                         class="welcome-card"
-                        type="button"
-                        data-action="research">
+                        type="button">
 
                         <strong>
                             🧠 Research
@@ -713,12 +605,12 @@
                     </button>
 
 
+
                     <!-- Documents -->
 
                     <button
                         class="welcome-card"
-                        type="button"
-                        data-action="documents">
+                        type="button">
 
                         <strong>
                             📄 Documents
@@ -731,15 +623,16 @@
                     </button>
 
 
+
                     <!-- Reminder -->
 
                     <button
                         class="welcome-card"
                         type="button"
-                        data-action="reminder">
+                        id="reminder-card">
 
                         <strong>
-                            ⏰ Reminder
+                            ⏰ Reminders
                         </strong>
 
                         <span>
@@ -766,27 +659,18 @@
             <form id="form">
 
 
-                <!-- Attachment -->
+                <!-- Attachment / Tools -->
 
                 <button
                     type="button"
                     class="input-tool"
-                    id="attachment-btn"
-                    title="Attach a file"
-                    aria-label="Attach a file">
+                    id="input-tool"
+                    title="More options">
 
                     +
 
                 </button>
 
-
-                <!-- Hidden File Input -->
-
-                <input
-                    type="file"
-                    id="file-input"
-                    hidden
-                    multiple>
 
 
                 <!-- Message -->
@@ -798,17 +682,20 @@
                     autocomplete="off"></textarea>
 
 
+
                 <!-- Send -->
 
                 <button
                     id="send"
-                    type="submit">
+                    type="submit"
+                    aria-label="Send message">
 
                     Send
 
                 </button>
 
             </form>
+
 
 
             <small class="footer-note">
@@ -820,445 +707,16 @@
 
         </footer>
 
+
     </main>
 
 </div>
 
 
 
-<!-- =====================================================
-     REMINDER MODAL
-====================================================== -->
-
-<div
-    id="reminder-modal"
-    class="modal-overlay"
-    aria-hidden="true">
-
-
-    <div
-        class="modal-card"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="reminder-title">
-
-
-        <div class="modal-header">
-
-            <div>
-
-                <h2 id="reminder-title">
-                    Set a Reminder
-                </h2>
-
-                <p>
-                    Tell Cipher what you want to remember.
-                </p>
-
-            </div>
-
-
-            <button
-                type="button"
-                class="modal-close"
-                id="close-reminder"
-                aria-label="Close reminder">
-
-                ×
-
-            </button>
-
-        </div>
-
-
-        <form id="reminder-form">
-
-
-            <!-- Reminder message -->
-
-            <label for="reminder-text">
-
-                What should I remind you about?
-
-            </label>
-
-
-            <input
-                type="text"
-                id="reminder-text"
-                name="reminder_text"
-                placeholder="e.g. Read my chemistry notes"
-                required>
-
-
-            <!-- Reminder date -->
-
-            <label for="reminder-date">
-
-                Date
-
-            </label>
-
-
-            <input
-                type="date"
-                id="reminder-date"
-                name="reminder_date"
-                required>
-
-
-            <!-- Reminder time -->
-
-            <label for="reminder-time">
-
-                Time
-
-            </label>
-
-
-            <input
-                type="time"
-                id="reminder-time"
-                name="reminder_time"
-                required>
-
-
-            <!-- Reminder notification -->
-
-            <label for="reminder-notification">
-
-                Notification
-
-            </label>
-
-
-            <select
-                id="reminder-notification"
-                name="notification_type">
-
-                <option value="in_app">
-                    Cipher notification
-                </option>
-
-                <option value="browser">
-                    Browser notification
-                </option>
-
-            </select>
-
-
-            <div
-                id="reminder-error"
-                class="form-error">
-            </div>
-
-
-            <div class="modal-actions">
-
-                <button
-                    type="button"
-                    class="secondary-btn"
-                    id="cancel-reminder">
-
-                    Cancel
-
-                </button>
-
-
-                <button
-                    type="submit"
-                    class="primary-btn">
-
-                    Set Reminder
-
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
-
-
-
-<!-- =====================================================
-     SETTINGS MODAL
-====================================================== -->
-
-<div
-    id="settings-modal"
-    class="modal-overlay"
-    aria-hidden="true">
-
-
-    <div
-        class="modal-card settings-card"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="settings-title">
-
-
-        <div class="modal-header">
-
-            <div>
-
-                <h2 id="settings-title">
-                    Cipher Settings
-                </h2>
-
-                <p>
-                    Customize your Cipher workspace.
-                </p>
-
-            </div>
-
-
-            <button
-                type="button"
-                class="modal-close"
-                id="close-settings"
-                aria-label="Close settings">
-
-                ×
-
-            </button>
-
-        </div>
-
-
-        <!-- =================================================
-             SETTINGS CONTENT
-        ================================================== -->
-
-        <div class="settings-content">
-
-
-            <!-- Appearance -->
-
-            <section class="settings-section">
-
-                <h3>
-                    Appearance
-                </h3>
-
-
-                <div class="setting-row">
-
-                    <div>
-
-                        <strong>
-                            Font Size
-                        </strong>
-
-                        <small>
-                            Adjust the interface text size.
-                        </small>
-
-                    </div>
-
-
-                    <select
-                        id="font-size-setting">
-
-                        <option value="small">
-                            Small
-                        </option>
-
-                        <option value="medium" selected>
-                            Medium
-                        </option>
-
-                        <option value="large">
-                            Large
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="setting-row">
-
-                    <div>
-
-                        <strong>
-                            Interface Density
-                        </strong>
-
-                        <small>
-                            Control the spacing in Cipher.
-                        </small>
-
-                    </div>
-
-
-                    <select
-                        id="density-setting">
-
-                        <option value="compact">
-                            Compact
-                        </option>
-
-                        <option
-                            value="comfortable"
-                            selected>
-
-                            Comfortable
-
-                        </option>
-
-                        <option value="spacious">
-                            Spacious
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="setting-row">
-
-                    <div>
-
-                        <strong>
-                            Message Style
-                        </strong>
-
-                        <small>
-                            Change the shape of message bubbles.
-                        </small>
-
-                    </div>
-
-
-                    <select
-                        id="message-style-setting">
-
-                        <option
-                            value="rounded"
-                            selected>
-
-                            Rounded
-
-                        </option>
-
-                        <option value="soft">
-                            Soft
-                        </option>
-
-                        <option value="square">
-                            Square
-                        </option>
-
-                    </select>
-
-                </div>
-
-            </section>
-
-
-            <!-- Memory -->
-
-            <section class="settings-section">
-
-                <h3>
-                    Memory
-                </h3>
-
-
-                <div class="setting-row">
-
-                    <div>
-
-                        <strong>
-                            Cipher Memory
-                        </strong>
-
-                        <small>
-                            Manage information Cipher remembers.
-                        </small>
-
-                    </div>
-
-
-                    <button
-                        type="button"
-                        class="secondary-btn"
-                        id="memory-settings-btn">
-
-                        Manage
-
-                    </button>
-
-                </div>
-
-            </section>
-
-
-            <!-- Data -->
-
-            <section class="settings-section">
-
-                <h3>
-                    Data
-                </h3>
-
-
-                <div class="setting-row">
-
-                    <div>
-
-                        <strong>
-                            Clear Local Preferences
-                        </strong>
-
-                        <small>
-                            Reset saved theme and appearance preferences.
-                        </small>
-
-                    </div>
-
-
-                    <button
-                        type="button"
-                        class="secondary-btn"
-                        id="reset-preferences-btn">
-
-                        Reset
-
-                    </button>
-
-                </div>
-
-            </section>
-
-        </div>
-
-
-        <div class="modal-actions">
-
-            <button
-                type="button"
-                class="primary-btn"
-                id="close-settings-bottom">
-
-                Done
-
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-
-<!-- =====================================================
+<!-- =========================================================
      JAVASCRIPT
-====================================================== -->
+========================================================= -->
 
 <script
     src="{{ url_for('static', filename='js/app.js') }}">
