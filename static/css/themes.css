@@ -1,34 +1,49 @@
-
 /* ===================================================
    CIPHER THEMES
+   Complete Theme & Appearance System
 =================================================== */
 
 
 /* ===================================================
-   DEFAULT (MIDNIGHT)
+   DEFAULT — MIDNIGHT
 =================================================== */
 
-:root{
+:root {
 
-    --bg-primary:#0b0f19;
+    --bg-primary: #0b0f19;
 
-    --bg-secondary:#111827;
+    --bg-secondary: #111827;
 
-    --bg-card:#1a2233;
+    --bg-card: #1a2233;
 
-    --bg-hover:#202b42;
+    --bg-hover: #202b42;
 
-    --border:#2c3b55;
+    --border: #2c3b55;
 
-    --accent:#2dd4bf;
+    --accent: #2dd4bf;
 
-    --accent-dark:#14b8a6;
+    --accent-dark: #14b8a6;
 
-    --text-primary:#ffffff;
+    --text-primary: #ffffff;
 
-    --text-secondary:#9ca3af;
+    --text-secondary: #9ca3af;
 
-    --text-muted:#6b7280;
+    --text-muted: #6b7280;
+
+
+    /* Appearance system */
+
+    --cipher-font-scale: 1;
+
+    --cipher-message-gap: 16px;
+
+    --cipher-message-padding: 12px 16px;
+
+    --cipher-message-radius: 18px;
+
+    --cipher-background-opacity: 1;
+
+    --cipher-panel-opacity: 1;
 
 }
 
@@ -37,25 +52,27 @@
    EMERALD
 =================================================== */
 
-[data-theme="emerald"]{
+[data-theme="emerald"] {
 
-    --bg-primary:#08110d;
+    --bg-primary: #08110d;
 
-    --bg-secondary:#0f1c16;
+    --bg-secondary: #0f1c16;
 
-    --bg-card:#13251d;
+    --bg-card: #13251d;
 
-    --bg-hover:#1a3228;
+    --bg-hover: #1a3228;
 
-    --border:#29503d;
+    --border: #29503d;
 
-    --accent:#34d399;
+    --accent: #34d399;
 
-    --accent-dark:#10b981;
+    --accent-dark: #10b981;
 
-    --text-primary:#ffffff;
+    --text-primary: #ffffff;
 
-    --text-secondary:#b5c9c1;
+    --text-secondary: #b5c9c1;
+
+    --text-muted: #78968a;
 
 }
 
@@ -64,25 +81,27 @@
    CYBER
 =================================================== */
 
-[data-theme="cyber"]{
+[data-theme="cyber"] {
 
-    --bg-primary:#090812;
+    --bg-primary: #090812;
 
-    --bg-secondary:#121222;
+    --bg-secondary: #121222;
 
-    --bg-card:#1a1b33;
+    --bg-card: #1a1b33;
 
-    --bg-hover:#23264a;
+    --bg-hover: #23264a;
 
-    --border:#40466f;
+    --border: #40466f;
 
-    --accent:#7c3aed;
+    --accent: #7c3aed;
 
-    --accent-dark:#9333ea;
+    --accent-dark: #9333ea;
 
-    --text-primary:#ffffff;
+    --text-primary: #ffffff;
 
-    --text-secondary:#c6c6e6;
+    --text-secondary: #c6c6e6;
+
+    --text-muted: #8989ad;
 
 }
 
@@ -91,25 +110,27 @@
    AMOLED BLACK
 =================================================== */
 
-[data-theme="amoled"]{
+[data-theme="amoled"] {
 
-    --bg-primary:#000000;
+    --bg-primary: #000000;
 
-    --bg-secondary:#050505;
+    --bg-secondary: #050505;
 
-    --bg-card:#0c0c0c;
+    --bg-card: #0c0c0c;
 
-    --bg-hover:#161616;
+    --bg-hover: #161616;
 
-    --border:#202020;
+    --border: #202020;
 
-    --accent:#2dd4bf;
+    --accent: #2dd4bf;
 
-    --accent-dark:#14b8a6;
+    --accent-dark: #14b8a6;
 
-    --text-primary:#ffffff;
+    --text-primary: #ffffff;
 
-    --text-secondary:#9ca3af;
+    --text-secondary: #9ca3af;
+
+    --text-muted: #5f5f5f;
 
 }
 
@@ -118,25 +139,27 @@
    OCEAN
 =================================================== */
 
-[data-theme="ocean"]{
+[data-theme="ocean"] {
 
-    --bg-primary:#071923;
+    --bg-primary: #071923;
 
-    --bg-secondary:#0d2433;
+    --bg-secondary: #0d2433;
 
-    --bg-card:#163447;
+    --bg-card: #163447;
 
-    --bg-hover:#21495f;
+    --bg-hover: #21495f;
 
-    --border:#32627e;
+    --border: #32627e;
 
-    --accent:#38bdf8;
+    --accent: #38bdf8;
 
-    --accent-dark:#0ea5e9;
+    --accent-dark: #0ea5e9;
 
-    --text-primary:#ffffff;
+    --text-primary: #ffffff;
 
-    --text-secondary:#c5d7e4;
+    --text-secondary: #c5d7e4;
+
+    --text-muted: #7897a8;
 
 }
 
@@ -145,25 +168,27 @@
    SUNSET
 =================================================== */
 
-[data-theme="sunset"]{
+[data-theme="sunset"] {
 
-    --bg-primary:#22120d;
+    --bg-primary: #22120d;
 
-    --bg-secondary:#301a13;
+    --bg-secondary: #301a13;
 
-    --bg-card:#44241a;
+    --bg-card: #44241a;
 
-    --bg-hover:#5b3324;
+    --bg-hover: #5b3324;
 
-    --border:#7a4b35;
+    --border: #7a4b35;
 
-    --accent:#fb923c;
+    --accent: #fb923c;
 
-    --accent-dark:#f97316;
+    --accent-dark: #f97316;
 
-    --text-primary:#ffffff;
+    --text-primary: #ffffff;
 
-    --text-secondary:#d8c0b4;
+    --text-secondary: #d8c0b4;
+
+    --text-muted: #a98370;
 
 }
 
@@ -172,27 +197,27 @@
    LIGHT
 =================================================== */
 
-[data-theme="light"]{
+[data-theme="light"] {
 
-    --bg-primary:#f6f7fb;
+    --bg-primary: #f6f7fb;
 
-    --bg-secondary:#ffffff;
+    --bg-secondary: #ffffff;
 
-    --bg-card:#f1f5f9;
+    --bg-card: #f1f5f9;
 
-    --bg-hover:#e5e7eb;
+    --bg-hover: #e5e7eb;
 
-    --border:#d1d5db;
+    --border: #d1d5db;
 
-    --accent:#14b8a6;
+    --accent: #14b8a6;
 
-    --accent-dark:#0f766e;
+    --accent-dark: #0f766e;
 
-    --text-primary:#111827;
+    --text-primary: #111827;
 
-    --text-secondary:#4b5563;
+    --text-secondary: #4b5563;
 
-    --text-muted:#6b7280;
+    --text-muted: #6b7280;
 
 }
 
@@ -206,13 +231,16 @@ body,
 #sidebar,
 #main,
 .topbar,
+header,
 .auth-box,
 .card,
 .chat-item,
 .msg,
 button,
 input,
-textarea{
+textarea,
+.cipher-theme-menu,
+.theme-option {
 
     transition:
         background-color .35s ease,
@@ -224,35 +252,53 @@ textarea{
 
 
 /* ===================================================
+   THEME TRANSITION CLASS
+=================================================== */
+
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+
+    transition:
+        background-color .3s ease !important,
+        color .3s ease !important,
+        border-color .3s ease !important,
+        box-shadow .3s ease !important;
+
+}
+
+
+/* ===================================================
    THEME HELPERS
 =================================================== */
 
-.theme-midnight{
-    color:#2dd4bf;
+.theme-midnight {
+    color: #2dd4bf;
 }
 
-.theme-emerald{
-    color:#34d399;
+.theme-emerald {
+    color: #34d399;
 }
 
-.theme-cyber{
-    color:#9333ea;
+.theme-cyber {
+    color: #9333ea;
 }
 
-.theme-ocean{
-    color:#38bdf8;
+.theme-ocean {
+    color: #38bdf8;
 }
 
-.theme-sunset{
-    color:#fb923c;
+.theme-sunset {
+    color: #fb923c;
 }
 
-.theme-amoled{
-    color:#ffffff;
+.theme-amoled {
+    color: #ffffff;
 }
 
-.theme-light{
-    color:#0f766e;
+.theme-light {
+    color: #0f766e;
 }
 
 
@@ -260,70 +306,461 @@ textarea{
    THEME BUTTONS
 =================================================== */
 
-.theme-option{
+.theme-option {
 
-    display:flex;
+    display: flex;
 
-    align-items:center;
+    align-items: center;
 
-    gap:12px;
+    gap: 12px;
 
-    padding:14px;
+    width: 100%;
 
-    border-radius:14px;
+    padding: 12px 14px;
 
-    cursor:pointer;
+    border-radius: 12px;
 
-    border:1px solid transparent;
+    cursor: pointer;
 
-}
+    border: 1px solid transparent;
 
-.theme-option:hover{
+    background: transparent;
 
-    background:var(--bg-hover);
+    color: var(--text-primary);
 
-    border-color:var(--border);
+    font-family: inherit;
 
-}
-
-.theme-preview{
-
-    width:18px;
-
-    height:18px;
-
-    border-radius:50%;
+    text-align: left;
 
 }
 
-.theme-preview.midnight{
-    background:#2dd4bf;
+
+.theme-option:hover {
+
+    background: var(--bg-hover);
+
+    border-color: var(--border);
+
 }
 
-.theme-preview.emerald{
-    background:#34d399;
+
+.theme-option.active {
+
+    background: var(--bg-hover);
+
+    border-color: var(--accent);
+
 }
 
-.theme-preview.cyber{
-    background:#9333ea;
+
+.theme-option-icon {
+
+    width: 24px;
+
+    min-width: 24px;
+
+    text-align: center;
+
 }
 
-.theme-preview.ocean{
-    background:#38bdf8;
+
+.theme-option-name {
+
+    flex: 1;
+
+    color: var(--text-primary);
+
 }
 
-.theme-preview.sunset{
-    background:#fb923c;
+
+.theme-option-check {
+
+    color: var(--accent);
+
+    font-weight: 700;
+
+    opacity: 0;
+
 }
 
-.theme-preview.amoled{
-    background:#000000;
-    border:1px solid #444;
+
+.theme-option.active
+.theme-option-check {
+
+    opacity: 1;
+
 }
 
-.theme-preview.light{
-    background:#f3f4f6;
-    border:1px solid #bbb;
+
+/* ===================================================
+   THEME PREVIEWS
+=================================================== */
+
+.theme-preview {
+
+    width: 18px;
+
+    height: 18px;
+
+    min-width: 18px;
+
+    border-radius: 50%;
+
+}
+
+
+.theme-preview.midnight {
+
+    background: #2dd4bf;
+
+}
+
+
+.theme-preview.emerald {
+
+    background: #34d399;
+
+}
+
+
+.theme-preview.cyber {
+
+    background: #9333ea;
+
+}
+
+
+.theme-preview.ocean {
+
+    background: #38bdf8;
+
+}
+
+
+.theme-preview.sunset {
+
+    background: #fb923c;
+
+}
+
+
+.theme-preview.amoled {
+
+    background: #000000;
+
+    border: 1px solid #444;
+
+}
+
+
+.theme-preview.light {
+
+    background: #f3f4f6;
+
+    border: 1px solid #bbb;
+
+}
+
+
+/* ===================================================
+   CIPHER THEME MENU
+=================================================== */
+
+.cipher-theme-menu {
+
+    display: none;
+
+    position: fixed;
+
+    min-width: 210px;
+
+    max-width: calc(100vw - 20px);
+
+    padding: 8px;
+
+    background: var(--bg-secondary);
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 14px 40px rgba(0, 0, 0, .35);
+
+    z-index: 9999;
+
+}
+
+
+.cipher-theme-menu.open {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 3px;
+
+}
+
+
+/* ===================================================
+   FONT SIZE SYSTEM
+=================================================== */
+
+:root[data-font-size="small"] {
+
+    --cipher-font-scale: .92;
+
+}
+
+
+:root[data-font-size="medium"] {
+
+    --cipher-font-scale: 1;
+
+}
+
+
+:root[data-font-size="large"] {
+
+    --cipher-font-scale: 1.08;
+
+}
+
+
+/* ===================================================
+   DENSITY SYSTEM
+=================================================== */
+
+:root[data-density="compact"] {
+
+    --cipher-message-gap: 10px;
+
+    --cipher-message-padding: 9px 13px;
+
+}
+
+
+:root[data-density="comfortable"] {
+
+    --cipher-message-gap: 16px;
+
+    --cipher-message-padding: 12px 16px;
+
+}
+
+
+:root[data-density="spacious"] {
+
+    --cipher-message-gap: 22px;
+
+    --cipher-message-padding: 15px 18px;
+
+}
+
+
+/* ===================================================
+   MESSAGE STYLE SYSTEM
+=================================================== */
+
+:root[data-message-style="rounded"] {
+
+    --cipher-message-radius: 18px;
+
+}
+
+
+:root[data-message-style="soft"] {
+
+    --cipher-message-radius: 10px;
+
+}
+
+
+:root[data-message-style="square"] {
+
+    --cipher-message-radius: 5px;
+
+}
+
+
+/* ===================================================
+   BACKGROUND SYSTEM
+=================================================== */
+
+:root[data-background="standard"] {
+
+    --cipher-background-opacity: 1;
+
+    --cipher-panel-opacity: 1;
+
+}
+
+
+:root[data-background="soft"] {
+
+    --cipher-background-opacity: .88;
+
+    --cipher-panel-opacity: .92;
+
+}
+
+
+:root[data-background="deep"] {
+
+    --cipher-background-opacity: 1;
+
+    --cipher-panel-opacity: 1;
+
+}
+
+
+/* ===================================================
+   OPTIONAL GLOBAL FONT SCALING
+=================================================== */
+
+#main {
+
+    font-size:
+        calc(16px * var(--cipher-font-scale));
+
+}
+
+
+/* ===================================================
+   MESSAGE APPEARANCE
+=================================================== */
+
+.msg {
+
+    border-radius:
+        var(--cipher-message-radius);
+
+}
+
+
+/* ===================================================
+   CHAT DENSITY
+=================================================== */
+
+#chat {
+
+    gap:
+        var(--cipher-message-gap);
+
+}
+
+
+/* ===================================================
+   APPEARANCE SETTINGS — ACCENT COLORS
+=================================================== */
+
+:root[data-accent="teal"] {
+
+    --accent: #2dd4bf;
+
+    --accent-dark: #14b8a6;
+
+}
+
+
+:root[data-accent="green"] {
+
+    --accent: #34d399;
+
+    --accent-dark: #10b981;
+
+}
+
+
+:root[data-accent="blue"] {
+
+    --accent: #38bdf8;
+
+    --accent-dark: #0ea5e9;
+
+}
+
+
+:root[data-accent="purple"] {
+
+    --accent: #a78bfa;
+
+    --accent-dark: #7c3aed;
+
+}
+
+
+:root[data-accent="orange"] {
+
+    --accent: #fb923c;
+
+    --accent-dark: #f97316;
+
+}
+
+
+/* ===================================================
+   APPEARANCE SETTINGS — BACKGROUND
+=================================================== */
+
+:root[data-background="soft"] #sidebar,
+:root[data-background="soft"] #main {
+
+    background-color:
+        color-mix(
+            in srgb,
+            var(--bg-primary) 88%,
+            transparent
+        );
+
+}
+
+
+/* ===================================================
+   MOBILE THEME MENU
+=================================================== */
+
+@media (max-width: 768px) {
+
+    .cipher-theme-menu {
+
+        min-width: 180px;
+
+        max-width:
+            calc(100vw - 20px);
+
+    }
+
+}
+
+
+/* ===================================================
+   REDUCED MOTION
+=================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+    html,
+    body,
+    #sidebar,
+    #main,
+    .topbar,
+    header,
+    .auth-box,
+    .card,
+    .chat-item,
+    .msg,
+    button,
+    input,
+    textarea,
+    .cipher-theme-menu,
+    .theme-option {
+
+        transition: none !important;
+
+    }
+
 }
 
 
