@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_login import (
     LoginManager,
     UserMixin,
@@ -32,6 +32,24 @@ app.secret_key = os.environ.get(
     "SECRET_KEY",
     "fallback-secret-key"
 )
+
+
+# =========================================================
+# STATIC JS FIX
+#
+# The js/ folder lives at the project root, not inside
+# static/. This route serves files from js/ whenever the
+# browser requests them at /static/js/<filename>, matching
+# what index.html expects.
+# =========================================================
+
+@app.route("/static/js/<path:filename>")
+def serve_js(filename):
+
+    return send_from_directory(
+        "js",
+        filename
+    )
 
 
 # =========================================================
