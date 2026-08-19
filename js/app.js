@@ -1136,4 +1136,1082 @@ async function handleReminderSubmit(event) {
     clearReminderError();
 
 
-    const
+    const text =
+        App.reminderText
+            ? App.reminderText.value.trim()
+            : "";
+
+
+    const date =
+        App.reminderDate
+            ? App.reminderDate.value
+            : "";
+
+
+    const time =
+        App.reminderTime
+            ? App.reminderTime.value
+            : "";
+
+
+    const notificationType =
+        App.reminderNotification
+            ? App.reminderNotification.value
+            : "in_app";
+
+
+    if (!text) {
+
+        showReminderError(
+            "Please enter what you want Cipher to remind you about."
+        );
+
+        return;
+
+    }
+
+
+    if (!date || !time) {
+
+        showReminderError(
+            "Please select a date and time."
+        );
+
+        return;
+
+    }
+
+
+    const reminderDateTime =
+        new Date(
+            `${date}T${time}`
+        );
+
+
+    if (
+        Number.isNaN(
+            reminderDateTime.getTime()
+        )
+    ) {
+
+        showReminderError(
+            "Please enter a valid reminder date and time."
+        );
+
+        return;
+
+    }
+
+
+    if (
+        reminderDateTime.getTime()
+        <= Date.now()
+    ) {
+
+        showReminderError(
+            "Please choose a future date and time."
+        );
+
+        return;
+
+    }
+
+
+    const reminder = {
+
+        text: text,
+
+        date: date,
+
+        time: time,
+
+        notification_type:
+            notificationType
+
+    };
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/reminders",
+                {
+
+                    method: "POST",
+
+                    credentials:
+                        "same-origin",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Accept":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify(
+                            reminder
+                        )
+
+                }
+            );
+
+
+        if (!response.ok) {
+
+            let errorMessage =
+                "Unable to create reminder.";
+
+
+            try {
+
+                const errorData =
+                    await response.json();
+
+
+                if (
+                    errorData.message
+                ) {
+
+                    errorMessage =
+                        errorData.message;
+
+                }
+
+            }
+
+            catch {
+
+                /* Keep default message. */
+
+            }
+
+
+            throw new Error(
+                errorMessage
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        closeReminder();
+
+
+        if (App.reminderText) {
+
+            App.reminderText.value = "";
+
+        }
+
+
+        setMinimumReminderDate();
+
+
+        showSuccess(
+            data.message
+            || "Reminder set successfully."
+        );
+
+
+    }
+
+    catch (error) {
+
+        logError(
+            error,
+            "Reminder"
+        );
+
+
+        showReminderError(
+            error.message
+            || "Unable to set reminder."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   REMINDER ERROR
+========================================================= */
+
+function showReminderError(message) {
+
+    if (!App.reminderError) {
+
+        showError(message);
+
+        return;
+
+    }
+
+
+    App.reminderError.textContent =
+        message;
+
+
+    App.reminderError.style.display =
+        "block";
+
+}
+
+
+function clearReminderError() {
+
+    if (!App.reminderError) return;
+
+
+    App.reminderError.textContent =
+        "";
+
+
+    App.reminderError.style.display =
+        "none";
+
+}
+
+
+/* =========================================================
+   FILE ATTACHMENT
+========================================================= */
+
+function openFilePicker() {
+
+    if (!App.fileInput) return;
+
+
+    App.fileInput.click();
+
+}
+
+
+function handleFileSelection(event) {
+
+    const files =
+        Array.from(
+            event.target.files || []
+        );
+
+
+    if (!files.length) return;
+
+
+    const names =
+        files
+            .map(file => file.name)
+            .join(", ");
+
+
+    showInfo(
+        `${files.length} file${files.length === 1 ? "" : "s"} selected: ${names}`
+    );
+
+
+    event.target.value = "";
+
+}
+
+
+/* =========================================================
+   WELCOME CARDS
+========================================================= */
+
+function handleWelcomeCard(event) {
+
+    const card =
+        event.currentTarget;
+
+
+    const action =
+        card.dataset.action;
+
+
+    switch (action) {
+
+        case "chat":
+
+            focusMessageInput();
+
+            break;
+
+
+        case "research":
+
+            setMessagePrompt(
+                "What would you like Cipher to research?"
+            );
+
+            break;
+
+
+        case "documents":
+
+            openFilePicker();
+
+            break;
+
+
+        case "reminder":
+
+            openReminder();
+
+            break;
+
+
+        default:
+
+            break;
+
+    }
+
+}
+
+
+/* =========================================================
+   FOCUS MESSAGE INPUT
+========================================================= */
+
+function focusMessageInput() {
+
+    if (!App.input) return;
+
+
+    App.input.focus();
+
+
+    App.input.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+    });
+
+}
+
+
+/* =========================================================
+   MESSAGE PROMPT
+========================================================= */
+
+function setMessagePrompt(prompt) {
+
+    if (!App.input) return;
+
+
+    App.input.value =
+        prompt;
+
+
+    autoResizeInput();
+
+
+    focusMessageInput();
+
+
+    App.input.setSelectionRange(
+        0,
+        0
+    );
+
+}
+
+
+/* =========================================================
+   GLOBAL KEYBOARD
+========================================================= */
+
+function handleGlobalKeydown(event) {
+
+    if (
+        event.key === "Escape"
+    ) {
+
+        if (Cipher.reminderOpen) {
+
+            closeReminder();
+
+            return;
+
+        }
+
+
+        if (Cipher.settingsOpen) {
+
+            closeSettings();
+
+            return;
+
+        }
+
+
+        if (
+            window.CipherThemes &&
+            typeof window.CipherThemes.closeMenu ===
+                "function"
+        ) {
+
+            window.CipherThemes.closeMenu();
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   NOTIFICATION SYSTEM
+========================================================= */
+
+function showNotification(
+    message,
+    type = "info",
+    duration = 3500
+) {
+
+    let container =
+        document.getElementById(
+            "notification-container"
+        );
+
+
+    if (!container) {
+
+        container =
+            document.createElement(
+                "div"
+            );
+
+
+        container.id =
+            "notification-container";
+
+
+        document.body.appendChild(
+            container
+        );
+
+    }
+
+
+    const notification =
+        document.createElement(
+            "div"
+        );
+
+
+    notification.className =
+        `notification ${type}`;
+
+
+    notification.setAttribute(
+        "role",
+        "status"
+    );
+
+
+    const messageSpan =
+        document.createElement(
+            "span"
+        );
+
+
+    messageSpan.textContent =
+        message;
+
+
+    const closeButton =
+        document.createElement(
+            "button"
+        );
+
+
+    closeButton.type =
+        "button";
+
+
+    closeButton.className =
+        "notification-close";
+
+
+    closeButton.setAttribute(
+        "aria-label",
+        "Close notification"
+    );
+
+
+    closeButton.innerHTML =
+        "&times;";
+
+
+    notification.appendChild(
+        messageSpan
+    );
+
+
+    notification.appendChild(
+        closeButton
+    );
+
+
+    container.appendChild(
+        notification
+    );
+
+
+    requestAnimationFrame(() => {
+
+        notification.classList.add(
+            "show"
+        );
+
+    });
+
+
+    let removed = false;
+
+
+    const removeNotification =
+        () => {
+
+            if (removed) return;
+
+
+            removed = true;
+
+
+            notification.classList.remove(
+                "show"
+            );
+
+
+            setTimeout(() => {
+
+                if (
+                    notification.parentNode
+                ) {
+
+                    notification.remove();
+
+                }
+
+            }, 300);
+
+        };
+
+
+    closeButton.addEventListener(
+        "click",
+        removeNotification
+    );
+
+
+    setTimeout(
+        removeNotification,
+        duration
+    );
+
+}
+
+
+/* =========================================================
+   NOTIFICATION HELPERS
+========================================================= */
+
+function showSuccess(message) {
+
+    showNotification(
+        message,
+        "success"
+    );
+
+}
+
+
+function showError(message) {
+
+    showNotification(
+        message,
+        "error"
+    );
+
+}
+
+
+function showWarning(message) {
+
+    showNotification(
+        message,
+        "warning"
+    );
+
+}
+
+
+function showInfo(message) {
+
+    showNotification(
+        message,
+        "info"
+    );
+
+}
+
+
+/* =========================================================
+   CONFIRMATION
+========================================================= */
+
+function confirmAction(message) {
+
+    return window.confirm(
+        message
+    );
+
+}
+
+
+/* =========================================================
+   LOCAL STORAGE HELPERS
+========================================================= */
+
+function saveLocal(
+    key,
+    value
+) {
+
+    try {
+
+        localStorage.setItem(
+            key,
+            JSON.stringify(value)
+        );
+
+    }
+
+    catch (error) {
+
+        logError(
+            error,
+            "Local Storage Save"
+        );
+
+    }
+
+}
+
+
+function loadLocal(
+    key,
+    fallback = null
+) {
+
+    try {
+
+        const value =
+            localStorage.getItem(
+                key
+            );
+
+
+        if (!value) {
+
+            return fallback;
+
+        }
+
+
+        return JSON.parse(
+            value
+        );
+
+    }
+
+    catch (error) {
+
+        logError(
+            error,
+            "Local Storage Load"
+        );
+
+
+        return fallback;
+
+    }
+
+}
+
+
+/* =========================================================
+   UTILITY FUNCTIONS
+========================================================= */
+
+function $(selector) {
+
+    return document.querySelector(
+        selector
+    );
+
+}
+
+
+function $$(selector) {
+
+    return document.querySelectorAll(
+        selector
+    );
+
+}
+
+
+function createElement(
+    tag,
+    className = "",
+    html = ""
+) {
+
+    const element =
+        document.createElement(
+            tag
+        );
+
+
+    if (className) {
+
+        element.className =
+            className;
+
+    }
+
+
+    if (html) {
+
+        element.innerHTML =
+            html;
+
+    }
+
+
+    return element;
+
+}
+
+
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.textContent =
+        text == null
+            ? ""
+            : String(text);
+
+
+    return div.innerHTML;
+
+}
+
+
+/* =========================================================
+   DELAY
+========================================================= */
+
+function sleep(ms) {
+
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                ms
+            )
+    );
+
+}
+
+
+/* =========================================================
+   RANDOM ID
+========================================================= */
+
+function generateId() {
+
+    if (
+        window.crypto &&
+        typeof window.crypto.randomUUID ===
+            "function"
+    ) {
+
+        return window.crypto.randomUUID();
+
+    }
+
+
+    return (
+        Date.now().toString(36)
+        + Math.random()
+            .toString(36)
+            .substring(2)
+    );
+
+}
+
+
+/* =========================================================
+   DATE FORMAT
+========================================================= */
+
+function formatDate(date) {
+
+    try {
+
+        return new Date(
+            date
+        ).toLocaleString();
+
+    }
+
+    catch {
+
+        return "";
+
+    }
+
+}
+
+
+/* =========================================================
+   NETWORK STATUS
+========================================================= */
+
+function isOnline() {
+
+    return navigator.onLine;
+
+}
+
+
+function updateNetworkStatus() {
+
+    Cipher.online =
+        navigator.onLine;
+
+
+    if (App.userStatus) {
+
+        App.userStatus.textContent =
+            navigator.onLine
+                ? "Online"
+                : "Offline";
+
+    }
+
+}
+
+
+window.addEventListener(
+    "offline",
+    () => {
+
+        updateNetworkStatus();
+
+
+        showWarning(
+            "You're offline. Cipher will reconnect when your connection returns."
+        );
+
+    }
+);
+
+
+window.addEventListener(
+    "online",
+    () => {
+
+        updateNetworkStatus();
+
+
+        showSuccess(
+            "Connection restored."
+        );
+
+    }
+);
+
+
+/* =========================================================
+   ERROR LOGGING
+========================================================= */
+
+function logError(
+    error,
+    source = "Unknown"
+) {
+
+    console.error(
+        `[Cipher:${source}]`,
+        error
+    );
+
+}
+
+
+/* =========================================================
+   GLOBAL ERROR HANDLING
+========================================================= */
+
+window.addEventListener(
+    "error",
+    event => {
+
+        logError(
+            event.error ||
+            event.message,
+            "Window"
+        );
+
+    }
+);
+
+
+window.addEventListener(
+    "unhandledrejection",
+    event => {
+
+        logError(
+            event.reason,
+            "Promise"
+        );
+
+    }
+);
+
+
+/* =========================================================
+   SAFE EXECUTION
+========================================================= */
+
+async function safeExecute(
+    fn,
+    source = "Unknown"
+) {
+
+    try {
+
+        return await fn();
+
+    }
+
+    catch (error) {
+
+        logError(
+            error,
+            source
+        );
+
+
+        showError(
+            "Operation failed."
+        );
+
+
+        return null;
+
+    }
+
+}
+
+
+/* =========================================================
+   APPLICATION INFO
+========================================================= */
+
+Cipher.version =
+    "2.0.1";
+
+
+Cipher.build =
+    "Prototype";
+
+
+Cipher.creator =
+    "Fatai Quadri";
+
+
+console.log(`
+
+=========================================
+             CIPHER AI
+=========================================
+Version : ${Cipher.version}
+Creator : ${Cipher.creator}
+Status  : Initializing
+=========================================
+
+`);
+
+
+/* =========================================================
+   PUBLIC APP API
+========================================================= */
+
+window.CipherApp = {
+
+    state:
+        Cipher,
+
+    openSettings:
+        openSettings,
+
+    closeSettings:
+        closeSettings,
+
+    openReminder:
+        openReminder,
+
+    closeReminder:
+        closeReminder,
+
+    showNotification:
+        showNotification,
+
+    showSuccess:
+        showSuccess,
+
+    showError:
+        showError,
+
+    showWarning:
+        showWarning,
+
+    showInfo:
+        showInfo,
+
+    focusInput:
+        focusMessageInput,
+
+    openFilePicker:
+        openFilePicker
+
+};
+
+
+/* =========================================================
+   END OF APP.JS
+========================================================= */
