@@ -98,6 +98,7 @@
 
             <button
                 class="auth-tab active"
+                type="button"
                 onclick="showTab('login')">
 
                 Log in
@@ -107,6 +108,7 @@
 
             <button
                 class="auth-tab"
+                type="button"
                 onclick="showTab('signup')">
 
                 Sign up
@@ -148,6 +150,7 @@
 
             <button
                 class="auth-btn"
+                type="button"
                 onclick="doLogin()">
 
                 Log in
@@ -169,7 +172,8 @@
             <button
                 class="google-btn"
                 id="google-login-btn"
-                type="button">
+                type="button"
+                onclick="signInWithGoogle()">
 
                 <img
                     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -224,6 +228,7 @@
 
             <button
                 class="auth-btn"
+                type="button"
                 onclick="doSignup()">
 
                 Create account
@@ -243,7 +248,8 @@
             <button
                 class="google-btn"
                 id="google-signup-btn"
-                type="button">
+                type="button"
+                onclick="signInWithGoogle()">
 
                 <img
                     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -306,7 +312,7 @@
 
         <button
             class="new-chat-btn"
-            onclick="startNewChat()">
+            type="button">
 
             <span>
                 ＋
@@ -372,7 +378,7 @@
 
                     </span>
 
-                    <small>
+                    <small id="user-status">
                         Online
                     </small>
 
@@ -390,6 +396,7 @@
                 <button
                     class="sidebar-icon-btn"
                     id="theme-btn"
+                    data-theme-trigger
                     title="Themes"
                     type="button">
 
@@ -441,11 +448,16 @@
         <header class="topbar">
 
 
-            <!-- MOBILE SIDEBAR BUTTON -->
+            <!-- MOBILE SIDEBAR BUTTON
+                 NOTE: no inline onclick here anymore --
+                 sidebar.js binds this once via
+                 addEventListener. Keeping an inline
+                 onclick AND a JS listener on the same
+                 button double-fires on every tap and
+                 makes the sidebar appear to do nothing. -->
 
             <button
                 id="sidebar-toggle"
-                onclick="toggleSidebar()"
                 type="button"
                 aria-label="Open sidebar">
 
@@ -488,6 +500,7 @@
                 <button
                     class="topbar-btn"
                     id="theme-switch"
+                    data-theme-trigger
                     type="button">
 
                     Theme
@@ -539,7 +552,7 @@
                     <button
                         class="welcome-card"
                         type="button"
-                        onclick="startNewChat()">
+                        data-action="chat">
 
                         <strong>
                             💬 Chat
@@ -555,7 +568,8 @@
 
                     <button
                         class="welcome-card"
-                        type="button">
+                        type="button"
+                        data-action="research">
 
                         <strong>
                             🧠 Research
@@ -572,7 +586,7 @@
                     <button
                         class="welcome-card"
                         type="button"
-                        onclick="document.getElementById('file-input').click()">
+                        data-action="documents">
 
                         <strong>
                             📄 Documents
@@ -681,150 +695,6 @@
 
 
 <!-- =====================================================
-     THEME PANEL
-===================================================== -->
-
-<div
-    id="theme-panel"
-    class="modal-panel"
-    style="display:none;">
-
-
-    <div class="panel-header">
-
-        <div>
-
-            <h3>
-                Appearance
-            </h3>
-
-            <span>
-                Choose your Cipher theme
-            </span>
-
-        </div>
-
-
-        <button
-            type="button"
-            class="panel-close"
-            data-close-panel="theme-panel">
-
-            ×
-
-        </button>
-
-    </div>
-
-
-
-    <div class="theme-options">
-
-
-        <button
-            class="theme-option"
-            data-theme="midnight"
-            type="button">
-
-            <span class="theme-preview midnight"></span>
-
-            <span>
-                Midnight
-            </span>
-
-        </button>
-
-
-        <button
-            class="theme-option"
-            data-theme="emerald"
-            type="button">
-
-            <span class="theme-preview emerald"></span>
-
-            <span>
-                Emerald
-            </span>
-
-        </button>
-
-
-        <button
-            class="theme-option"
-            data-theme="cyber"
-            type="button">
-
-            <span class="theme-preview cyber"></span>
-
-            <span>
-                Cyber
-            </span>
-
-        </button>
-
-
-        <button
-            class="theme-option"
-            data-theme="amoled"
-            type="button">
-
-            <span class="theme-preview amoled"></span>
-
-            <span>
-                AMOLED Black
-            </span>
-
-        </button>
-
-
-        <button
-            class="theme-option"
-            data-theme="ocean"
-            type="button">
-
-            <span class="theme-preview ocean"></span>
-
-            <span>
-                Ocean
-            </span>
-
-        </button>
-
-
-        <button
-            class="theme-option"
-            data-theme="sunset"
-            type="button">
-
-            <span class="theme-preview sunset"></span>
-
-            <span>
-                Sunset
-            </span>
-
-        </button>
-
-
-        <button
-            class="theme-option"
-            data-theme="light"
-            type="button">
-
-            <span class="theme-preview light"></span>
-
-            <span>
-                Light
-            </span>
-
-        </button>
-
-    </div>
-
-</div>
-
-
-
-<!-- =====================================================
      SETTINGS PANEL
 ===================================================== -->
 
@@ -925,6 +795,7 @@
             <button
                 class="settings-action"
                 id="settings-theme-btn"
+                data-theme-trigger
                 type="button">
 
                 <span>
@@ -1068,6 +939,13 @@
             id="reminder-time">
 
 
+        <div
+            class="auth-error"
+            id="reminder-error"
+            style="display:none;">
+        </div>
+
+
         <button
             type="button"
             class="auth-btn"
@@ -1084,20 +962,11 @@
 
 
 <!-- =====================================================
-     MODAL OVERLAY
-===================================================== -->
-
-<div
-    id="modal-overlay"
-    class="modal-overlay"
-    style="display:none;">
-
-</div>
-
-
-
-<!-- =====================================================
      JAVASCRIPT
+     Load order matters: app.js defines shared helpers
+     (showNotification, escapeHTML, etc.) that chat.js,
+     sidebar.js and themes.js all depend on, so it must
+     load first.
 ===================================================== -->
 
 <script
