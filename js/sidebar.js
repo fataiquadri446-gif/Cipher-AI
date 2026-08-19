@@ -8,6 +8,11 @@
 
 /* ==========================================
    SIDEBAR OBJECT
+   NOTE: Sidebar.currentChat mirrors
+   Chat.currentChat (defined in chat.js) --
+   they are kept in sync everywhere a chat
+   is created or selected so nothing silently
+   disagrees on "which chat is open".
 ========================================== */
 
 const Sidebar = {
@@ -41,23 +46,6 @@ const SidebarUI = {
 
 
 /* ==========================================
-   INITIALIZE
-========================================== */
-
-function initializeSidebar(){
-
-    if(Sidebar.initialized) return;
-
-    Sidebar.initialized = true;
-
-    registerSidebarEvents();
-
-    loadSidebarChats();
-
-}
-
-
-/* ==========================================
    EVENTS
 ========================================== */
 
@@ -69,8 +57,24 @@ function registerSidebarEvents(){
 
             "click",
 
-            toggleSidebar
+            event => {
 
+                event.stopPropagation();
+
+                toggleSidebar();
+
+            }
+
+        );
+
+    }
+
+
+    if (SidebarUI.newChat) {
+
+        SidebarUI.newChat.addEventListener(
+            "click",
+            createNewChat
         );
 
     }
@@ -137,7 +141,7 @@ function closeSidebar() {
 
 document.addEventListener("click", (event) => {
 
-    if (window.innerWidth > 768) return;
+    if (window.innerWidth > 900) return;
 
     if (!Sidebar.opened) return;
 
@@ -162,7 +166,7 @@ document.addEventListener("click", (event) => {
 
 function closeSidebarAfterSelection() {
 
-    if (window.innerWidth <= 768) {
+    if (window.innerWidth <= 900) {
 
         closeSidebar();
 
@@ -218,17 +222,6 @@ async function loadSidebarChats() {
 
 
 /* ==========================================
-   REFRESH CHAT LIST
-========================================== */
-
-async function refreshSidebar() {
-
-    await loadSidebarChats();
-
-}
-
-
-/* ==========================================
    SHOW SIDEBAR MESSAGE
 ========================================== */
 
@@ -260,10 +253,6 @@ function showEmptySidebar() {
     SidebarUI.list.innerHTML = `
 
         <div class="sidebar-empty">
-
-            <div class="sidebar-empty-icon">
-                💬
-            </div>
 
             <p>No conversations yet.</p>
 
@@ -351,8 +340,6 @@ function renderSidebarChats(chats) {
         chat => !chat.pinned
     );
 
-    /* Pinned chats */
-
     if (pinned.length > 0) {
 
         addSidebarSectionLabel(
@@ -368,8 +355,6 @@ function renderSidebarChats(chats) {
         });
 
     }
-
-    /* Recent chats */
 
     if (recent.length > 0) {
 
@@ -435,9 +420,6 @@ function createSidebarChatItem(chat) {
         chat.title ||
         "New Conversation";
 
-    const messageCount =
-        Number(chat.message_count || 0);
-
     const date =
         formatChatDate(
             chat.updated_at ||
@@ -446,35 +428,9 @@ function createSidebarChatItem(chat) {
 
     item.innerHTML = `
 
-        <div class="chat-item-icon">
-            💬
-        </div>
+        <div class="chat-item-title">
 
-        <div class="chat-item-info">
-
-            <div class="chat-item-title">
-
-                ${escapeHTML(title)}
-
-            </div>
-
-            <div class="chat-item-meta">
-
-                <span>
-                    ${messageCount}
-                    ${messageCount === 1
-                        ? "message"
-                        : "messages"}
-                </span>
-
-                ${
-                    date
-                    ? `<span>•</span>
-                       <span>${escapeHTML(date)}</span>`
-                    : ""
-                }
-
-            </div>
+            ${escapeHTML(title)}
 
         </div>
 
@@ -554,7 +510,9 @@ function formatChatDate(dateValue) {
 
 
 /* ==========================================
-   CHAT SEARCH
+   CHAT SEARCH (uses the existing #chat-search
+   input already in index.html -- no need to
+   create a duplicate one)
 ========================================== */
 
 function searchSidebarChats(query) {
@@ -583,10 +541,6 @@ function searchSidebarChats(query) {
 }
 
 
-/* ==========================================
-   SEARCH RESULTS
-========================================== */
-
 function renderSidebarSearchResults(chats, query) {
 
     if (!SidebarUI.list) return;
@@ -598,10 +552,6 @@ function renderSidebarSearchResults(chats, query) {
         SidebarUI.list.innerHTML = `
 
             <div class="sidebar-empty">
-
-                <div class="sidebar-empty-icon">
-                    🔎
-                </div>
 
                 <p>No chats found.</p>
 
@@ -633,89 +583,6 @@ function renderSidebarSearchResults(chats, query) {
 }
 
 
-/* ==========================================
-   CREATE SEARCH BOX
-========================================== */
-
-function createChatSearch() {
-
-    if (!SidebarUI.sidebar) return;
-
-    if (
-        document.getElementById(
-            "chat-search"
-        )
-    ) {
-
-        return;
-
-    }
-
-    const wrapper =
-        document.createElement("div");
-
-    wrapper.className =
-        "chat-search-wrapper";
-
-    wrapper.innerHTML = `
-
-        <div class="chat-search-box">
-
-            <span class="chat-search-icon">
-                🔎
-            </span>
-
-            <input
-                type="search"
-                id="chat-search"
-                placeholder="Search chats..."
-                autocomplete="off"
-                aria-label="Search conversations"
-            />
-
-            <button
-                type="button"
-                class="chat-search-clear"
-                id="chat-search-clear"
-                aria-label="Clear search"
-                style="display:none;">
-
-                ×
-
-            </button>
-
-        </div>
-
-    `;
-
-    const newChatButton =
-        SidebarUI.newChat;
-
-    if (newChatButton) {
-
-        newChatButton.insertAdjacentElement(
-            "afterend",
-            wrapper
-        );
-
-    }
-    else {
-
-        SidebarUI.sidebar.prepend(
-            wrapper
-        );
-
-    }
-
-    setupChatSearchEvents();
-
-}
-
-
-/* ==========================================
-   SEARCH EVENTS
-========================================== */
-
 function setupChatSearchEvents() {
 
     const searchInput =
@@ -723,93 +590,20 @@ function setupChatSearchEvents() {
             "chat-search"
         );
 
-    const clearButton =
-        document.getElementById(
-            "chat-search-clear"
-        );
-
     if (!searchInput) return;
-
 
     searchInput.addEventListener(
         "input",
         () => {
 
-            const query =
-                searchInput.value;
-
-            if (clearButton) {
-
-                clearButton.style.display =
-                    query
-                    ? "block"
-                    : "none";
-
-            }
-
-            searchSidebarChats(query);
+            searchSidebarChats(
+                searchInput.value
+            );
 
         }
     );
 
-
-    if (clearButton) {
-
-        clearButton.addEventListener(
-            "click",
-            () => {
-
-                searchInput.value = "";
-
-                clearButton.style.display =
-                    "none";
-
-                searchSidebarChats("");
-
-                searchInput.focus();
-
-            }
-        );
-
-    }
-
 }
-
-
-/* ==========================================
-   KEYBOARD SHORTCUT
-========================================== */
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        /*
-         * Ctrl + K focuses chat search.
-         */
-
-        if (
-            event.ctrlKey &&
-            event.key.toLowerCase() === "k"
-        ) {
-
-            event.preventDefault();
-
-            const searchInput =
-                document.getElementById(
-                    "chat-search"
-                );
-
-            if (searchInput) {
-
-                searchInput.focus();
-
-            }
-
-        }
-
-    }
-);
 
 
 /* ==========================================
@@ -818,10 +612,6 @@ document.addEventListener(
 
 let activeChatMenu = null;
 
-
-/* ==========================================
-   OPEN CHAT MENU
-========================================== */
 
 function openChatMenu(event, chatId) {
 
@@ -853,14 +643,6 @@ function openChatMenu(event, chatId) {
 
         <button
             type="button"
-            onclick="renameChat('${escapeHTML(String(chatId))}')">
-
-            ✏️ Rename
-
-        </button>
-
-        <button
-            type="button"
             class="danger"
             onclick="deleteChat('${escapeHTML(String(chatId))}')">
 
@@ -886,10 +668,6 @@ function openChatMenu(event, chatId) {
 
 }
 
-
-/* ==========================================
-   CLOSE CHAT MENU
-========================================== */
 
 function closeChatMenu() {
 
@@ -1037,290 +815,10 @@ async function deleteChat(chatId) {
 
 
 /* ==========================================
-   RENAME CHAT
-========================================== */
-
-async function renameChat(chatId) {
-
-    closeChatMenu();
-
-    const chat = Sidebar.chats.find(
-        item =>
-            String(item.id) === String(chatId)
-    );
-
-    if (!chat) return;
-
-    const currentTitle =
-        chat.title ||
-        "New Conversation";
-
-    const newTitle = prompt(
-        "Enter a new chat title:",
-        currentTitle
-    );
-
-    if (newTitle === null) return;
-
-    const title = newTitle.trim();
-
-    if (!title) {
-
-        showWarning(
-            "Chat title cannot be empty."
-        );
-
-        return;
-
-    }
-
-    try {
-
-        const response = await fetch(
-
-            `/chats/${encodeURIComponent(chatId)}/rename`,
-
-            {
-
-                method: "POST",
-
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-
-                body: JSON.stringify({
-                    title: title
-                })
-
-            }
-
-        );
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Unable to rename chat."
-            );
-
-        }
-
-        await loadSidebarChats();
-
-        showSuccess(
-            "Chat renamed."
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        showError(
-            "Unable to rename chat."
-        );
-
-    }
-
-}
-
-
-/* ==========================================
-   MOBILE + COLLAPSED SIDEBAR
-========================================== */
-
-Sidebar.collapsed = false;
-
-
-/* ==========================================
-   COLLAPSE DESKTOP SIDEBAR
-========================================== */
-
-function toggleSidebarCollapse() {
-
-    // Don't collapse the sidebar on mobile.
-    if (window.innerWidth <= 768) {
-
-        toggleSidebar();
-
-        return;
-
-    }
-
-    Sidebar.collapsed =
-        !Sidebar.collapsed;
-
-    if (SidebarUI.sidebar) {
-
-        SidebarUI.sidebar.classList.toggle(
-            "collapsed",
-            Sidebar.collapsed
-        );
-
-    }
-
-    saveSidebarPreference();
-
-}
-
-
-/* ==========================================
-   RESTORE SIDEBAR PREFERENCE
-========================================== */
-
-function restoreSidebarPreference() {
-
-    if (window.innerWidth <= 768) return;
-
-    const saved =
-        localStorage.getItem(
-            "cipher-sidebar-collapsed"
-        );
-
-    Sidebar.collapsed =
-        saved === "true";
-
-    if (SidebarUI.sidebar) {
-
-        SidebarUI.sidebar.classList.toggle(
-            "collapsed",
-            Sidebar.collapsed
-        );
-
-    }
-
-}
-
-
-/* ==========================================
-   SAVE SIDEBAR PREFERENCE
-========================================== */
-
-function saveSidebarPreference() {
-
-    localStorage.setItem(
-
-        "cipher-sidebar-collapsed",
-
-        Sidebar.collapsed
-            ? "true"
-            : "false"
-
-    );
-
-}
-
-
-/* ==========================================
-   WINDOW RESIZE
-========================================== */
-
-window.addEventListener(
-    "resize",
-    () => {
-
-        if (window.innerWidth > 768) {
-
-            closeSidebar();
-
-            restoreSidebarPreference();
-
-        }
-        else {
-
-            // Mobile should never remain
-            // in desktop collapsed mode.
-
-            Sidebar.collapsed = false;
-
-            if (SidebarUI.sidebar) {
-
-                SidebarUI.sidebar.classList.remove(
-                    "collapsed"
-                );
-
-            }
-
-        }
-
-    }
-);
-
-
-/* ==========================================
-   MOBILE CHAT SELECTION
-========================================== */
-
-document.addEventListener(
-    "click",
-    event => {
-
-        const chatItem =
-            event.target.closest(
-                ".chat-item"
-            );
-
-        if (!chatItem) return;
-
-        if (window.innerWidth <= 768) {
-
-            closeSidebar();
-
-        }
-
-    }
-);
-
-
-/* ==========================================
-   ESCAPE KEY
-========================================== */
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (event.key !== "Escape") return;
-
-        closeChatMenu();
-
-        if (
-            window.innerWidth <= 768 &&
-            Sidebar.opened
-        ) {
-
-            closeSidebar();
-
-        }
-
-    }
-);
-
-
-/* ==========================================
-   FINAL SIDEBAR INITIALIZATION
-========================================== */
-
-function initializeSidebar() {
-
-    if (Sidebar.initialized) return;
-
-    Sidebar.initialized = true;
-
-    restoreSidebarPreference();
-
-    createChatSearch();
-
-    registerSidebarEvents();
-
-    loadSidebarChats();
-
-}
-
-
-/* ==========================================
    NEW CHAT
+   This is the single implementation (chat.js
+   no longer defines its own createNewChat, so
+   there's nothing to silently overwrite).
 ========================================== */
 
 async function createNewChat() {
@@ -1346,29 +844,20 @@ async function createNewChat() {
 
         Sidebar.currentChat = chat.id;
 
-        /*
-         * Clear the current conversation.
-         */
+        if (typeof Chat !== "undefined") {
 
-        if (
-            typeof clearChat ===
-            "function"
-        ) {
+            Chat.currentChat = chat.id;
 
-            clearChat();
+            Chat.messages = [];
 
         }
 
-        /*
-         * Show Cipher welcome screen.
-         */
-
         if (
-            typeof showWelcome ===
+            typeof showWelcomeScreen ===
             "function"
         ) {
 
-            showWelcome();
+            showWelcomeScreen();
 
         }
 
@@ -1379,12 +868,11 @@ async function createNewChat() {
         closeSidebarAfterSelection();
 
         if (
-            typeof input !==
-            "undefined" &&
-            input
+            typeof ChatUI !== "undefined" &&
+            ChatUI.input
         ) {
 
-            input.focus();
+            ChatUI.input.focus();
 
         }
 
@@ -1413,18 +901,79 @@ async function createNewChat() {
 }
 
 
-/* ==========================================
-   NEW CHAT BUTTON
-========================================== */
+/*
+ * index.html calls startNewChat() in a couple
+ * of inline onclick attributes -- keep that name
+ * working as an alias for createNewChat().
+ */
 
-if (SidebarUI.newChat) {
+function startNewChat() {
 
-    SidebarUI.newChat.addEventListener(
-        "click",
-        createNewChat
-    );
+    createNewChat();
 
 }
+
+
+/* ==========================================
+   FINAL SIDEBAR INITIALIZATION
+========================================== */
+
+function initializeSidebar() {
+
+    if (Sidebar.initialized) return;
+
+    Sidebar.initialized = true;
+
+    setupChatSearchEvents();
+
+    registerSidebarEvents();
+
+    loadSidebarChats();
+
+}
+
+
+/* ==========================================
+   WINDOW RESIZE
+========================================== */
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        if (window.innerWidth > 900) {
+
+            closeSidebar();
+
+        }
+
+    }
+);
+
+
+/* ==========================================
+   ESCAPE KEY
+========================================== */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key !== "Escape") return;
+
+        closeChatMenu();
+
+        if (
+            window.innerWidth <= 900 &&
+            Sidebar.opened
+        ) {
+
+            closeSidebar();
+
+        }
+
+    }
+);
 
 
 /* ==========================================
@@ -1446,3 +995,7 @@ document.addEventListener(
 ========================================== */
 
 window.CipherSidebar = Sidebar;
+
+/* ==========================================
+   END OF SIDEBAR.JS
+========================================== */
