@@ -7,6 +7,10 @@
 
 /* ==========================================
    CHAT OBJECT
+   This is the single source of truth for
+   which chat is currently open. sidebar.js
+   reads/writes Chat.currentChat directly
+   instead of keeping its own copy.
 ========================================== */
 
 const Chat = {
@@ -46,76 +50,11 @@ const ChatUI = {
 
 
 /* ==========================================
-   INITIALIZE CHAT
-========================================== */
-
-function initializeChat(){
-
-    if(Chat.initialized) return;
-
-    Chat.initialized = true;
-
-    registerChatEvents();
-
-    loadLastChat();
-
-    loadDraft();
-
-}
-
-
-/* ==========================================
-   REGISTER EVENTS
-========================================== */
-
-function registerChatEvents(){
-
-    ChatUI.form.addEventListener(
-
-        "submit",
-
-        sendMessage
-
-    );
-
-    ChatUI.input.addEventListener(
-
-        "keydown",
-
-        handleTyping
-
-    );
-
-}
-
-
-/* ==========================================
-   TYPING
-========================================== */
-
-function handleTyping(event){
-
-    Chat.typing = true;
-
-    if(
-
-        event.key === "Enter" &&
-
-        !event.shiftKey
-
-    ){
-
-        event.preventDefault();
-
-        sendMessage(event);
-
-    }
-
-}
-
-
-/* ==========================================
    LOAD LAST CHAT
+   NOTE: registerChatEvents() is intentionally
+   NOT called anymore -- app.js already owns
+   the form submit and input keydown listeners.
+   Calling both would send every message twice.
 ========================================== */
 
 function loadLastChat(){
@@ -133,27 +72,37 @@ function loadLastChat(){
 }
 
 
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        loadLastChat();
+
+        loadDraft();
+
+    }
+);
+
+
 /* ==========================================
    SEND MESSAGE
+   Called by app.js's handleSendMessage() with
+   no arguments. Reads the message from the
+   input itself. No longer blocks when there's
+   no current chat -- the backend /chat route
+   auto-creates one and returns its id, which
+   we then adopt as the current chat everywhere.
 ========================================== */
 
 async function sendMessage(event) {
 
-    if (event) {
+    if (event && typeof event.preventDefault === "function") {
 
         event.preventDefault();
 
     }
 
     if (Chat.sending) return;
-
-    if (!Chat.currentChat) {
-
-        showWarning("Start a new chat first.");
-
-        return;
-
-    }
 
     const message = ChatUI.input.value.trim();
 
@@ -167,6 +116,12 @@ async function sendMessage(event) {
 
     ChatUI.input.value = "";
 
+    if (typeof autoResizeInput === "function") {
+
+        autoResizeInput();
+
+    }
+
     const thinkingMessage = addThinkingMessage();
 
     try {
@@ -174,6 +129,8 @@ async function sendMessage(event) {
         const response = await fetch("/chat", {
 
             method: "POST",
+
+            credentials: "same-origin",
 
             headers: {
 
@@ -227,6 +184,46 @@ async function sendMessage(event) {
 
         });
 
+        /*
+         * Adopt the chat_id the backend created
+         * (or confirmed) as the current chat, and
+         * keep the sidebar in sync with it.
+         */
+
+        if (data.chat_id) {
+
+            const isNewChat =
+                Chat.currentChat !== data.chat_id;
+
+            Chat.currentChat = data.chat_id;
+
+            if (
+                typeof Sidebar !== "undefined"
+            ) {
+
+                Sidebar.currentChat = data.chat_id;
+
+            }
+
+            if (
+                isNewChat &&
+                typeof loadSidebarChats === "function"
+            ) {
+
+                await loadSidebarChats();
+
+            }
+
+            if (
+                typeof highlightActiveChat === "function"
+            ) {
+
+                highlightActiveChat(data.chat_id);
+
+            }
+
+        }
+
     }
 
     catch (error) {
@@ -249,22 +246,7 @@ async function sendMessage(event) {
 
     ChatUI.input.focus();
 
-}
-
-
-/* ==========================================
-   SEND BUTTON
-========================================== */
-
-function disableSendButton() {
-
-    ChatUI.sendButton.disabled = true;
-
-}
-
-function enableSendButton() {
-
-    ChatUI.sendButton.disabled = false;
+    clearDraft();
 
 }
 
@@ -312,27 +294,6 @@ function updateThinkingMessage(element, text) {
 /* ==========================================
    STREAM TEXT
 ========================================== */
-
-async function streamText(element, text) {
-
-    Chat.streaming = true;
-
-    element.textContent = "";
-
-    for (const character of text) {
-
-        element.textContent += character;
-
-        scrollToBottom();
-
-        await sleep(12);
-
-    }
-
-    Chat.streaming = false;
-
-}
-
 
 async function streamMarkdown(element, text){
 
@@ -393,25 +354,6 @@ function addUserMessage(text) {
 }
 
 
-function addBotMessage(text) {
-
-    const message = createMessageElement(
-
-        "assistant",
-
-        text
-
-    );
-
-    ChatUI.container.appendChild(message);
-
-    scrollToBottom();
-
-    return message;
-
-}
-
-
 /* ==========================================
    CREATE MESSAGE
 ========================================== */
@@ -422,7 +364,7 @@ function createMessageElement(role, text) {
 
     wrapper.className =
 
-        `message ${role}`;
+        `msg ${role === "user" ? "user" : "bot"}`;
 
     wrapper.dataset.role = role;
 
@@ -431,54 +373,17 @@ function createMessageElement(role, text) {
 
     wrapper.innerHTML = `
 
-        <div class="message-avatar">
+        <div class="message-text">
 
-            ${role === "user" ? "👤" : "¢"}
-
-        </div>
-
-        <div class="message-content">
-
-            <div class="message-text">
-
-                ${escapeHTML(text)}
-
-            </div>
-
-            <div class="message-footer">
-
-                <span class="message-time">
-
-                    ${formatMessageTime()}
-
-                </span>
-
-                ${createMessageActions(role, text)}
-
-            </div>
+            ${escapeHTML(text)}
 
         </div>
+
+        ${createMessageActions(role, text)}
 
     `;
 
     return wrapper;
-
-}
-
-
-/* ==========================================
-   FORMAT TIME
-========================================== */
-
-function formatMessageTime() {
-
-    return new Date().toLocaleTimeString([], {
-
-        hour: "2-digit",
-
-        minute: "2-digit"
-
-    });
 
 }
 
@@ -523,7 +428,12 @@ async function loadChat(chatId) {
 
         messages.forEach(message => {
 
-            renderHistoryMessage(message);
+            ChatUI.container.appendChild(
+                createMessageElement(
+                    message.role,
+                    message.content
+                )
+            );
 
             Chat.messages.push(message);
 
@@ -540,100 +450,6 @@ async function loadChat(chatId) {
         showError(
 
             "Unable to load chat history."
-
-        );
-
-    }
-
-}
-
-
-/* ==========================================
-   RENDER HISTORY
-========================================== */
-
-function renderHistoryMessage(message) {
-
-    if (
-
-        message.role === "user"
-
-    ) {
-
-        ChatUI.container.appendChild(
-
-            createMessageElement(
-
-                "user",
-
-                message.content
-
-            )
-
-        );
-
-    }
-
-    else {
-
-        ChatUI.container.appendChild(
-
-            createMessageElement(
-
-                "assistant",
-
-                message.content
-
-            )
-
-        );
-
-    }
-
-}
-
-
-/* ==========================================
-   NEW CHAT
-========================================== */
-
-async function createNewChat() {
-
-    try {
-
-        const response = await fetch(
-
-            "/chats/new",
-
-            {
-
-                method: "POST"
-
-            }
-
-        );
-
-        const chat = await response.json();
-
-        Chat.currentChat = chat.id;
-
-        Chat.messages = [];
-
-        ChatUI.container.innerHTML = "";
-
-        showWelcomeScreen();
-
-        loadSidebarChats();
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        showError(
-
-            "Unable to create chat."
 
         );
 
@@ -665,11 +481,8 @@ function showWelcomeScreen() {
             <p>
 
                 Ask anything.
-
                 Solve problems.
-
                 Create reminders.
-
                 Learn faster.
 
             </p>
@@ -691,8 +504,6 @@ function renderMarkdown(text) {
 
     let html = escapeHTML(text);
 
-    /* Code blocks */
-
     html = html.replace(
 
         /```([\s\S]*?)```/g,
@@ -700,8 +511,6 @@ function renderMarkdown(text) {
         `<pre class="cipher-code"><code>$1</code></pre>`
 
     );
-
-    /* Inline code */
 
     html = html.replace(
 
@@ -711,8 +520,6 @@ function renderMarkdown(text) {
 
     );
 
-    /* Bold */
-
     html = html.replace(
 
         /\*\*(.*?)\*\*/g,
@@ -721,8 +528,6 @@ function renderMarkdown(text) {
 
     );
 
-    /* Italic */
-
     html = html.replace(
 
         /\*(.*?)\*/g,
@@ -730,8 +535,6 @@ function renderMarkdown(text) {
         `<em>$1</em>`
 
     );
-
-    /* Headings */
 
     html = html.replace(
 
@@ -757,8 +560,6 @@ function renderMarkdown(text) {
 
     );
 
-    /* Bullet list */
-
     html = html.replace(
 
         /^\- (.*)$/gm,
@@ -775,202 +576,9 @@ function renderMarkdown(text) {
 
     );
 
-    /* Line breaks */
-
     html = html.replace(/\n/g, "<br>");
 
     return html;
-
-}
-
-
-/* ==========================================
-   RENDER BOT RESPONSE
-========================================== */
-
-function renderBotResponse(element, text) {
-
-    element.innerHTML = renderMarkdown(text);
-
-}
-
-
-/* ==========================================
-   COPY CODE
-========================================== */
-
-async function copyCode(button){
-
-    const code =
-
-        button.parentElement.querySelector("code");
-
-    if(!code) return;
-
-    try{
-
-        await navigator.clipboard.writeText(
-
-            code.innerText
-
-        );
-
-        showSuccess("Code copied.");
-
-    }
-
-    catch(error){
-
-        console.error(error);
-
-        showError("Unable to copy code.");
-
-    }
-
-}
-
-
-/* ==========================================
-   FILE & IMAGE ATTACHMENTS
-========================================== */
-
-const Attachment = {
-
-    file: null,
-
-    preview: null
-
-};
-
-
-/* ==========================================
-   SELECT FILE
-========================================== */
-
-function selectAttachment() {
-
-    let input = document.getElementById("attachment-input");
-
-    if (!input) {
-
-        input = document.createElement("input");
-
-        input.type = "file";
-
-        input.id = "attachment-input";
-
-        input.accept = "image/*,.pdf,.txt,.doc,.docx";
-
-        input.style.display = "none";
-
-        input.addEventListener("change", handleAttachment);
-
-        document.body.appendChild(input);
-
-    }
-
-    input.click();
-
-}
-
-
-/* ==========================================
-   HANDLE FILE
-========================================== */
-
-function handleAttachment(event) {
-
-    const file = event.target.files[0];
-
-    if (!file) return;
-
-    Attachment.file = file;
-
-    showSuccess(`Selected: ${file.name}`);
-
-}
-
-
-/* ==========================================
-   REMOVE FILE
-========================================== */
-
-function removeAttachment() {
-
-    Attachment.file = null;
-
-    showInfo("Attachment removed.");
-
-}
-
-
-/* ==========================================
-   UPLOAD FILE
-========================================== */
-
-async function uploadAttachment(chatId) {
-
-    if (!Attachment.file) return null;
-
-    const formData = new FormData();
-
-    formData.append(
-
-        "file",
-
-        Attachment.file
-
-    );
-
-    formData.append(
-
-        "chat_id",
-
-        chatId
-
-    );
-
-    try {
-
-        const response = await fetch(
-
-            "/upload",
-
-            {
-
-                method: "POST",
-
-                body: formData
-
-            }
-
-        );
-
-        const data = await response.json();
-
-        if (data.success) {
-
-            return data.file_url;
-
-        }
-
-        return null;
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        showError(
-
-            "Unable to upload attachment."
-
-        );
-
-        return null;
-
-    }
 
 }
 
@@ -992,38 +600,22 @@ function createMessageActions(role, text) {
         <div class="message-actions">
 
             <button
-                class="message-action"
+                class="message-btn"
                 onclick="copyMessage(this)"
-                title="Copy">
+                title="Copy"
+                type="button">
 
                 📋
 
             </button>
 
             <button
-                class="message-action"
+                class="message-btn"
                 onclick="regenerateResponse()"
-                title="Regenerate">
+                title="Regenerate"
+                type="button">
 
                 🔄
-
-            </button>
-
-            <button
-                class="message-action"
-                onclick="pinMessage(this)"
-                title="Pin">
-
-                📌
-
-            </button>
-
-            <button
-                class="message-action"
-                onclick="shareMessage(this)"
-                title="Share">
-
-                📤
 
             </button>
 
@@ -1042,7 +634,7 @@ async function copyMessage(button) {
 
     const message =
 
-        button.closest(".message")
+        button.closest(".msg")
               .querySelector(".message-text");
 
     try {
@@ -1090,74 +682,6 @@ function regenerateResponse() {
 
 
 /* ==========================================
-   PIN MESSAGE
-========================================== */
-
-function pinMessage(button) {
-
-    button.innerHTML = "📍";
-
-    showSuccess(
-
-        "Message pinned."
-
-    );
-
-}
-
-
-/* ==========================================
-   SHARE
-========================================== */
-
-async function shareMessage(button) {
-
-    const message =
-
-        button.closest(".message")
-              .querySelector(".message-text")
-              .innerText;
-
-    if (navigator.share) {
-
-        try {
-
-            await navigator.share({
-
-                title: "Cipher",
-
-                text: message
-
-            });
-
-        }
-
-        catch {
-
-        }
-
-    }
-
-    else {
-
-        await navigator.clipboard.writeText(
-
-            message
-
-        );
-
-        showSuccess(
-
-            "Copied for sharing."
-
-        );
-
-    }
-
-}
-
-
-/* ==========================================
    AUTO SAVE & DRAFT RECOVERY
 ========================================== */
 
@@ -1167,10 +691,6 @@ const Draft = {
 
 };
 
-
-/* ==========================================
-   SAVE DRAFT
-========================================== */
 
 function saveDraft() {
 
@@ -1186,10 +706,6 @@ function saveDraft() {
 
 }
 
-
-/* ==========================================
-   LOAD DRAFT
-========================================== */
 
 function loadDraft() {
 
@@ -1216,10 +732,6 @@ function loadDraft() {
 }
 
 
-/* ==========================================
-   CLEAR DRAFT
-========================================== */
-
 function clearDraft() {
 
     localStorage.removeItem(
@@ -1230,10 +742,6 @@ function clearDraft() {
 
 }
 
-
-/* ==========================================
-   AUTO SAVE EVENTS
-========================================== */
 
 if (ChatUI.input) {
 
@@ -1249,15 +757,5 @@ if (ChatUI.input) {
 
 
 /* ==========================================
-   CLEAR AFTER SEND
+   END OF CHAT.JS
 ========================================== */
-
-const originalSendMessage = sendMessage;
-
-sendMessage = async function(event){
-
-    await originalSendMessage(event);
-
-    clearDraft();
-
-};
