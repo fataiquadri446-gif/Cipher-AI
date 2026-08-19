@@ -89,22 +89,19 @@ const App = {
         document.getElementById("settings-btn"),
 
     reminderButton:
-        document.getElementById("reminder-btn"),
+        document.getElementById("open-reminder-btn"),
 
     attachmentButton:
-        document.getElementById("attachment-btn"),
+        document.getElementById("upload-btn"),
 
     fileInput:
         document.getElementById("file-input"),
 
     reminderModal:
-        document.getElementById("reminder-modal"),
-
-    reminderForm:
-        document.getElementById("reminder-form"),
+        document.getElementById("reminder-panel"),
 
     reminderText:
-        document.getElementById("reminder-text"),
+        document.getElementById("reminder-title"),
 
     reminderDate:
         document.getElementById("reminder-date"),
@@ -120,22 +117,11 @@ const App = {
     reminderError:
         document.getElementById("reminder-error"),
 
-    closeReminder:
-        document.getElementById("close-reminder"),
-
-    cancelReminder:
-        document.getElementById("cancel-reminder"),
+    saveReminderButton:
+        document.getElementById("save-reminder-btn"),
 
     settingsModal:
-        document.getElementById("settings-modal"),
-
-    closeSettings:
-        document.getElementById("close-settings"),
-
-    closeSettingsBottom:
-        document.getElementById(
-            "close-settings-bottom"
-        ),
+        document.getElementById("settings-panel"),
 
     fontSizeSetting:
         document.getElementById(
@@ -166,40 +152,6 @@ const App = {
 
 
 /* =========================================================
-   DOM REFRESH
-   Useful if another script modifies the page.
-========================================================= */
-
-function refreshAppDOM() {
-
-    App.authScreen =
-        document.getElementById("auth-screen");
-
-    App.appScreen =
-        document.getElementById("app-screen");
-
-    App.chat =
-        document.getElementById("chat");
-
-    App.form =
-        document.getElementById("form");
-
-    App.input =
-        document.getElementById("input");
-
-    App.send =
-        document.getElementById("send");
-
-    App.sidebar =
-        document.getElementById("sidebar");
-
-    App.sidebarToggle =
-        document.getElementById("sidebar-toggle");
-
-}
-
-
-/* =========================================================
    INITIALIZATION
 ========================================================= */
 
@@ -218,40 +170,11 @@ async function initializeCipher() {
     }
 
 
-    /*
-     * Theme system is controlled by themes.js.
-     */
-
-    if (
-        window.CipherThemes &&
-        typeof window.CipherThemes.apply === "function"
-    ) {
-
-        window.CipherThemes.apply(
-            Cipher.theme,
-            false
-        );
-
-    }
-
-
-    /*
-     * Set initial date for reminder.
-     */
-
     setMinimumReminderDate();
 
 
-    /*
-     * Connect application events.
-     */
-
     registerGlobalEvents();
 
-
-    /*
-     * Check authentication.
-     */
 
     await checkLogin();
 
@@ -333,12 +256,6 @@ async function checkLogin() {
         );
 
 
-        showNotification(
-            "Unable to connect to Cipher.",
-            "error"
-        );
-
-
         showAuthScreen();
 
     }
@@ -413,24 +330,20 @@ function enterApp(username) {
 
 
     /*
-     * Load chat history through chat.js.
+     * Load chat history through sidebar.js.
      */
 
     if (
-        typeof loadChats === "function"
+        typeof loadSidebarChats === "function"
     ) {
 
         safeExecute(
-            () => loadChats(),
+            () => loadSidebarChats(),
             "Load Chats"
         );
 
     }
 
-
-    /*
-     * Focus the message box.
-     */
 
     setTimeout(() => {
 
@@ -487,28 +400,12 @@ function hideLoading() {
         false;
 
 
-    App.send.innerHTML = `
+    if (App.send.dataset.originalText) {
 
-        <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true">
+        App.send.innerHTML =
+            App.send.dataset.originalText;
 
-            <path
-                d="M22 2L11 13">
-            </path>
-
-            <path
-                d="M22 2L15 22L11 13L2 9L22 2">
-            </path>
-
-        </svg>
-
-    `;
+    }
 
 }
 
@@ -539,6 +436,9 @@ function registerGlobalEvents() {
 
     /* =====================================================
        MESSAGE FORM
+       NOTE: chat.js does NOT bind its own submit listener
+       (initializeChat() is never called), so this is the
+       single, authoritative handler for sending messages.
     ===================================================== */
 
     if (App.form) {
@@ -573,22 +473,11 @@ function registerGlobalEvents() {
 
     /* =====================================================
        SIDEBAR TOGGLE
+       NOTE: sidebar.js already binds its own click listener
+       to #sidebar-toggle (and owns toggleSidebar()), so app.js
+       intentionally does NOT bind a second listener here to
+       avoid the double-toggle bug.
     ===================================================== */
-
-    if (App.sidebarToggle) {
-
-        App.sidebarToggle.addEventListener(
-            "click",
-            event => {
-
-                event.stopPropagation();
-
-                toggleSidebar();
-
-            }
-        );
-
-    }
 
 
     /* =====================================================
@@ -601,27 +490,6 @@ function registerGlobalEvents() {
             "click",
             openSettings
         );
-
-    }
-
-
-    if (App.closeSettings) {
-
-        App.closeSettings.addEventListener(
-            "click",
-            closeSettings
-        );
-
-    }
-
-
-    if (App.closeSettingsBottom) {
-
-        App.closeSettingsBottom
-            .addEventListener(
-                "click",
-                closeSettings
-            );
 
     }
 
@@ -640,30 +508,10 @@ function registerGlobalEvents() {
     }
 
 
-    if (App.closeReminder) {
+    if (App.saveReminderButton) {
 
-        App.closeReminder.addEventListener(
+        App.saveReminderButton.addEventListener(
             "click",
-            closeReminder
-        );
-
-    }
-
-
-    if (App.cancelReminder) {
-
-        App.cancelReminder.addEventListener(
-            "click",
-            closeReminder
-        );
-
-    }
-
-
-    if (App.reminderForm) {
-
-        App.reminderForm.addEventListener(
-            "submit",
             handleReminderSubmit
         );
 
@@ -693,6 +541,53 @@ function registerGlobalEvents() {
         );
 
     }
+
+
+    /* =====================================================
+       PANEL CLOSE BUTTONS (theme / settings / reminder)
+       These use data-close-panel="<id>" in the HTML.
+    ===================================================== */
+
+    document
+        .querySelectorAll("[data-close-panel]")
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const panel =
+                        document.getElementById(
+                            button.dataset.closePanel
+                        );
+
+                    if (panel) {
+
+                        panel.style.display =
+                            "none";
+
+                        if (
+                            panel === App.settingsModal
+                        ) {
+
+                            Cipher.settingsOpen = false;
+
+                        }
+
+                        if (
+                            panel === App.reminderModal
+                        ) {
+
+                            Cipher.reminderOpen = false;
+
+                        }
+
+                    }
+
+                }
+            );
+
+        });
 
 
     /* =====================================================
@@ -805,32 +700,12 @@ function registerGlobalEvents() {
 
 
     /* =====================================================
-       CLICK OUTSIDE
-    ===================================================== */
-
-    document.addEventListener(
-        "click",
-        handleDocumentClick
-    );
-
-
-    /* =====================================================
        ESCAPE
     ===================================================== */
 
     document.addEventListener(
         "keydown",
         handleGlobalKeydown
-    );
-
-
-    /* =====================================================
-       WINDOW RESIZE
-    ===================================================== */
-
-    window.addEventListener(
-        "resize",
-        handleWindowResize
     );
 
 
@@ -913,22 +788,15 @@ function autoResizeInput() {
 
 /* =========================================================
    SEND MESSAGE
+   NOTE: chat.js owns the real sending logic and reads the
+   message straight from ChatUI.input, so this just forwards
+   the submit event to it. It no longer requires a chat to
+   already exist -- the backend auto-creates one on /chat.
 ========================================================= */
 
 async function handleSendMessage(event) {
 
     event.preventDefault();
-
-
-    if (!Cipher.currentChat) {
-
-        showInfo(
-            "Start a new chat before sending a message."
-        );
-
-        return;
-
-    }
 
 
     if (!App.input) return;
@@ -961,9 +829,7 @@ async function handleSendMessage(event) {
             typeof sendMessage === "function"
         ) {
 
-            await sendMessage(
-                message
-            );
+            await sendMessage();
 
         }
 
@@ -1009,115 +875,6 @@ async function handleSendMessage(event) {
 
 
 /* =========================================================
-   SIDEBAR
-========================================================= */
-
-function toggleSidebar(force = null) {
-
-    if (!App.sidebar) return;
-
-
-    const shouldOpen =
-        force !== null
-            ? Boolean(force)
-            : !App.sidebar.classList.contains("open");
-
-
-    App.sidebar.classList.toggle(
-        "open",
-        shouldOpen
-    );
-
-
-    Cipher.sidebarOpen =
-        shouldOpen;
-
-
-    document.body.classList.toggle(
-        "sidebar-open",
-        shouldOpen
-    );
-
-}
-
-
-function closeSidebar() {
-
-    toggleSidebar(false);
-
-}
-
-
-/* =========================================================
-   MOBILE SIDEBAR
-========================================================= */
-
-function handleWindowResize() {
-
-    if (
-        window.innerWidth > 900
-    ) {
-
-        closeSidebar();
-
-    }
-
-
-    if (
-        window.CipherThemes &&
-        typeof window.CipherThemes.closeMenu ===
-            "function"
-    ) {
-
-        window.CipherThemes.closeMenu();
-
-    }
-
-}
-
-
-function handleDocumentClick(event) {
-
-    /*
-     * Mobile sidebar.
-     */
-
-    if (
-        window.innerWidth <= 900 &&
-        App.sidebar &&
-        App.sidebarToggle
-    ) {
-
-        const clickedSidebar =
-            App.sidebar.contains(
-                event.target
-            );
-
-
-        const clickedToggle =
-            App.sidebarToggle.contains(
-                event.target
-            );
-
-
-        if (
-            !clickedSidebar &&
-            !clickedToggle &&
-            App.sidebar.classList.contains(
-                "open"
-            )
-        ) {
-
-            closeSidebar();
-
-        }
-
-    }
-
-}
-
-
-/* =========================================================
    SETTINGS
 ========================================================= */
 
@@ -1129,24 +886,12 @@ function openSettings() {
     loadAppearanceIntoSettings();
 
 
-    App.settingsModal.classList.add(
-        "open"
-    );
-
-
-    App.settingsModal.setAttribute(
-        "aria-hidden",
-        "false"
-    );
+    App.settingsModal.style.display =
+        "block";
 
 
     Cipher.settingsOpen =
         true;
-
-
-    document.body.classList.add(
-        "modal-open"
-    );
 
 }
 
@@ -1156,28 +901,12 @@ function closeSettings() {
     if (!App.settingsModal) return;
 
 
-    App.settingsModal.classList.remove(
-        "open"
-    );
-
-
-    App.settingsModal.setAttribute(
-        "aria-hidden",
-        "true"
-    );
+    App.settingsModal.style.display =
+        "none";
 
 
     Cipher.settingsOpen =
         false;
-
-
-    if (!Cipher.reminderOpen) {
-
-        document.body.classList.remove(
-            "modal-open"
-        );
-
-    }
 
 }
 
@@ -1302,30 +1031,15 @@ function openReminder() {
     if (!App.reminderModal) return;
 
 
-    closeSettings();
-
-
     setMinimumReminderDate();
 
 
-    App.reminderModal.classList.add(
-        "open"
-    );
-
-
-    App.reminderModal.setAttribute(
-        "aria-hidden",
-        "false"
-    );
+    App.reminderModal.style.display =
+        "block";
 
 
     Cipher.reminderOpen =
         true;
-
-
-    document.body.classList.add(
-        "modal-open"
-    );
 
 
     if (App.reminderText) {
@@ -1346,28 +1060,12 @@ function closeReminder() {
     if (!App.reminderModal) return;
 
 
-    App.reminderModal.classList.remove(
-        "open"
-    );
-
-
-    App.reminderModal.setAttribute(
-        "aria-hidden",
-        "true"
-    );
+    App.reminderModal.style.display =
+        "none";
 
 
     Cipher.reminderOpen =
         false;
-
-
-    if (!Cipher.settingsOpen) {
-
-        document.body.classList.remove(
-            "modal-open"
-        );
-
-    }
 
 
     clearReminderError();
@@ -1428,1310 +1126,14 @@ function setMinimumReminderDate() {
 
 async function handleReminderSubmit(event) {
 
-    event.preventDefault();
+    if (event) {
+
+        event.preventDefault();
+
+    }
 
 
     clearReminderError();
 
 
-    const text =
-        App.reminderText
-            ? App.reminderText.value.trim()
-            : "";
-
-
-    const date =
-        App.reminderDate
-            ? App.reminderDate.value
-            : "";
-
-
-    const time =
-        App.reminderTime
-            ? App.reminderTime.value
-            : "";
-
-
-    const notificationType =
-        App.reminderNotification
-            ? App.reminderNotification.value
-            : "in_app";
-
-
-    if (!text) {
-
-        showReminderError(
-            "Please enter what you want Cipher to remind you about."
-        );
-
-        return;
-
-    }
-
-
-    if (!date || !time) {
-
-        showReminderError(
-            "Please select a date and time."
-        );
-
-        return;
-
-    }
-
-
-    const reminderDateTime =
-        new Date(
-            `${date}T${time}`
-        );
-
-
-    if (
-        Number.isNaN(
-            reminderDateTime.getTime()
-        )
-    ) {
-
-        showReminderError(
-            "Please enter a valid reminder date and time."
-        );
-
-        return;
-
-    }
-
-
-    if (
-        reminderDateTime.getTime()
-        <= Date.now()
-    ) {
-
-        showReminderError(
-            "Please choose a future date and time."
-        );
-
-        return;
-
-    }
-
-
-    /*
-     * The backend endpoint will be
-     * connected in the reminder backend.
-     */
-
-    const reminder = {
-
-        text: text,
-
-        date: date,
-
-        time: time,
-
-        notification_type:
-            notificationType
-
-    };
-
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/reminders",
-                {
-
-                    method: "POST",
-
-                    credentials:
-                        "same-origin",
-
-                    headers: {
-
-                        "Content-Type":
-                            "application/json",
-
-                        "Accept":
-                            "application/json"
-
-                    },
-
-                    body:
-                        JSON.stringify(
-                            reminder
-                        )
-
-                }
-            );
-
-
-        if (!response.ok) {
-
-            let errorMessage =
-                "Unable to create reminder.";
-
-
-            try {
-
-                const errorData =
-                    await response.json();
-
-
-                if (
-                    errorData.message
-                ) {
-
-                    errorMessage =
-                        errorData.message;
-
-                }
-
-            }
-
-            catch {
-
-                /* Keep default message. */
-
-            }
-
-
-            throw new Error(
-                errorMessage
-            );
-
-        }
-
-
-        const data =
-            await response.json();
-
-
-        closeReminder();
-
-
-        if (
-            App.reminderForm
-        ) {
-
-            App.reminderForm.reset();
-
-        }
-
-
-        setMinimumReminderDate();
-
-
-        showSuccess(
-            data.message
-            || "Reminder set successfully."
-        );
-
-
-    }
-
-    catch (error) {
-
-        logError(
-            error,
-            "Reminder"
-        );
-
-
-        /*
-         * If the backend reminder endpoint
-         * hasn't been added yet, give a
-         * clear message instead of silently
-         * pretending the reminder was saved.
-         */
-
-        showReminderError(
-            error.message
-            || "Unable to set reminder."
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   REMINDER ERROR
-========================================================= */
-
-function showReminderError(message) {
-
-    if (!App.reminderError) {
-
-        showError(message);
-
-        return;
-
-    }
-
-
-    App.reminderError.textContent =
-        message;
-
-
-    App.reminderError.style.display =
-        "block";
-
-}
-
-
-function clearReminderError() {
-
-    if (!App.reminderError) return;
-
-
-    App.reminderError.textContent =
-        "";
-
-
-    App.reminderError.style.display =
-        "none";
-
-}
-
-
-/* =========================================================
-   FILE ATTACHMENT
-========================================================= */
-
-function openFilePicker() {
-
-    if (!App.fileInput) return;
-
-
-    App.fileInput.click();
-
-}
-
-
-function handleFileSelection(event) {
-
-    const files =
-        Array.from(
-            event.target.files || []
-        );
-
-
-    if (!files.length) return;
-
-
-    /*
-     * File processing will be connected
-     * to the document system.
-     */
-
-    const names =
-        files
-            .map(file => file.name)
-            .join(", ");
-
-
-    showInfo(
-        `${files.length} file${files.length === 1 ? "" : "s"} selected: ${names}`
-    );
-
-
-    /*
-     * Reset input so the same file can
-     * be selected again later.
-     */
-
-    event.target.value = "";
-
-}
-
-
-/* =========================================================
-   WELCOME CARDS
-========================================================= */
-
-function handleWelcomeCard(event) {
-
-    const card =
-        event.currentTarget;
-
-
-    const action =
-        card.dataset.action;
-
-
-    switch (action) {
-
-        case "chat":
-
-            focusMessageInput();
-
-            break;
-
-
-        case "research":
-
-            setMessagePrompt(
-                "What would you like Cipher to research?"
-            );
-
-            break;
-
-
-        case "documents":
-
-            openFilePicker();
-
-            break;
-
-
-        case "reminder":
-
-            openReminder();
-
-            break;
-
-
-        default:
-
-            break;
-
-    }
-
-}
-
-
-/* =========================================================
-   FOCUS MESSAGE INPUT
-========================================================= */
-
-function focusMessageInput() {
-
-    if (!App.input) return;
-
-
-    App.input.focus();
-
-
-    App.input.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest"
-    });
-
-}
-
-
-/* =========================================================
-   MESSAGE PROMPT
-========================================================= */
-
-function setMessagePrompt(prompt) {
-
-    if (!App.input) return;
-
-
-    App.input.value =
-        prompt;
-
-
-    autoResizeInput();
-
-
-    focusMessageInput();
-
-
-    App.input.setSelectionRange(
-        0,
-        0
-    );
-
-}
-
-
-/* =========================================================
-   GLOBAL KEYBOARD
-========================================================= */
-
-function handleGlobalKeydown(event) {
-
-    if (
-        event.key === "Escape"
-    ) {
-
-        if (Cipher.reminderOpen) {
-
-            closeReminder();
-
-            return;
-
-        }
-
-
-        if (Cipher.settingsOpen) {
-
-            closeSettings();
-
-            return;
-
-        }
-
-
-        if (
-            window.CipherThemes &&
-            typeof window.CipherThemes.closeMenu ===
-                "function"
-        ) {
-
-            window.CipherThemes.closeMenu();
-
-        }
-
-    }
-
-}
-
-
-/* =========================================================
-   NOTIFICATION SYSTEM
-========================================================= */
-
-function showNotification(
-    message,
-    type = "info",
-    duration = 3500
-) {
-
-    let container =
-        document.getElementById(
-            "notification-container"
-        );
-
-
-    if (!container) {
-
-        container =
-            document.createElement(
-                "div"
-            );
-
-
-        container.id =
-            "notification-container";
-
-
-        document.body.appendChild(
-            container
-        );
-
-    }
-
-
-    const notification =
-        document.createElement(
-            "div"
-        );
-
-
-    notification.className =
-        `notification ${type}`;
-
-
-    notification.setAttribute(
-        "role",
-        "status"
-    );
-
-
-    const messageSpan =
-        document.createElement(
-            "span"
-        );
-
-
-    messageSpan.textContent =
-        message;
-
-
-    const closeButton =
-        document.createElement(
-            "button"
-        );
-
-
-    closeButton.type =
-        "button";
-
-
-    closeButton.className =
-        "notification-close";
-
-
-    closeButton.setAttribute(
-        "aria-label",
-        "Close notification"
-    );
-
-
-    closeButton.innerHTML =
-        "&times;";
-
-
-    notification.appendChild(
-        messageSpan
-    );
-
-
-    notification.appendChild(
-        closeButton
-    );
-
-
-    container.appendChild(
-        notification
-    );
-
-
-    requestAnimationFrame(() => {
-
-        notification.classList.add(
-            "show"
-        );
-
-    });
-
-
-    let removed = false;
-
-
-    const removeNotification =
-        () => {
-
-            if (removed) return;
-
-
-            removed = true;
-
-
-            notification.classList.remove(
-                "show"
-            );
-
-
-            setTimeout(() => {
-
-                if (
-                    notification.parentNode
-                ) {
-
-                    notification.remove();
-
-                }
-
-            }, 300);
-
-        };
-
-
-    closeButton.addEventListener(
-        "click",
-        removeNotification
-    );
-
-
-    setTimeout(
-        removeNotification,
-        duration
-    );
-
-}
-
-
-/* =========================================================
-   NOTIFICATION HELPERS
-========================================================= */
-
-function showSuccess(message) {
-
-    showNotification(
-        message,
-        "success"
-    );
-
-}
-
-
-function showError(message) {
-
-    showNotification(
-        message,
-        "error"
-    );
-
-}
-
-
-function showWarning(message) {
-
-    showNotification(
-        message,
-        "warning"
-    );
-
-}
-
-
-function showInfo(message) {
-
-    showNotification(
-        message,
-        "info"
-    );
-
-}
-
-
-/* =========================================================
-   CONFIRMATION
-========================================================= */
-
-function confirmAction(message) {
-
-    return window.confirm(
-        message
-    );
-
-}
-
-
-/* =========================================================
-   SPLASH SCREEN
-========================================================= */
-
-async function showSplashScreen(
-    duration = 1200
-) {
-
-    let splash =
-        document.getElementById(
-            "cipher-splash"
-        );
-
-
-    if (!splash) {
-
-        splash =
-            document.createElement(
-                "div"
-            );
-
-
-        splash.id =
-            "cipher-splash";
-
-
-        splash.innerHTML = `
-
-            <div class="splash-content">
-
-                <div class="splash-logo">
-
-                    <img
-                        src="/static/images/logo.jpg"
-                        alt="Cipher logo"
-                        class="cipher-logo">
-
-                </div>
-
-                <h1>
-                    Cipher
-                </h1>
-
-                <p>
-                    Initializing Cipher...
-                </p>
-
-                <div class="splash-loader">
-
-                    <div class="loader-bar"></div>
-
-                </div>
-
-            </div>
-
-        `;
-
-
-        document.body.appendChild(
-            splash
-        );
-
-    }
-
-
-    splash.style.display =
-        "flex";
-
-
-    await sleep(
-        duration
-    );
-
-}
-
-
-function hideSplashScreen() {
-
-    const splash =
-        document.getElementById(
-            "cipher-splash"
-        );
-
-
-    if (!splash) return;
-
-
-    splash.style.opacity =
-        "0";
-
-
-    setTimeout(() => {
-
-        if (
-            splash.parentNode
-        ) {
-
-            splash.remove();
-
-        }
-
-    }, 500);
-
-}
-
-
-/* =========================================================
-   START APPLICATION
-========================================================= */
-
-async function startApplication() {
-
-    /*
-     * Authentication is handled once
-     * by initializeCipher().
-     *
-     * This function is kept as a public
-     * startup helper for compatibility.
-     */
-
-    await showSplashScreen();
-
-
-    if (!Cipher.user) {
-
-        await checkLogin();
-
-    }
-
-
-    hideSplashScreen();
-
-}
-
-
-/* =========================================================
-   LOCAL STORAGE HELPERS
-========================================================= */
-
-function saveLocal(
-    key,
-    value
-) {
-
-    try {
-
-        localStorage.setItem(
-            key,
-            JSON.stringify(value)
-        );
-
-    }
-
-    catch (error) {
-
-        logError(
-            error,
-            "Local Storage Save"
-        );
-
-    }
-
-}
-
-
-function loadLocal(
-    key,
-    fallback = null
-) {
-
-    try {
-
-        const value =
-            localStorage.getItem(
-                key
-            );
-
-
-        if (!value) {
-
-            return fallback;
-
-        }
-
-
-        return JSON.parse(
-            value
-        );
-
-    }
-
-    catch (error) {
-
-        logError(
-            error,
-            "Local Storage Load"
-        );
-
-
-        return fallback;
-
-    }
-
-}
-
-
-/* =========================================================
-   UTILITY FUNCTIONS
-========================================================= */
-
-function $(selector) {
-
-    return document.querySelector(
-        selector
-    );
-
-}
-
-
-function $$(selector) {
-
-    return document.querySelectorAll(
-        selector
-    );
-
-}
-
-
-function createElement(
-    tag,
-    className = "",
-    html = ""
-) {
-
-    const element =
-        document.createElement(
-            tag
-        );
-
-
-    if (className) {
-
-        element.className =
-            className;
-
-    }
-
-
-    if (html) {
-
-        element.innerHTML =
-            html;
-
-    }
-
-
-    return element;
-
-}
-
-
-/* =========================================================
-   HTML ESCAPE
-========================================================= */
-
-function escapeHTML(text) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-
-    div.textContent =
-        text == null
-            ? ""
-            : String(text);
-
-
-    return div.innerHTML;
-
-}
-
-
-/* =========================================================
-   DELAY
-========================================================= */
-
-function sleep(ms) {
-
-    return new Promise(
-        resolve =>
-            setTimeout(
-                resolve,
-                ms
-            )
-    );
-
-}
-
-
-/* =========================================================
-   RANDOM ID
-========================================================= */
-
-function generateId() {
-
-    if (
-        window.crypto &&
-        typeof window.crypto.randomUUID ===
-            "function"
-    ) {
-
-        return window.crypto.randomUUID();
-
-    }
-
-
-    return (
-        Date.now().toString(36)
-        + Math.random()
-            .toString(36)
-            .substring(2)
-    );
-
-}
-
-
-/* =========================================================
-   DATE FORMAT
-========================================================= */
-
-function formatDate(date) {
-
-    try {
-
-        return new Date(
-            date
-        ).toLocaleString();
-
-    }
-
-    catch {
-
-        return "";
-
-    }
-
-}
-
-
-/* =========================================================
-   NETWORK STATUS
-========================================================= */
-
-function isOnline() {
-
-    return navigator.onLine;
-
-}
-
-
-function updateNetworkStatus() {
-
-    Cipher.online =
-        navigator.onLine;
-
-
-    if (App.userStatus) {
-
-        App.userStatus.textContent =
-            navigator.onLine
-                ? "Online"
-                : "Offline";
-
-    }
-
-}
-
-
-window.addEventListener(
-    "offline",
-    () => {
-
-        updateNetworkStatus();
-
-
-        showWarning(
-            "You're offline. Cipher will reconnect when your connection returns."
-        );
-
-    }
-);
-
-
-window.addEventListener(
-    "online",
-    () => {
-
-        updateNetworkStatus();
-
-
-        showSuccess(
-            "Connection restored."
-        );
-
-    }
-);
-
-
-/* =========================================================
-   ERROR LOGGING
-========================================================= */
-
-function logError(
-    error,
-    source = "Unknown"
-) {
-
-    console.error(
-        `[Cipher:${source}]`,
-        error
-    );
-
-}
-
-
-/* =========================================================
-   GLOBAL ERROR HANDLING
-========================================================= */
-
-window.addEventListener(
-    "error",
-    event => {
-
-        logError(
-            event.error ||
-            event.message,
-            "Window"
-        );
-
-    }
-);
-
-
-window.addEventListener(
-    "unhandledrejection",
-    event => {
-
-        logError(
-            event.reason,
-            "Promise"
-        );
-
-    }
-);
-
-
-/* =========================================================
-   SAFE EXECUTION
-========================================================= */
-
-async function safeExecute(
-    fn,
-    source = "Unknown"
-) {
-
-    try {
-
-        return await fn();
-
-    }
-
-    catch (error) {
-
-        logError(
-            error,
-            source
-        );
-
-
-        showError(
-            "Operation failed."
-        );
-
-
-        return null;
-
-    }
-
-}
-
-
-/* =========================================================
-   APPLICATION CLEANUP
-========================================================= */
-
-window.addEventListener(
-    "beforeunload",
-    () => {
-
-        /*
-         * Keep the current theme
-         * synchronized.
-         */
-
-        if (
-            window.CipherThemes &&
-            typeof window.CipherThemes.current ===
-                "function"
-        ) {
-
-            Cipher.theme =
-                window.CipherThemes.current();
-
-        }
-
-
-        saveLocal(
-            "last-chat",
-            Cipher.currentChat
-        );
-
-    }
-);
-
-
-/* =========================================================
-   AUTO SAVE
-========================================================= */
-
-setInterval(
-    () => {
-
-        if (
-            Cipher.initialized
-        ) {
-
-            saveLocal(
-                "last-chat",
-                Cipher.currentChat
-            );
-
-        }
-
-    },
-    30000
-);
-
-
-/* =========================================================
-   APPLICATION INFO
-========================================================= */
-
-Cipher.version =
-    "2.0.0";
-
-
-Cipher.build =
-    "Prototype";
-
-
-Cipher.creator =
-    "Fatai Quadri";
-
-
-console.log(`
-
-=========================================
-             CIPHER AI
-=========================================
-Version : ${Cipher.version}
-Creator : ${Cipher.creator}
-Status  : Initializing
-=========================================
-
-`);
-
-
-/* =========================================================
-   PUBLIC APP API
-========================================================= */
-
-window.CipherApp = {
-
-    state:
-        Cipher,
-
-    openSettings:
-        openSettings,
-
-    closeSettings:
-        closeSettings,
-
-    openReminder:
-        openReminder,
-
-    closeReminder:
-        closeReminder,
-
-    toggleSidebar:
-        toggleSidebar,
-
-    closeSidebar:
-        closeSidebar,
-
-    showNotification:
-        showNotification,
-
-    showSuccess:
-        showSuccess,
-
-    showError:
-        showError,
-
-    showWarning:
-        showWarning,
-
-    showInfo:
-        showInfo,
-
-    focusInput:
-        focusMessageInput,
-
-    openFilePicker:
-        openFilePicker
-
-};
-
-
-/* =========================================================
-   END OF APP.JS
-========================================================= */
+    const
