@@ -322,18 +322,22 @@ def ask_ai(message, image_base64=None, image_mime_type=None, user_facts=None):
 
     payload = {
 
+        "system_instruction": {
+
+            "parts": [
+                {
+                    "text":
+                        system_text
+                }
+            ]
+
+        },
+
         "contents": [
 
             {
-                "parts": [
-                    {
-                        "text":
-                            system_text
-                    }
-                ]
-            },
+                "role": "user",
 
-            {
                 "parts":
                     user_parts
             }
