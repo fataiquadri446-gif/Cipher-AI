@@ -118,9 +118,15 @@ async function sendMessage(event) {
 
     ChatUI.sendButton.disabled = true;
 
+    const imageDataUrl =
+        pendingImage
+            ? `data:${pendingImage.mimeType};base64,${pendingImage.base64}`
+            : null;
+
+
     addUserMessage(
-        message
-        || `📎 ${pendingImage.name}`
+        message,
+        imageDataUrl
     );
 
     ChatUI.input.value = "";
@@ -360,13 +366,15 @@ function scrollToBottom() {
    MESSAGE RENDERING
 ========================================== */
 
-function addUserMessage(text) {
+function addUserMessage(text, imageDataUrl = null) {
 
     const message = createMessageElement(
 
         "user",
 
-        text
+        text,
+
+        imageDataUrl
 
     );
 
@@ -383,7 +391,7 @@ function addUserMessage(text) {
    CREATE MESSAGE
 ========================================== */
 
-function createMessageElement(role, text) {
+function createMessageElement(role, text, imageDataUrl = null) {
 
     const wrapper = document.createElement("div");
 
@@ -396,13 +404,21 @@ function createMessageElement(role, text) {
     wrapper.dataset.time = Date.now();
 
 
+    const imageHTML =
+        imageDataUrl
+            ? `<img class="msg-image" src="${imageDataUrl}" alt="Uploaded image">`
+            : "";
+
+
     wrapper.innerHTML = `
 
-        <div class="message-text">
+        ${imageHTML}
 
-            ${escapeHTML(text)}
-
-        </div>
+        ${
+            text
+            ? `<div class="message-text">${escapeHTML(text)}</div>`
+            : ""
+        }
 
         ${createMessageActions(role, text)}
 
