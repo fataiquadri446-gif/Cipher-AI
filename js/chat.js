@@ -106,19 +106,34 @@ async function sendMessage(event) {
 
     const message = ChatUI.input.value.trim();
 
-    if (!message) return;
+    const pendingImage =
+        (typeof Cipher !== "undefined")
+            ? Cipher.pendingImage
+            : null;
+
+
+    if (!message && !pendingImage) return;
 
     Chat.sending = true;
 
     ChatUI.sendButton.disabled = true;
 
-    addUserMessage(message);
+    addUserMessage(
+        message
+        || `📎 ${pendingImage.name}`
+    );
 
     ChatUI.input.value = "";
 
     if (typeof autoResizeInput === "function") {
 
         autoResizeInput();
+
+    }
+
+    if (typeof clearPendingImage === "function") {
+
+        clearPendingImage();
 
     }
 
@@ -142,7 +157,17 @@ async function sendMessage(event) {
 
                 chat_id: Chat.currentChat,
 
-                message: message
+                message: message,
+
+                image_base64:
+                    pendingImage
+                        ? pendingImage.base64
+                        : null,
+
+                image_mime_type:
+                    pendingImage
+                        ? pendingImage.mimeType
+                        : null
 
             })
 
