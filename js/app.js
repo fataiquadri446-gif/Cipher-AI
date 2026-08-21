@@ -1468,7 +1468,10 @@ function handleFileSelection(event) {
         };
 
 
-        showAttachmentPreview(file.name);
+        showAttachmentPreview(
+            file.name,
+            result
+        );
 
     };
 
@@ -1487,7 +1490,7 @@ function handleFileSelection(event) {
 }
 
 
-function showAttachmentPreview(fileName) {
+function showAttachmentPreview(fileName, dataUrl) {
 
     const preview =
         document.getElementById(
@@ -1507,11 +1510,24 @@ function showAttachmentPreview(fileName) {
         "attachment-chip";
 
 
+    const thumb =
+        document.createElement("img");
+
+    thumb.src =
+        dataUrl;
+
+    thumb.alt =
+        fileName;
+
+    thumb.className =
+        "attachment-thumb";
+
+
     const label =
         document.createElement("span");
 
     label.textContent =
-        `📎 ${fileName}`;
+        fileName;
 
 
     const removeButton =
@@ -1533,6 +1549,8 @@ function showAttachmentPreview(fileName) {
         clearPendingImage
     );
 
+
+    chip.appendChild(thumb);
 
     chip.appendChild(label);
 
