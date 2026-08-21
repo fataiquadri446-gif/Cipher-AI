@@ -1384,7 +1384,16 @@ function clearReminderError() {
 
 /* =========================================================
    FILE ATTACHMENT
+   Images are converted to base64 and held here until the
+   next message is sent -- chat.js reads Cipher.pendingImage
+   and includes it in the /chat request. Cipher's vision
+   support only understands images, so non-image files are
+   rejected with a clear message rather than silently doing
+   nothing.
 ========================================================= */
+
+Cipher.pendingImage = null;
+
 
 function openFilePicker() {
 
@@ -1404,21 +1413,151 @@ function handleFileSelection(event) {
         );
 
 
+    event.target.value = "";
+
+
     if (!files.length) return;
 
 
-    const names =
-        files
-            .map(file => file.name)
-            .join(", ");
+    const file = files[0];
 
 
-    showInfo(
-        `${files.length} file${files.length === 1 ? "" : "s"} selected: ${names}`
+    if (!file.type.startsWith("image/")) {
+
+        showWarning(
+            "Cipher can currently only see images -- try a JPG, PNG, or WEBP file."
+        );
+
+        return;
+
+    }
+
+
+    if (file.size > 8 * 1024 * 1024) {
+
+        showWarning(
+            "That image is too large. Please use one under 8MB."
+        );
+
+        return;
+
+    }
+
+
+    const reader = new FileReader();
+
+
+    reader.onload = () => {
+
+        const result = reader.result;
+
+        const base64 =
+            result.substring(
+                result.indexOf(",") + 1
+            );
+
+
+        Cipher.pendingImage = {
+
+            base64: base64,
+
+            mimeType: file.type,
+
+            name: file.name
+
+        };
+
+
+        showAttachmentPreview(file.name);
+
+    };
+
+
+    reader.onerror = () => {
+
+        showError(
+            "Unable to read that image."
+        );
+
+    };
+
+
+    reader.readAsDataURL(file);
+
+}
+
+
+function showAttachmentPreview(fileName) {
+
+    const preview =
+        document.getElementById(
+            "attachment-preview"
+        );
+
+    if (!preview) return;
+
+
+    preview.innerHTML = "";
+
+
+    const chip =
+        document.createElement("div");
+
+    chip.className =
+        "attachment-chip";
+
+
+    const label =
+        document.createElement("span");
+
+    label.textContent =
+        `📎 ${fileName}`;
+
+
+    const removeButton =
+        document.createElement("button");
+
+    removeButton.type =
+        "button";
+
+    removeButton.setAttribute(
+        "aria-label",
+        "Remove attachment"
+    );
+
+    removeButton.textContent =
+        "×";
+
+    removeButton.addEventListener(
+        "click",
+        clearPendingImage
     );
 
 
-    event.target.value = "";
+    chip.appendChild(label);
+
+    chip.appendChild(removeButton);
+
+    preview.appendChild(chip);
+
+}
+
+
+function clearPendingImage() {
+
+    Cipher.pendingImage = null;
+
+
+    const preview =
+        document.getElementById(
+            "attachment-preview"
+        );
+
+    if (preview) {
+
+        preview.innerHTML = "";
+
+    }
 
 }
 
