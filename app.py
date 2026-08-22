@@ -971,6 +971,58 @@ def init_db():
     )
 
 
+    # -----------------------------------------------------
+    # FRIEND CODES
+    #
+    # A user generates a short-lived code and shares it
+    # outside the app. Whoever redeems it becomes friends
+    # with the code's owner instantly -- no search, no
+    # browsing other users, no separate accept step.
+    # -----------------------------------------------------
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS friend_codes (
+
+            id UUID PRIMARY KEY
+                DEFAULT gen_random_uuid(),
+
+            code VARCHAR(12)
+                UNIQUE NOT NULL,
+
+            user_id UUID
+                REFERENCES users(id)
+                ON DELETE CASCADE,
+
+            created_at TIMESTAMP
+                DEFAULT NOW(),
+
+            expires_at TIMESTAMP
+                NOT NULL,
+
+            used_by UUID
+                REFERENCES users(id)
+                ON DELETE SET NULL,
+
+            used_at TIMESTAMP
+
+        )
+        """
+    )
+
+
+    cur.execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        friend_codes_code_idx
+
+        ON friend_codes (
+            code
+        )
+        """
+    )
+
+
     conn.commit()
 
     cur.close()
@@ -3223,25 +3275,153 @@ explanations short, one or two sentences.
 
 
 # ---------------------------------------------------------
-# SEARCH USERS
+# HELPER: ordered friendship pair
+# ---------------------------------------------------------
+
+def _friendship_pair(user_id_a, user_id_b):
+
+    ids = sorted([str(user_id_a), str(user_id_b)])
+
+    return ids[0], ids[1]
+
+
+def _generate_friend_code(length=6):
+
+    import string
+    import secrets
+
+    alphabet = string.ascii_uppercase + string.digits
+
+    # Avoid visually confusing characters.
+    alphabet = alphabet.replace("0", "").replace("O", "")
+    alphabet = alphabet.replace("1", "").replace("I", "")
+
+    return "".join(
+        secrets.choice(alphabet) for _ in range(length)
+    )
+
+
+# ---------------------------------------------------------
+# GENERATE A FRIEND CODE
+#
+# Creates a short-lived code (10 minutes) tied to the
+# current user. No user list or search is exposed anywhere
+# -- the only way to find someone is to already have a code
+# they shared with you outside the app.
 # ---------------------------------------------------------
 
 @app.route(
-    "/api/users/search",
-    methods=["GET"]
+    "/api/friends/code/generate",
+    methods=["POST"]
 )
 @login_required
-def search_users():
+def generate_friend_code():
 
-    query = request.args.get(
-        "q",
-        ""
-    ).strip()
+    from datetime import datetime, timedelta
+
+    conn = get_db()
+
+    cur = conn.cursor(
+        cursor_factory=
+        psycopg2.extras.DictCursor
+    )
 
 
-    if len(query) < 2:
+    expires_at = (
+        datetime.now() + timedelta(minutes=10)
+    )
 
-        return jsonify([])
+
+    code = None
+
+    for _ in range(5):
+
+        candidate = _generate_friend_code()
+
+        cur.execute(
+            """
+            SELECT id FROM friend_codes
+            WHERE code = %s
+            """,
+            (candidate,)
+        )
+
+        if not cur.fetchone():
+
+            code = candidate
+
+            break
+
+
+    if not code:
+
+        cur.close()
+
+        conn.close()
+
+        return jsonify({
+
+            "error": "Unable to generate a code, try again."
+
+        }), 500
+
+
+    cur.execute(
+        """
+        INSERT INTO friend_codes
+            (code, user_id, expires_at)
+        VALUES
+            (%s, %s, %s)
+        """,
+        (code, current_user.id, expires_at)
+    )
+
+    conn.commit()
+
+    cur.close()
+
+    conn.close()
+
+
+    return jsonify({
+
+        "code": code,
+
+        "expires_at": expires_at.isoformat()
+
+    }), 201
+
+
+# ---------------------------------------------------------
+# REDEEM A FRIEND CODE
+#
+# Entering someone else's valid, unexpired, unused code
+# connects you as friends immediately -- no accept step,
+# since possessing the code already implies both people
+# agreed to connect.
+# ---------------------------------------------------------
+
+@app.route(
+    "/api/friends/code/redeem",
+    methods=["POST"]
+)
+@login_required
+def redeem_friend_code():
+
+    from datetime import datetime
+
+    data = request.get_json(silent=True) or {}
+
+    code = data.get("code", "").strip().upper()
+
+
+    if not code:
+
+        return jsonify({
+
+            "error": "Enter a code."
+
+        }), 400
 
 
     conn = get_db()
@@ -3254,83 +3434,59 @@ def search_users():
 
     cur.execute(
         """
-        SELECT id, username
-
-        FROM users
-
-        WHERE
-
-            username ILIKE %s
-
-            AND id != %s
-
-        ORDER BY username ASC
-
-        LIMIT 20
+        SELECT * FROM friend_codes
+        WHERE code = %s
         """,
-        (
-            f"%{query}%",
-            current_user.id
-        )
+        (code,)
     )
 
-
-    rows = cur.fetchall()
-
-    cur.close()
-
-    conn.close()
+    row = cur.fetchone()
 
 
-    return jsonify([
+    if not row:
 
-        {
-            "id": str(row["id"]),
-            "username": row["username"]
-        }
+        cur.close()
 
-        for row in rows
-
-    ])
-
-
-# ---------------------------------------------------------
-# HELPER: ordered friendship pair
-# ---------------------------------------------------------
-
-def _friendship_pair(user_id_a, user_id_b):
-
-    ids = sorted([str(user_id_a), str(user_id_b)])
-
-    return ids[0], ids[1]
-
-
-# ---------------------------------------------------------
-# SEND FRIEND REQUEST
-# ---------------------------------------------------------
-
-@app.route(
-    "/api/friends/request",
-    methods=["POST"]
-)
-@login_required
-def send_friend_request():
-
-    data = request.get_json(silent=True) or {}
-
-    receiver_id = data.get("user_id")
-
-
-    if not receiver_id:
+        conn.close()
 
         return jsonify({
 
-            "error": "A user id is required."
+            "error": "That code isn't valid."
 
-        }), 400
+        }), 404
 
 
-    if str(receiver_id) == str(current_user.id):
+    if row["used_by"] is not None:
+
+        cur.close()
+
+        conn.close()
+
+        return jsonify({
+
+            "error": "That code has already been used."
+
+        }), 409
+
+
+    if row["expires_at"] < datetime.now():
+
+        cur.close()
+
+        conn.close()
+
+        return jsonify({
+
+            "error": "That code has expired. Ask for a new one."
+
+        }), 410
+
+
+    if str(row["user_id"]) == str(current_user.id):
+
+        cur.close()
+
+        conn.close()
 
         return jsonify({
 
@@ -3339,17 +3495,9 @@ def send_friend_request():
         }), 400
 
 
-    conn = get_db()
-
-    cur = conn.cursor(
-        cursor_factory=
-        psycopg2.extras.DictCursor
-    )
-
-
     a, b = _friendship_pair(
-        current_user.id,
-        receiver_id
+        row["user_id"],
+        current_user.id
     )
 
 
@@ -3375,164 +3523,10 @@ def send_friend_request():
         }), 409
 
 
-    try:
-
-        cur.execute(
-            """
-            INSERT INTO friend_requests
-                (sender_id, receiver_id, status)
-            VALUES
-                (%s, %s, 'pending')
-            ON CONFLICT (sender_id, receiver_id)
-            DO UPDATE SET status = 'pending'
-            RETURNING id
-            """,
-            (
-                current_user.id,
-                receiver_id
-            )
-        )
-
-        conn.commit()
-
-        cur.close()
-
-        conn.close()
-
-
-        return jsonify({
-
-            "success": True,
-
-            "message": "Friend request sent."
-
-        }), 201
-
-
-    except Exception as error:
-
-        print("Friend request error:", error)
-
-        return jsonify({
-
-            "error": "Unable to send friend request."
-
-        }), 500
-
-
-# ---------------------------------------------------------
-# GET INCOMING / OUTGOING REQUESTS
-# ---------------------------------------------------------
-
-@app.route(
-    "/api/friends/requests",
-    methods=["GET"]
-)
-@login_required
-def get_friend_requests():
-
-    conn = get_db()
-
-    cur = conn.cursor(
-        cursor_factory=
-        psycopg2.extras.DictCursor
-    )
-
-
-    cur.execute(
-        """
-        SELECT
-            fr.id,
-            fr.sender_id,
-            u.username AS sender_username
-
-        FROM friend_requests fr
-
-        JOIN users u ON u.id = fr.sender_id
-
-        WHERE
-            fr.receiver_id = %s
-            AND fr.status = 'pending'
-
-        ORDER BY fr.created_at DESC
-        """,
-        (current_user.id,)
-    )
-
-    incoming = cur.fetchall()
-
-    cur.close()
-
-    conn.close()
-
-
-    return jsonify([
-
-        {
-            "id": str(row["id"]),
-            "from_user_id": str(row["sender_id"]),
-            "from_username": row["sender_username"]
-        }
-
-        for row in incoming
-
-    ])
-
-
-# ---------------------------------------------------------
-# ACCEPT / DECLINE FRIEND REQUEST
-# ---------------------------------------------------------
-
-@app.route(
-    "/api/friends/<request_id>/accept",
-    methods=["POST"]
-)
-@login_required
-def accept_friend_request(request_id):
-
-    conn = get_db()
-
-    cur = conn.cursor(
-        cursor_factory=
-        psycopg2.extras.DictCursor
-    )
-
-
-    cur.execute(
-        """
-        SELECT * FROM friend_requests
-        WHERE id = %s AND receiver_id = %s
-        """,
-        (request_id, current_user.id)
-    )
-
-    row = cur.fetchone()
-
-
-    if not row:
-
-        cur.close()
-
-        conn.close()
-
-        return jsonify({
-
-            "error": "Request not found."
-
-        }), 404
-
-
-    a, b = _friendship_pair(
-        row["sender_id"],
-        row["receiver_id"]
-    )
-
-
     cur.execute(
         """
         INSERT INTO friendships (user_a_id, user_b_id)
         VALUES (%s, %s)
-        ON CONFLICT DO NOTHING
         """,
         (a, b)
     )
@@ -3540,48 +3534,23 @@ def accept_friend_request(request_id):
 
     cur.execute(
         """
-        UPDATE friend_requests
-        SET status = 'accepted'
+        UPDATE friend_codes
+        SET used_by = %s, used_at = NOW()
         WHERE id = %s
         """,
-        (request_id,)
+        (current_user.id, row["id"])
     )
-
-
-    conn.commit()
-
-    cur.close()
-
-    conn.close()
-
-
-    return jsonify({
-
-        "success": True
-
-    })
-
-
-@app.route(
-    "/api/friends/<request_id>/decline",
-    methods=["POST"]
-)
-@login_required
-def decline_friend_request(request_id):
-
-    conn = get_db()
-
-    cur = conn.cursor()
 
 
     cur.execute(
         """
-        UPDATE friend_requests
-        SET status = 'declined'
-        WHERE id = %s AND receiver_id = %s
+        SELECT username FROM users
+        WHERE id = %s
         """,
-        (request_id, current_user.id)
+        (row["user_id"],)
     )
+
+    friend_row = cur.fetchone()
 
 
     conn.commit()
@@ -3593,9 +3562,14 @@ def decline_friend_request(request_id):
 
     return jsonify({
 
-        "success": True
+        "success": True,
 
-    })
+        "friend_username":
+            friend_row["username"]
+            if friend_row else None
+
+    }), 201
+
 
 
 # ---------------------------------------------------------
