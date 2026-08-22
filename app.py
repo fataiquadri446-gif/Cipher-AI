@@ -1431,6 +1431,9 @@ def me():
 
             "logged_in": True,
 
+            "id":
+                current_user.id,
+
             "username":
                 current_user.username,
 
@@ -1647,6 +1650,19 @@ def home():
 
     return render_template(
         "index.html"
+    )
+
+
+# =========================================================
+# FRIENDS PAGE
+# =========================================================
+
+@app.route("/friends")
+@login_required
+def friends_page():
+
+    return render_template(
+        "chat.html"
     )
 
 
@@ -3285,7 +3301,7 @@ def _friendship_pair(user_id_a, user_id_b):
     return ids[0], ids[1]
 
 
-def _generate_friend_code(length=6):
+def _generate_friend_code():
 
     import string
     import secrets
@@ -3296,9 +3312,14 @@ def _generate_friend_code(length=6):
     alphabet = alphabet.replace("0", "").replace("O", "")
     alphabet = alphabet.replace("1", "").replace("I", "")
 
-    return "".join(
-        secrets.choice(alphabet) for _ in range(length)
-    )
+    def chunk(length):
+
+        return "".join(
+            secrets.choice(alphabet) for _ in range(length)
+        )
+
+
+    return f"CPH-{chunk(4)}-{chunk(2)}"
 
 
 # ---------------------------------------------------------
