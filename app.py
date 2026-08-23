@@ -3525,7 +3525,7 @@ def redeem_friend_code():
     cur.execute(
         """
         SELECT id FROM friendships
-        WHERE user_a_id = %s AND user_b_id = %s
+        WHERE user_one_id = %s AND user_two_id = %s
         """,
         (a, b)
     )
@@ -3546,7 +3546,7 @@ def redeem_friend_code():
 
     cur.execute(
         """
-        INSERT INTO friendships (user_a_id, user_b_id)
+        INSERT INTO friendships (user_one_id, user_two_id)
         VALUES (%s, %s)
         """,
         (a, b)
@@ -3622,13 +3622,13 @@ def get_friends():
 
         JOIN users u
             ON u.id = CASE
-                WHEN f.user_a_id = %s THEN f.user_b_id
-                ELSE f.user_a_id
+                WHEN f.user_one_id = %s THEN f.user_two_id
+                ELSE f.user_one_id
             END
 
         WHERE
-            f.user_a_id = %s
-            OR f.user_b_id = %s
+            f.user_one_id = %s
+            OR f.user_two_id = %s
 
         ORDER BY u.username ASC
         """,
@@ -3691,7 +3691,7 @@ def get_dm_conversation(friend_id):
     cur.execute(
         """
         SELECT id FROM friendships
-        WHERE user_a_id = %s AND user_b_id = %s
+        WHERE user_one_id = %s AND user_two_id = %s
         """,
         (a, b)
     )
@@ -3798,7 +3798,7 @@ def send_dm(friend_id):
     cur.execute(
         """
         SELECT id FROM friendships
-        WHERE user_a_id = %s AND user_b_id = %s
+        WHERE user_one_id = %s AND user_two_id = %s
         """,
         (a, b)
     )
