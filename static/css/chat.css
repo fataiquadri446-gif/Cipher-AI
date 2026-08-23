@@ -1,4 +1,3 @@
-
 :root {
 
     --bg: #0b0d14;
@@ -45,6 +44,7 @@ body {
         sans-serif;
 
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 
@@ -55,6 +55,7 @@ body {
 .cipher-app {
 
     min-height: 100vh;
+    min-height: 100dvh;
     max-width: 850px;
     margin: auto;
 
@@ -870,6 +871,8 @@ body {
 
     flex: 1;
 
+    min-height: 0;
+
     overflow-y: auto;
 
     padding: 20px;
@@ -1012,6 +1015,16 @@ body {
     background: var(--surface-3);
 
     border-bottom-left-radius: 5px;
+}
+
+
+.dm-image {
+
+    max-width: 100%;
+
+    border-radius: 14px;
+
+    display: block;
 }
 
 
