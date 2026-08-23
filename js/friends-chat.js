@@ -603,6 +603,21 @@ async function openConversation(friend) {
         .textContent = friend.username;
 
 
+    const avatar =
+        document.querySelector(
+            "#conversation .avatar"
+        );
+
+    if (avatar) {
+
+        avatar.textContent =
+            friend.username
+                ? friend.username[0].toUpperCase()
+                : "C";
+
+    }
+
+
     await loadMessages(friend.id);
 
 }
@@ -730,8 +745,28 @@ function renderMessages(conversationMessages) {
             );
 
 
-        bubble.textContent =
-            message.content;
+        if (
+            typeof message.content === "string" &&
+            message.content.startsWith("data:image")
+        ) {
+
+            const image =
+                document.createElement("img");
+
+            image.className = "dm-image";
+
+            image.src = message.content;
+
+            image.alt = "Shared image";
+
+            bubble.appendChild(image);
+
+        } else {
+
+            bubble.textContent =
+                message.content;
+
+        }
 
 
         messages.appendChild(bubble);
@@ -768,6 +803,124 @@ document
 
         }
     );
+
+
+/* =========================================
+   ATTACHMENT (IMAGES)
+   Selecting an image sends it immediately as
+   its own message -- DMs are text-only on the
+   backend, so an image is sent as a data URL
+   string stored in the same content column.
+========================================= */
+
+const dmAttachmentBtn =
+    document.getElementById("dmAttachmentBtn");
+
+const dmFileInput =
+    document.getElementById("dmFileInput");
+
+
+if (dmAttachmentBtn && dmFileInput) {
+
+    dmAttachmentBtn.onclick = () => {
+
+        if (!activeFriend) {
+
+            alert("Open a conversation first.");
+
+            return;
+
+        }
+
+        dmFileInput.click();
+
+    };
+
+
+    dmFileInput.addEventListener(
+        "change",
+        async event => {
+
+            const file =
+                event.target.files &&
+                event.target.files[0];
+
+            event.target.value = "";
+
+            if (!file || !activeFriend) return;
+
+
+            if (!file.type.startsWith("image/")) {
+
+                alert(
+                    "You can only attach images right now."
+                );
+
+                return;
+
+            }
+
+
+            if (file.size > 5 * 1024 * 1024) {
+
+                alert(
+                    "That image is too large. Please use one under 5MB."
+                );
+
+                return;
+
+            }
+
+
+            const reader = new FileReader();
+
+
+            reader.onload = async () => {
+
+                try {
+
+                    await api(
+                        `/api/messages/${activeFriend.id}`,
+                        {
+                            method: "POST",
+
+                            body: JSON.stringify({
+                                content: reader.result
+                            })
+                        }
+                    );
+
+
+                    await loadMessages(activeFriend.id);
+
+
+                } catch (error) {
+
+                    console.error(error);
+
+                    alert(
+                        error.message
+                        || "Unable to send image."
+                    );
+
+                }
+
+            };
+
+
+            reader.onerror = () => {
+
+                alert("Unable to read that image.");
+
+            };
+
+
+            reader.readAsDataURL(file);
+
+        }
+    );
+
+}
 
 
 async function sendMessage() {
