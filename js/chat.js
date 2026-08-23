@@ -330,19 +330,54 @@ async function streamMarkdown(element, text){
 
     Chat.streaming = true;
 
+
+    const hasCode = /```/.test(text);
+
+
+    /*
+     * Code blocks render as instant tappable cards, not
+     * animated text -- typing out a full code file one
+     * character at a time is exactly the slowness this
+     * was built to fix. Long plain-text replies also skip
+     * the animation so they don't feel sluggish.
+     */
+
+    if (hasCode || text.length > 240) {
+
+        element.innerHTML = renderMarkdown(text);
+
+        scrollToBottom();
+
+        Chat.streaming = false;
+
+        return;
+
+    }
+
+
+    /*
+     * Short, code-free replies keep a light typing effect.
+     * We only touch textContent while animating (cheap) and
+     * do the real markdown parse once at the end, instead of
+     * re-parsing the whole growing string on every character.
+     */
+
     let current = "";
 
     for(const character of text){
 
         current += character;
 
-        element.innerHTML = renderMarkdown(current);
+        element.textContent = current;
 
         scrollToBottom();
 
-        await sleep(10);
+        await sleep(8);
 
     }
+
+
+    element.innerHTML = renderMarkdown(text);
 
     Chat.streaming = false;
 
@@ -410,15 +445,21 @@ function createMessageElement(role, text, imageDataUrl = null) {
             : "";
 
 
+    const messageBodyHTML =
+        text
+            ? (
+                role === "user"
+                    ? `<div class="message-text">${escapeHTML(text)}</div>`
+                    : `<div class="message-text">${renderMarkdown(text)}</div>`
+            )
+            : "";
+
+
     wrapper.innerHTML = `
 
         ${imageHTML}
 
-        ${
-            text
-            ? `<div class="message-text">${escapeHTML(text)}</div>`
-            : ""
-        }
+        ${messageBodyHTML}
 
         ${createMessageActions(role, text)}
 
@@ -536,6 +577,268 @@ function showWelcomeScreen() {
 
 
 /* ==========================================
+   CODE BLOCKS
+   Fenced code blocks are pulled out before any
+   other markdown processing (so bold/italic/etc.
+   regexes never touch code) and rendered as a
+   tappable card instead of a wall of monospace
+   text. The raw code is kept in this map so the
+   viewer modal can show/copy/download it exactly
+   as written.
+========================================== */
+
+const CipherCodeBlocks = new Map();
+
+let cipherCodeBlockCounter = 0;
+
+
+const CODE_EXTENSIONS = {
+
+    python: "py", py: "py",
+    javascript: "js", js: "js",
+    typescript: "ts", ts: "ts",
+    html: "html",
+    css: "css",
+    json: "json",
+    bash: "sh", shell: "sh", sh: "sh",
+    sql: "sql",
+    java: "java",
+    c: "c",
+    cpp: "cpp", "c++": "cpp",
+    csharp: "cs", "c#": "cs",
+    go: "go",
+    rust: "rs",
+    php: "php",
+    ruby: "rb",
+    swift: "swift",
+    kotlin: "kt",
+    yaml: "yml", yml: "yml",
+    xml: "xml",
+    markdown: "md", md: "md"
+
+};
+
+
+function extensionForLanguage(lang) {
+
+    return CODE_EXTENSIONS[(lang || "").toLowerCase()] || "txt";
+
+}
+
+
+function createCodeCardHTML(id, lang) {
+
+    const label =
+        (lang || "code").toUpperCase();
+
+
+    return `
+
+        <div
+            class="code-card"
+            data-code-id="${id}"
+            role="button"
+            tabindex="0"
+        >
+
+            <div class="code-card-icon">
+                &lt;/&gt;
+            </div>
+
+            <div class="code-card-info">
+
+                <strong>Code</strong>
+
+                <small>Code · ${escapeHTML(label)}</small>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* ==========================================
+   OPEN CODE VIEWER
+========================================== */
+
+function openCodeModal(id) {
+
+    const block = CipherCodeBlocks.get(id);
+
+    if (!block) return;
+
+
+    let modal =
+        document.getElementById("code-viewer-modal");
+
+
+    if (!modal) {
+
+        modal = document.createElement("div");
+
+        modal.id = "code-viewer-modal";
+
+        modal.className = "code-viewer-overlay";
+
+
+        modal.innerHTML = `
+
+            <div class="code-viewer">
+
+                <div class="code-viewer-header">
+
+                    <strong id="code-viewer-lang"></strong>
+
+                    <div class="code-viewer-actions">
+
+                        <button type="button" id="code-viewer-copy">
+                            Copy
+                        </button>
+
+                        <button type="button" id="code-viewer-download">
+                            Download
+                        </button>
+
+                        <button type="button" id="code-viewer-close">
+                            ×
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <pre class="code-viewer-body"><code id="code-viewer-code"></code></pre>
+
+            </div>
+
+        `;
+
+
+        document.body.appendChild(modal);
+
+
+        modal.addEventListener("click", event => {
+
+            if (event.target === modal) {
+
+                modal.classList.remove("open");
+
+            }
+
+        });
+
+
+        document
+            .getElementById("code-viewer-close")
+            .addEventListener("click", () => {
+
+                modal.classList.remove("open");
+
+            });
+
+    }
+
+
+    document.getElementById("code-viewer-lang").textContent =
+        (block.lang || "code").toUpperCase();
+
+    document.getElementById("code-viewer-code").textContent =
+        block.code;
+
+
+    const copyButton =
+        document.getElementById("code-viewer-copy");
+
+    copyButton.onclick = async () => {
+
+        try {
+
+            await navigator.clipboard.writeText(block.code);
+
+            copyButton.textContent = "Copied!";
+
+            setTimeout(() => {
+
+                copyButton.textContent = "Copy";
+
+            }, 1500);
+
+        } catch {
+
+            showError("Unable to copy.");
+
+        }
+
+    };
+
+
+    const downloadButton =
+        document.getElementById("code-viewer-download");
+
+    downloadButton.onclick = () => {
+
+        const ext = extensionForLanguage(block.lang);
+
+        const blob = new Blob([block.code], { type: "text/plain" });
+
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+
+        link.href = url;
+
+        link.download = `code.${ext}`;
+
+        link.click();
+
+        URL.revokeObjectURL(url);
+
+    };
+
+
+    modal.classList.add("open");
+
+}
+
+
+/*
+ * Delegated once at load -- works for cards inside
+ * messages added at any point, including history
+ * loaded long after this script first ran.
+ */
+
+document.addEventListener("click", event => {
+
+    const card = event.target.closest(".code-card");
+
+    if (card) {
+
+        openCodeModal(card.dataset.codeId);
+
+    }
+
+});
+
+
+document.addEventListener("keydown", event => {
+
+    if (event.key !== "Enter") return;
+
+    const card = event.target.closest(".code-card");
+
+    if (card) {
+
+        openCodeModal(card.dataset.codeId);
+
+    }
+
+});
+
+
+/* ==========================================
    MARKDOWN RENDERER
 ========================================== */
 
@@ -543,15 +846,40 @@ function renderMarkdown(text) {
 
     if (!text) return "";
 
-    let html = escapeHTML(text);
 
-    html = html.replace(
+    const placeholders = [];
 
-        /```([\s\S]*?)```/g,
 
-        `<pre class="cipher-code"><code>$1</code></pre>`
+    const withoutCode = text.replace(
+
+        /```(\w+)?\n?([\s\S]*?)```/g,
+
+        (match, lang, code) => {
+
+            const id =
+                `code-${Date.now()}-${cipherCodeBlockCounter++}`;
+
+            CipherCodeBlocks.set(id, {
+
+                code: code.trim(),
+
+                lang: (lang || "text").toLowerCase()
+
+            });
+
+
+            const token = `@@CODEBLOCK_${id}@@`;
+
+            placeholders.push({ token, id });
+
+            return token;
+
+        }
 
     );
+
+
+    let html = escapeHTML(withoutCode);
 
     html = html.replace(
 
@@ -618,6 +946,19 @@ function renderMarkdown(text) {
     );
 
     html = html.replace(/\n/g, "<br>");
+
+
+    placeholders.forEach(({ token, id }) => {
+
+        const block = CipherCodeBlocks.get(id);
+
+        html = html.replace(
+            token,
+            createCodeCardHTML(id, block.lang)
+        );
+
+    });
+
 
     return html;
 
