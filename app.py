@@ -107,17 +107,14 @@ including building practice quizzes on any subject.
 
 Here's how you respond:
 
-- Lead with the answer first, then explain if it helps — don't bury the point in a long windup.
-- Keep a warm, conversational tone, like a knowledgeable friend, not a textbook.
+- Be sharp and concise. Lead with the answer immediately — no preamble, no restating the question, no "Sure, here's..." throat-clearing.
 - For calculations, logic, or multi-step problems, reason through the steps clearly and in order, showing your work, not just the final result.
 - Be creative and original when asked for creative writing, ideas, or brainstorming — avoid generic or clichéd answers.
-- When helping with code, write clean, correct, well-commented code, and explain the key parts.
-- Keep explanations concise but complete — enough detail to be useful without rambling.
+- When asked for code, output the complete, working code first, in a single fenced code block, with the language tag set correctly (e.g. ```python, ```javascript, ```html). Add only a brief one- or two-line note after it if something genuinely needs flagging (a missing dependency, a config step) — skip walking through the code line by line unless explicitly asked to explain it.
 - If a question is ambiguous, make a reasonable assumption, briefly state it, and answer anyway rather than asking too many clarifying questions.
 - Use plain, everyday language. Avoid unnecessary jargon.
 - Break longer answers into short paragraphs or simple lists when that makes them easier to scan.
-- Stay patient and encouraging, especially with calculations or problem-solving.
-- Don't pad responses with filler, disclaimers, or over-apologizing.
+- Never pad responses with filler, disclaimers, throat-clearing, or over-apologizing.
 """
 
 
@@ -262,7 +259,7 @@ def safe_math(expression):
 # GEMINI AI
 # =========================================================
 
-def ask_ai(message, image_base64=None, image_mime_type=None, user_facts=None):
+def ask_ai(message, image_base64=None, image_mime_type=None, user_facts=None, history=None):
 
     if not API_KEY:
 
@@ -320,6 +317,58 @@ def ask_ai(message, image_base64=None, image_mime_type=None, user_facts=None):
         })
 
 
+    # -----------------------------------------------------
+    # Conversation history
+    #
+    # Without this, every message is answered in total
+    # isolation -- Cipher has no idea what "it" or "that"
+    # refers to, and will guess rather than ask. `history`
+    # is a list of {"role": "user"/"assistant", "content": str}
+    # in chronological order, already excluding the message
+    # being sent right now.
+    # -----------------------------------------------------
+
+    contents = []
+
+
+    if history:
+
+        for turn in history:
+
+            gemini_role = (
+                "model"
+                if turn.get("role") == "assistant"
+                else "user"
+            )
+
+            turn_text = turn.get("content") or ""
+
+
+            if not turn_text.strip():
+
+                continue
+
+
+            contents.append({
+
+                "role": gemini_role,
+
+                "parts": [
+                    { "text": turn_text }
+                ]
+
+            })
+
+
+    contents.append({
+
+        "role": "user",
+
+        "parts":
+            user_parts
+    })
+
+
     payload = {
 
         "system_instruction": {
@@ -333,16 +382,8 @@ def ask_ai(message, image_base64=None, image_mime_type=None, user_facts=None):
 
         },
 
-        "contents": [
-
-            {
-                "role": "user",
-
-                "parts":
-                    user_parts
-            }
-
-        ]
+        "contents":
+            contents
 
     }
 
@@ -2152,6 +2193,33 @@ def chat():
 
 
     # -----------------------------------------------------
+    # Load conversation history (before saving this message)
+    # so Cipher actually knows what was said earlier in this
+    # chat, instead of answering each message in isolation.
+    # -----------------------------------------------------
+
+    cur.execute(
+        """
+        SELECT role, content
+
+        FROM messages
+
+        WHERE chat_id = %s
+
+        ORDER BY created_at ASC
+
+        LIMIT 30
+        """,
+        (chat_id,)
+    )
+
+    history = [
+        { "role": row["role"], "content": row["content"] }
+        for row in cur.fetchall()
+    ]
+
+
+    # -----------------------------------------------------
     # Save user message
     # -----------------------------------------------------
 
@@ -2189,7 +2257,8 @@ def chat():
             or "Describe this image.",
             image_base64=image_base64,
             image_mime_type=image_mime_type,
-            user_facts=user_facts
+            user_facts=user_facts,
+            history=history
         )
 
 
@@ -2239,7 +2308,8 @@ def chat():
 
         reply = ask_ai(
             message,
-            user_facts=user_facts
+            user_facts=user_facts,
+            history=history
         )
 
 
