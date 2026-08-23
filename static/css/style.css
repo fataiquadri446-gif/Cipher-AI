@@ -11,6 +11,19 @@
 
 :root{
 
+    /*
+     * 100vh on mobile browsers is measured against the
+     * full screen, not what's actually visible once the
+     * address bar is showing -- so content sized with
+     * 100vh runs off the bottom with no way to scroll to
+     * it. 100dvh (dynamic viewport height) tracks the real
+     * visible area instead. The plain 100vh value here is
+     * just a fallback for older browsers that don't
+     * support dvh yet.
+     */
+
+    --app-height:100vh;
+
     --bg-primary:#0b0f19;
     --bg-secondary:#111827;
     --bg-card:#1a2233;
@@ -32,6 +45,17 @@
 
     --shadow:
         0 12px 35px rgba(0,0,0,.35);
+
+}
+
+
+@supports (height: 100dvh){
+
+    :root{
+
+        --app-height:100dvh;
+
+    }
 
 }
 
@@ -590,6 +614,7 @@ img{
 
     width:100vw;
     height:100vh;
+    height:100dvh;
 
     overflow:hidden;
 
@@ -604,6 +629,7 @@ img{
 
     width:290px;
     height:100vh;
+    height:100dvh;
 
     background:var(--bg-secondary);
 
@@ -740,6 +766,8 @@ img{
 .chat-list{
 
     flex:1;
+
+    min-height:0;
 
     overflow-y:auto;
 
@@ -992,6 +1020,7 @@ img{
     min-width:0;
 
     height:100vh;
+    height:100dvh;
 
     display:flex;
 
