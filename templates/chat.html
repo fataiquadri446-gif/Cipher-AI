@@ -1,1 +1,416 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cipher — Chats</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+</head>
+
+<body>
+
+<!-- ==============================
+     APP
+================================ -->
+
+<div class="cipher-app">
+
+    <!-- TOP BAR -->
+    <header class="chat-header">
+
+        <button class="icon-btn" id="backBtn">
+            <span>‹</span>
+        </button>
+
+        <div class="header-title">
+            <div class="mini-logo">¢</div>
+
+            <div>
+                <h1>Cipher</h1>
+                <small>Messages</small>
+            </div>
+        </div>
+
+        <button class="icon-btn" id="menuBtn">
+            ⋮
+        </button>
+
+    </header>
+
+
+    <!-- ==============================
+         CHAT LIST PAGE
+    =============================== -->
+
+    <main class="chat-page" id="chatPage">
+
+        <div class="page-heading">
+
+            <div>
+                <h2>Chats</h2>
+                <p>Your private conversations</p>
+            </div>
+
+            <button class="add-btn" id="addFriendBtn">
+                +
+            </button>
+
+        </div>
+
+
+        <!-- SEARCH -->
+
+        <div class="search-box">
+
+            <span>⌕</span>
+
+            <input
+                type="text"
+                id="chatSearch"
+                placeholder="Search chats..."
+            >
+
+        </div>
+
+
+        <!-- CHAT LIST -->
+
+        <section class="chat-list" id="chatList">
+
+            <!-- Empty state -->
+
+            <div class="empty-state" id="emptyChats">
+
+                <div class="empty-icon">
+                    💬
+                </div>
+
+                <h3>No conversations yet</h3>
+
+                <p>
+                    Add a friend using their private Cipher code
+                    to start chatting.
+                </p>
+
+                <button class="primary-btn" id="emptyAddFriend">
+                    Add a Friend
+                </button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ==============================
+         FRIENDS PAGE
+    =============================== -->
+
+    <section class="friends-page hidden" id="friendsPage">
+
+        <div class="page-heading">
+
+            <div>
+                <h2>Friends</h2>
+                <p>People you've connected with</p>
+            </div>
+
+            <button class="add-btn" id="friendsAddBtn">
+                +
+            </button>
+
+        </div>
+
+
+        <div class="friends-list" id="friendsList">
+
+            <div class="empty-state">
+
+                <div class="empty-icon">
+                    👥
+                </div>
+
+                <h3>No friends yet</h3>
+
+                <p>
+                    Cipher never recommends random users.
+                    Add someone using their private code.
+                </p>
+
+                <button class="primary-btn" id="friendEmptyBtn">
+                    Add Friend
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ==============================
+         BOTTOM NAVIGATION
+    =============================== -->
+
+    <nav class="bottom-nav">
+
+        <button class="nav-item active" data-page="chatPage">
+
+            <span>💬</span>
+            <small>Chats</small>
+
+        </button>
+
+        <button class="nav-item" data-page="friendsPage">
+
+            <span>👥</span>
+            <small>Friends</small>
+
+        </button>
+
+        <button class="nav-item" id="profileBtn">
+
+            <span>◉</span>
+            <small>Profile</small>
+
+        </button>
+
+    </nav>
+
+</div>
+
+
+
+<!-- ==============================
+     ADD FRIEND MODAL
+================================ -->
+
+<div class="modal-overlay" id="friendModal">
+
+    <div class="modal">
+
+        <button class="modal-close" id="closeFriendModal">
+            ×
+        </button>
+
+        <div class="modal-icon">
+            🤝
+        </div>
+
+        <h2>Add a Friend</h2>
+
+        <p>
+            Enter your friend's Cipher code.
+            You won't be shown random users.
+        </p>
+
+
+        <!-- TABS -->
+
+        <div class="friend-tabs">
+
+            <button
+                class="friend-tab active"
+                data-tab="enterCode"
+            >
+                Enter Code
+            </button>
+
+            <button
+                class="friend-tab"
+                data-tab="myCode"
+            >
+                My Code
+            </button>
+
+        </div>
+
+
+        <!-- ENTER CODE -->
+
+        <div class="tab-content active" id="enterCode">
+
+            <label>Cipher Friend Code</label>
+
+            <input
+                type="text"
+                id="friendCodeInput"
+                class="code-input"
+                placeholder="e.g. CPH-7X4K-92"
+                maxlength="12"
+                autocomplete="off"
+            >
+
+            <p class="input-error" id="codeError"></p>
+
+            <button
+                class="primary-btn full"
+                id="sendFriendRequest"
+            >
+                Add Friend
+            </button>
+
+        </div>
+
+
+        <!-- MY CODE -->
+
+        <div class="tab-content" id="myCode">
+
+            <p class="your-code-label">
+                Your Cipher Friend Code
+            </p>
+
+            <div class="my-code">
+                <span id="myFriendCode">
+                    Generating…
+                </span>
+
+                <button id="copyCode">
+                    Copy
+                </button>
+            </div>
+
+            <p class="code-info">
+                Share this code privately with someone.
+                They can use it to add you. It expires in
+                10 minutes.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ==============================
+     PROFILE MODAL
+================================ -->
+
+<div class="modal-overlay" id="profileModal">
+
+    <div class="modal profile-modal">
+
+        <button class="modal-close" id="closeProfile">
+            ×
+        </button>
+
+        <div class="profile-avatar">
+            ¢
+        </div>
+
+        <h2 id="profileName">Cipher User</h2>
+
+        <p class="username">
+            @cipheruser
+        </p>
+
+        <div class="profile-code">
+
+            <span>Your Friend Code</span>
+
+            <strong>—</strong>
+
+        </div>
+
+        <button class="secondary-btn">
+            Edit Profile
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- ==============================
+     CHAT WINDOW
+================================ -->
+
+<section class="conversation hidden" id="conversation">
+
+    <header class="conversation-header">
+
+        <button class="icon-btn" id="closeConversation">
+            ‹
+        </button>
+
+        <div class="conversation-user">
+
+            <div class="avatar">
+                C
+            </div>
+
+            <div>
+                <strong id="conversationName">
+                    Friend
+                </strong>
+
+                <small>
+                    Cipher friend
+                </small>
+            </div>
+
+        </div>
+
+        <button class="icon-btn">
+            ⋮
+        </button>
+
+    </header>
+
+
+    <div class="messages" id="messages">
+
+        <div class="conversation-empty">
+
+            <div class="empty-icon">
+                🔐
+            </div>
+
+            <h3>Private conversation</h3>
+
+            <p>
+                Your conversation with this friend
+                starts here.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- MESSAGE INPUT -->
+
+    <div class="message-composer">
+
+        <button class="attachment-btn">
+            +
+        </button>
+
+        <input
+            type="text"
+            id="messageInput"
+            placeholder="Message..."
+        >
+
+        <button
+            class="send-message"
+            id="sendMessage"
+        >
+            ➤
+        </button>
+    </div>
+
+</section>
+
+
+<script src="{{ url_for('static', filename='js/friends-chat.js') }}"></script>
+
+</body>
+</html>
