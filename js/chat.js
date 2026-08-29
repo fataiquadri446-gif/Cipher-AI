@@ -114,6 +114,21 @@ async function sendMessage(event) {
 
     if (!message && !pendingImage) return;
 
+    /*
+     * Check for a theme-change request before anything
+     * else -- this is instant and local, so the person
+     * sees the interface respond immediately rather than
+     * waiting on a network round trip. The message still
+     * gets sent to Cipher normally afterward either way.
+     */
+
+    if (typeof window.CipherThemeCommand === "function") {
+
+        window.CipherThemeCommand(message);
+
+    }
+
+
     Chat.sending = true;
 
     ChatUI.sendButton.disabled = true;
