@@ -123,6 +123,39 @@ API_KEY = os.environ.get("GEMINI_API_KEY")
 MODEL = "gemini-2.5-flash"
 
 
+# -----------------------------------------------------
+# FALLBACK AI PROVIDERS
+#
+# If Gemini fails or isn't configured, Cipher tries these
+# next, in order. Both are genuinely free (no credit card
+# required):
+#
+#   - Groq: fast inference, hosts several open models.
+#   - OpenRouter: aggregates many providers' free models
+#     through one API; "openrouter/free" auto-picks from
+#     whatever's currently available, since specific free
+#     model IDs on OpenRouter rotate and get delisted.
+#
+# Neither of these reliably supports image input the way
+# Gemini does, so image messages only use Gemini -- if
+# Gemini is down, an image message gets a clear "can't see
+# images right now" reply rather than a silent failure or
+# a fallback pretending to have seen something it didn't.
+# -----------------------------------------------------
+
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+
+# Llama 4 Scout handles both plain text and images, so
+# Groq alone can cover everything Cipher needs -- and its
+# custom LPU hardware makes it the fastest of the three
+# providers, which is why it's tried first below.
+GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+
+OPENROUTER_MODEL = "openrouter/free"
+
+
 # =========================================================
 # SAFE MATH
 # =========================================================
@@ -256,16 +289,97 @@ def safe_math(expression):
 
 
 # =========================================================
-# GEMINI AI
+# AI PROVIDERS
+#
+# Each _call_* function either returns the model's reply
+# text or raises an exception -- ask_ai() below tries them
+# in order and moves to the next one on any failure, so a
+# single provider having a bad day doesn't take Cipher
+# down with it.
 # =========================================================
 
-def ask_ai(message, image_base64=None, image_mime_type=None, user_facts=None, history=None):
+def _history_to_openai_messages(history):
+
+    messages = []
+
+
+    if not history:
+
+        return messages
+
+
+    for turn in history:
+
+        role = (
+            "assistant"
+            if turn.get("role") == "assistant"
+            else "user"
+        )
+
+        content = turn.get("content") or ""
+
+
+        if not content.strip():
+
+            continue
+
+
+        messages.append({
+
+            "role": role,
+
+            "content": content
+
+        })
+
+
+    return messages
+
+
+def _build_openai_user_content(message, image_base64, image_mime_type):
+
+    """
+    Groq and OpenRouter both speak the same OpenAI-style
+    multimodal format: plain string content for text-only
+    messages, or a list of text/image_url parts when an
+    image is attached.
+    """
+
+    if not image_base64:
+
+        return message
+
+
+    return [
+
+        {
+            "type": "text",
+            "text": message
+        },
+
+        {
+            "type": "image_url",
+
+            "image_url": {
+
+                "url":
+                    f"data:{image_mime_type or 'image/jpeg'};base64,{image_base64}"
+
+            }
+
+        }
+
+    ]
+
+
+    return messages
+
+
+def _call_gemini(message, image_base64, image_mime_type, system_text, history):
 
     if not API_KEY:
 
-        return (
-            "Cipher's AI service isn't configured yet."
-        )
+        raise RuntimeError("Gemini is not configured.")
 
 
     url = (
@@ -275,28 +389,8 @@ def ask_ai(message, image_base64=None, image_mime_type=None, user_facts=None, hi
     )
 
 
-    system_text = SYSTEM_PROMPT
-
-
-    if user_facts:
-
-        facts_block = "\n".join(
-            f"- {fact}" for fact in user_facts
-        )
-
-        system_text += (
-            "\n\nHere is what you remember about this "
-            "user from previous conversations. Use it "
-            "naturally where relevant, but don't force "
-            "it into every reply:\n"
-            f"{facts_block}"
-        )
-
-
     user_parts = [
-        {
-            "text": message
-        }
+        { "text": message }
     ]
 
 
@@ -316,17 +410,6 @@ def ask_ai(message, image_base64=None, image_mime_type=None, user_facts=None, hi
 
         })
 
-
-    # -----------------------------------------------------
-    # Conversation history
-    #
-    # Without this, every message is answered in total
-    # isolation -- Cipher has no idea what "it" or "that"
-    # refers to, and will guess rather than ask. `history`
-    # is a list of {"role": "user"/"assistant", "content": str}
-    # in chronological order, already excluding the message
-    # being sent right now.
-    # -----------------------------------------------------
 
     contents = []
 
@@ -364,85 +447,282 @@ def ask_ai(message, image_base64=None, image_mime_type=None, user_facts=None, hi
 
         "role": "user",
 
-        "parts":
-            user_parts
+        "parts": user_parts
+
     })
 
 
     payload = {
 
         "system_instruction": {
-
-            "parts": [
-                {
-                    "text":
-                        system_text
-                }
-            ]
-
+            "parts": [{ "text": system_text }]
         },
 
-        "contents":
-            contents
+        "contents": contents
 
     }
 
 
-    try:
+    response = requests.post(
+        url,
+        json=payload,
+        timeout=45
+    )
 
-        response = requests.post(
-            url,
-            json=payload,
-            timeout=45
+
+    if response.status_code != 200:
+
+        raise RuntimeError(
+            f"Gemini returned {response.status_code}: "
+            f"{response.text[:300]}"
         )
 
 
-        if response.status_code == 200:
+    data = response.json()
 
-            data = response.json()
+    return (
+        data
+        ["candidates"]
+        [0]
+        ["content"]
+        ["parts"]
+        [0]
+        ["text"]
+    )
 
 
-            return (
-                data
-                ["candidates"]
-                [0]
-                ["content"]
-                ["parts"]
-                [0]
-                ["text"]
+def _call_groq(message, image_base64, image_mime_type, system_text, history):
+
+    if not GROQ_API_KEY:
+
+        raise RuntimeError("Groq is not configured.")
+
+
+    url = "https://api.groq.com/openai/v1/chat/completions"
+
+
+    messages = [
+        { "role": "system", "content": system_text }
+    ]
+
+    messages.extend(
+        _history_to_openai_messages(history)
+    )
+
+    messages.append({
+
+        "role": "user",
+
+        "content": _build_openai_user_content(
+            message, image_base64, image_mime_type
+        )
+
+    })
+
+
+    payload = {
+
+        "model": GROQ_MODEL,
+
+        "messages": messages,
+
+        "temperature": 0.7
+
+    }
+
+
+    headers = {
+
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+
+        "Content-Type": "application/json"
+
+    }
+
+
+    response = requests.post(
+        url,
+        json=payload,
+        headers=headers,
+        timeout=30
+    )
+
+
+    if response.status_code != 200:
+
+        raise RuntimeError(
+            f"Groq returned {response.status_code}: "
+            f"{response.text[:300]}"
+        )
+
+
+    data = response.json()
+
+    return data["choices"][0]["message"]["content"]
+
+
+def _call_openrouter(message, image_base64, image_mime_type, system_text, history):
+
+    if not OPENROUTER_API_KEY:
+
+        raise RuntimeError("OpenRouter is not configured.")
+
+
+    url = "https://openrouter.ai/api/v1/chat/completions"
+
+
+    messages = [
+        { "role": "system", "content": system_text }
+    ]
+
+    messages.extend(
+        _history_to_openai_messages(history)
+    )
+
+    messages.append({
+
+        "role": "user",
+
+        "content": _build_openai_user_content(
+            message, image_base64, image_mime_type
+        )
+
+    })
+
+
+    payload = {
+
+        "model": OPENROUTER_MODEL,
+
+        "messages": messages
+
+    }
+
+
+    headers = {
+
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+
+        "Content-Type": "application/json"
+
+    }
+
+
+    response = requests.post(
+        url,
+        json=payload,
+        headers=headers,
+        timeout=30
+    )
+
+
+    if response.status_code != 200:
+
+        raise RuntimeError(
+            f"OpenRouter returned {response.status_code}: "
+            f"{response.text[:300]}"
+        )
+
+
+    data = response.json()
+
+    return data["choices"][0]["message"]["content"]
+
+
+def ask_ai(message, image_base64=None, image_mime_type=None, user_facts=None, history=None):
+
+    system_text = SYSTEM_PROMPT
+
+
+    if user_facts:
+
+        facts_block = "\n".join(
+            f"- {fact}" for fact in user_facts
+        )
+
+        system_text += (
+            "\n\nHere is what you remember about this "
+            "user from previous conversations. Use it "
+            "naturally where relevant, but don't force "
+            "it into every reply:\n"
+            f"{facts_block}"
+        )
+
+
+    # -------------------------------------------------
+    # Provider order: Groq first -- its custom LPU
+    # hardware makes it dramatically faster than the
+    # others (sub-second responses), and Llama 4 Scout
+    # handles both text and images. Gemini is the backup,
+    # and OpenRouter's free router (which also handles
+    # images by auto-picking a vision-capable free model)
+    # is the last resort, since its free tier is the most
+    # tightly rate-limited of the three.
+    # -------------------------------------------------
+
+    providers = [
+
+        (
+            "Groq",
+            lambda: _call_groq(
+                message, image_base64, image_mime_type,
+                system_text, history
             )
+        ),
 
+        (
+            "Gemini",
+            lambda: _call_gemini(
+                message, image_base64, image_mime_type,
+                system_text, history
+            )
+        ),
 
-        print(
-            "Gemini API error:",
-            response.status_code,
-            response.text
+        (
+            "OpenRouter",
+            lambda: _call_openrouter(
+                message, image_base64, image_mime_type,
+                system_text, history
+            )
         )
 
-
-        return "API Error."
-
-
-    except requests.RequestException as error:
-
-        print(
-            "Gemini network error:",
-            error
-        )
+    ]
 
 
-        return "Network error."
+    last_error = None
 
 
-    except Exception as error:
+    for name, call in providers:
 
-        print(
-            "Gemini processing error:",
-            error
-        )
+        try:
+
+            result = call()
 
 
-        return "Unable to process the request."
+            if result and result.strip():
+
+                return result
+
+
+        except Exception as error:
+
+            print(f"{name} provider failed:", error)
+
+            last_error = error
+
+            continue
+
+
+    print(
+        "All AI providers failed. Last error:",
+        last_error
+    )
+
+
+    return (
+        "Cipher is having trouble reaching its AI providers "
+        "right now. Please try again in a moment."
+    )
 
 
 # =========================================================
@@ -1489,6 +1769,115 @@ def me():
         "logged_in": False
 
     })
+
+
+# =========================================================
+# UPDATE PROFILE
+#
+# Currently supports changing the username only. Email
+# changes are intentionally not exposed here -- safely
+# changing an account's email normally requires a
+# verification step, which is out of scope for now.
+# =========================================================
+
+@app.route(
+    "/api/profile",
+    methods=["POST"]
+)
+@login_required
+def update_profile():
+
+    data = request.get_json(silent=True) or {}
+
+    new_username = data.get("username", "").strip()
+
+
+    if len(new_username) < 3:
+
+        return jsonify({
+
+            "error":
+                "Username must be at least 3 characters."
+
+        }), 400
+
+
+    conn = get_db()
+
+    cur = conn.cursor(
+        cursor_factory=
+        psycopg2.extras.DictCursor
+    )
+
+
+    try:
+
+        cur.execute(
+            """
+            SELECT id FROM users
+            WHERE username = %s AND id != %s
+            """,
+            (new_username, current_user.id)
+        )
+
+
+        if cur.fetchone():
+
+            cur.close()
+
+            conn.close()
+
+            return jsonify({
+
+                "error":
+                    "That username is already taken."
+
+            }), 409
+
+
+        cur.execute(
+            """
+            UPDATE users
+            SET username = %s
+            WHERE id = %s
+            RETURNING username
+            """,
+            (new_username, current_user.id)
+        )
+
+
+        row = cur.fetchone()
+
+
+        conn.commit()
+
+        cur.close()
+
+        conn.close()
+
+
+        return jsonify({
+
+            "success": True,
+
+            "username": row["username"]
+
+        })
+
+
+    except Exception as error:
+
+        print(
+            "Update profile error:",
+            error
+        )
+
+        return jsonify({
+
+            "error":
+                "Unable to update profile."
+
+        }), 500
 
 
 # =========================================================
