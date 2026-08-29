@@ -32,10 +32,10 @@
           href="{{ url_for('static', filename='css/style.css') }}">
 
     <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/themes.css') }}">
+          href="{{ url_for('static', filename='css/animations.css') }}">
 
     <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/animations.css') }}">
+          href="{{ url_for('static', filename='css/cipher-ui.css') }}">
 
 </head>
 
@@ -707,171 +707,329 @@
 
 
 <!-- =====================================================
-     SETTINGS PANEL
+     CIPHER SETTINGS MODAL
 ===================================================== -->
 
-<div
-    id="settings-panel"
-    class="modal-panel"
-    style="display:none;">
+<div id="settingsModal" class="cipher-modal">
 
+    <div class="cipher-settings">
 
-    <div class="panel-header">
+        <div class="settings-top">
 
-        <div>
+            <div>
+                <h2>⚙️ Settings</h2>
+                <p>Manage your Cipher account and workspace</p>
+            </div>
 
-            <h3>
-                Settings
-            </h3>
-
-            <span>
-                Manage your Cipher workspace
-            </span>
+            <button class="close-btn" id="closeSettings" type="button">
+                ×
+            </button>
 
         </div>
 
 
-        <button
-            type="button"
-            class="panel-close"
-            data-close-panel="settings-panel">
+        <div class="settings-group">
 
+            <h3>Profile</h3>
+
+            <div class="profile-editor">
+
+                <div class="profile-picture-container">
+
+                    <img
+                        id="profilePreview"
+                        class="profile-preview"
+                        src=""
+                        alt="Profile picture">
+
+                    <label class="camera-button" for="profileUpload">
+                        📷
+                    </label>
+
+                    <input
+                        type="file"
+                        id="profileUpload"
+                        accept="image/*"
+                        hidden>
+
+                </div>
+
+                <div>
+                    <strong id="settingsUsername">User</strong>
+                    <small id="settingsEmailDisplay">—</small>
+                </div>
+
+            </div>
+
+            <label for="displayNameInput">Display name</label>
+            <input
+                type="text"
+                id="displayNameInput"
+                class="settings-field"
+                placeholder="How Cipher greets you">
+
+            <label for="usernameInput">Username</label>
+            <input
+                type="text"
+                id="usernameInput"
+                class="settings-field"
+                placeholder="Username">
+
+        </div>
+
+
+        <div class="settings-group">
+
+            <h3>Appearance</h3>
+
+            <div class="setting-item">
+                <div>
+                    <strong>Compact mode</strong>
+                    <small>Tighter spacing between messages</small>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="compactModeToggle">
+                    <span></span>
+                </label>
+            </div>
+
+            <div class="setting-item">
+                <div>
+                    <strong>Animations</strong>
+                    <small>Enable interface animations</small>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="animationsToggle" checked>
+                    <span></span>
+                </label>
+            </div>
+
+            <label for="textSizeSelect">Text size</label>
+            <select id="textSizeSelect" class="settings-field">
+                <option value="normal">Normal</option>
+                <option value="large">Large</option>
+                <option value="xlarge">Extra large</option>
+            </select>
+
+        </div>
+
+
+        <div class="settings-group">
+
+            <h3>Status</h3>
+
+            <div class="setting-item">
+                <div>
+                    <strong>Show as online</strong>
+                    <small>Let friends see when you're active</small>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="onlineStatusToggle" checked>
+                    <span></span>
+                </label>
+            </div>
+
+        </div>
+
+
+        <div class="settings-group">
+
+            <h3>Advanced</h3>
+
+            <button class="advanced-button" id="advancedThemeBtn" type="button">
+                🎨 Open theme settings
+            </button>
+
+            <button class="advanced-button" id="advancedReminderBtn" type="button">
+                🔔 Reminders
+            </button>
+
+            <button class="advanced-button" id="advancedMemoryBtn" type="button">
+                🧠 Manage what Cipher remembers
+            </button>
+
+            <button class="advanced-button danger" id="advancedSignOutBtn" type="button">
+                ⎋ Sign out
+            </button>
+
+        </div>
+
+
+        <button class="save-settings-button" id="saveSettingsBtn" type="button">
+            Save changes
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     CIPHER THEME MENU
+===================================================== -->
+
+<div id="themeMenu" class="theme-menu">
+
+    <div class="theme-menu-header">
+
+        <div>
+            <h2>🎨 Appearance</h2>
+            <small>
+                Customize your Cipher interface
+            </small>
+        </div>
+
+        <button id="closeThemeMenu" type="button">
             ×
-
         </button>
 
     </div>
 
 
+    <div class="theme-list">
 
-    <div class="settings-content">
+        <button class="theme-option" data-theme="midnight" type="button">
+            <i class="theme-dot midnight"></i>
+            <span>🌙 Midnight</span>
+        </button>
+
+        <button class="theme-option" data-theme="emerald" type="button">
+            <i class="theme-dot emerald"></i>
+            <span>💚 Emerald</span>
+        </button>
+
+        <button class="theme-option" data-theme="cyber" type="button">
+            <i class="theme-dot cyber"></i>
+            <span>⚡ Cyber</span>
+        </button>
+
+        <button class="theme-option" data-theme="amoled" type="button">
+            <i class="theme-dot amoled"></i>
+            <span>⚫ AMOLED Black</span>
+        </button>
+
+        <button class="theme-option" data-theme="ocean" type="button">
+            <i class="theme-dot ocean"></i>
+            <span>🌊 Ocean</span>
+        </button>
+
+        <button class="theme-option" data-theme="sunset" type="button">
+            <i class="theme-dot sunset"></i>
+            <span>🌅 Sunset</span>
+        </button>
+
+        <button class="theme-option" data-theme="aurora" type="button">
+            <i class="theme-dot aurora"></i>
+            <span>🌌 Aurora</span>
+        </button>
+
+        <button class="theme-option" data-theme="violet" type="button">
+            <i class="theme-dot violet"></i>
+            <span>🔮 Violet</span>
+        </button>
+
+        <button class="theme-option" data-theme="rose" type="button">
+            <i class="theme-dot rose"></i>
+            <span>🌹 Rose</span>
+        </button>
+
+        <button class="theme-option" data-theme="crimson" type="button">
+            <i class="theme-dot crimson"></i>
+            <span>🔥 Crimson</span>
+        </button>
+
+        <button class="theme-option" data-theme="arctic" type="button">
+            <i class="theme-dot arctic"></i>
+            <span>❄️ Arctic</span>
+        </button>
+
+        <button class="theme-option" data-theme="gold" type="button">
+            <i class="theme-dot gold"></i>
+            <span>✨ Gold</span>
+        </button>
+
+        <button class="theme-option" data-theme="nebula" type="button">
+            <i class="theme-dot nebula"></i>
+            <span>🪐 Nebula</span>
+        </button>
+
+        <button class="theme-option" data-theme="sakura" type="button">
+            <i class="theme-dot sakura"></i>
+            <span>🌸 Sakura</span>
+        </button>
+
+        <button class="theme-option" data-theme="matrix" type="button">
+            <i class="theme-dot matrix"></i>
+            <span>💻 Matrix</span>
+        </button>
+
+        <button class="theme-option" data-theme="light" type="button">
+            <i class="theme-dot light"></i>
+            <span>☀️ Light</span>
+        </button>
+
+    </div>
 
 
-        <!-- ACCOUNT -->
+    <div class="theme-control">
 
-        <div class="settings-section">
-
-            <h4>
-                Account
-            </h4>
-
-
-            <div class="setting-row">
-
-                <div>
-
-                    <strong>
-                        Username
-                    </strong>
-
-                    <small
-                        id="settings-username">
-                        User
-                    </small>
-
-                </div>
-
-            </div>
-
-
-            <div class="setting-row">
-
-                <div>
-
-                    <strong>
-                        Email
-                    </strong>
-
-                    <small
-                        id="settings-email">
-                        —
-                    </small>
-
-                </div>
-
-            </div>
-
+        <div>
+            <strong>🔀 Automatic random themes</strong>
+            <small>
+                Picks a new theme each time you open Cipher
+            </small>
         </div>
+        <label class="switch">
+            <input id="randomThemes" type="checkbox">
+            <span></span>
+        </label>
+
+    </div>
+
+    <div id="randomThemeSettings" class="random-theme-settings">
+
+        <label for="randomThemeInterval">
+            Change theme every (reserved for a future update)
+        </label>
+
+        <select id="randomThemeInterval" class="settings-field">
+            <option value="30000">30 seconds</option>
+            <option value="60000">1 minute</option>
+            <option value="300000">5 minutes</option>
+            <option value="900000">15 minutes</option>
+            <option value="3600000">1 hour</option>
+        </select>
+
+    </div>
 
 
+    <div class="theme-control cipher-control">
 
-        <!-- APPEARANCE -->
-
-        <div class="settings-section">
-
-            <h4>
-                Appearance
-            </h4>
-
-
-            <button
-                class="settings-action"
-                id="settings-theme-btn"
-                data-theme-trigger
-                type="button">
-
-                <span>
-                    🎨 Theme
-                </span>
-
-                <span>
-                    →
-                </span>
-
-            </button>
-
+        <div>
+            <strong>
+                🤖 Let Cipher control themes
+            </strong>
+            <small>
+                Allow Cipher to change the interface
+                when you ask it.
+            </small>
         </div>
+        <label class="switch">
+            <input id="cipherThemeControl" type="checkbox">
+            <span></span>
+        </label>
 
+    </div>
 
+    <div class="theme-examples">
 
-        <!-- REMINDERS -->
+        <strong>Try telling Cipher:</strong>
 
-        <div class="settings-section">
-
-            <h4>
-                Productivity
-            </h4>
-
-
-            <button
-                class="settings-action"
-                id="open-reminder-btn"
-                type="button">
-
-                <span>
-                    🔔 Reminders
-                </span>
-
-                <span>
-                    →
-                </span>
-
-            </button>
-
-        </div>
-
-
-
-        <!-- SIGN OUT -->
-
-        <div class="settings-section">
-
-            <button
-                class="settings-action danger"
-                onclick="doLogout()"
-                type="button">
-
-                <span>
-                    ⎋ Sign out
-                </span>
-
-                <span>
-                    →
-                </span>
-
-            </button>
-
-        </div>
+        <p>"Change the interface to Aurora."</p>
+        <p>"Use a cyber template."</p>
+        <p>"Switch to Ocean."</p>
+        <p>"Change my theme." (Cipher will ask which one)</p>
 
     </div>
 
@@ -977,8 +1135,9 @@
      JAVASCRIPT
      Load order matters: app.js defines shared helpers
      (showNotification, escapeHTML, etc.) that chat.js,
-     sidebar.js and themes.js all depend on, so it must
-     load first.
+     sidebar.js and cipher-ui.js all depend on, so it must
+     load first. themes.js has been retired in favor of
+     cipher-ui.js, which is now the single theme engine.
 ===================================================== -->
 
 <script
@@ -997,7 +1156,7 @@
 
 
 <script
-    src="{{ url_for('static', filename='js/themes.js') }}">
+    src="{{ url_for('static', filename='js/cipher-ui.js') }}">
 </script>
 
 
