@@ -482,16 +482,11 @@ function registerGlobalEvents() {
 
     /* =====================================================
        SETTINGS
+       NOTE: settings are now fully owned by cipher-ui.js
+       (the new settings modal + theme system). app.js no
+       longer binds its own click listener here to avoid
+       a redundant second listener on the same button.
     ===================================================== */
-
-    if (App.settingsButton) {
-
-        App.settingsButton.addEventListener(
-            "click",
-            openSettings
-        );
-
-    }
 
 
     /* =====================================================
