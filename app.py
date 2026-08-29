@@ -466,7 +466,7 @@ def _call_gemini(message, image_base64, image_mime_type, system_text, history):
     response = requests.post(
         url,
         json=payload,
-        timeout=45
+        timeout=15
     )
 
 
@@ -544,7 +544,7 @@ def _call_groq(message, image_base64, image_mime_type, system_text, history):
         url,
         json=payload,
         headers=headers,
-        timeout=30
+        timeout=12
     )
 
 
@@ -612,7 +612,7 @@ def _call_openrouter(message, image_base64, image_mime_type, system_text, histor
         url,
         json=payload,
         headers=headers,
-        timeout=30
+        timeout=12
     )
 
 
