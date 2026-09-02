@@ -213,6 +213,169 @@ OPENROUTER_MODEL = "openrouter/free"
 
 
 # =========================================================
+# IMAGE GENERATION
+#
+# Two providers, tried in order:
+#   1. Gemini's image model ("Nano Banana") -- higher
+#      quality, runs on Google's infrastructure, genuinely
+#      free up to a daily cap, and reuses the API key
+#      that's already configured for chat.
+#   2. Pollinations.ai -- a free, keyless fallback if
+#      Gemini fails or that daily cap is hit, so image
+#      generation doesn't just go down when one does.
+# =========================================================
+
+import urllib.parse
+
+GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image"
+
+
+def _call_gemini_image(prompt):
+
+    if not API_KEY:
+
+        raise RuntimeError("Gemini is not configured.")
+
+
+    url = (
+        "https://generativelanguage.googleapis.com/"
+        f"v1beta/models/{GEMINI_IMAGE_MODEL}:generateContent"
+        f"?key={API_KEY}"
+    )
+
+
+    payload = {
+
+        "contents": [
+
+            {
+                "role": "user",
+
+                "parts": [
+                    { "text": prompt }
+                ]
+            }
+
+        ]
+
+    }
+
+
+    response = requests.post(
+        url,
+        json=payload,
+        timeout=25
+    )
+
+
+    if response.status_code != 200:
+
+        raise RuntimeError(
+            f"Gemini image gen returned {response.status_code}: "
+            f"{response.text[:300]}"
+        )
+
+
+    data = response.json()
+
+
+    parts = (
+        data
+        ["candidates"]
+        [0]
+        ["content"]
+        ["parts"]
+    )
+
+
+    for part in parts:
+
+        inline = part.get("inlineData") or part.get("inline_data")
+
+
+        if inline and inline.get("data"):
+
+            mime_type = inline.get("mimeType") or inline.get("mime_type") or "image/png"
+
+            return f"data:{mime_type};base64,{inline['data']}"
+
+
+    raise RuntimeError("Gemini image gen returned no image data.")
+
+
+def build_pollinations_image_url(prompt, width=1024, height=1024):
+
+    encoded_prompt = urllib.parse.quote(prompt)
+
+    return (
+        "https://image.pollinations.ai/prompt/"
+        f"{encoded_prompt}"
+        f"?width={width}&height={height}&nologo=true"
+    )
+
+
+def generate_image_url(prompt):
+
+    """
+    Tries Gemini first, falls back to Pollinations. Always
+    returns *some* usable image URL/data-URL -- Pollinations
+    doesn't require any setup, so this effectively can't
+    fail entirely once a prompt has been extracted.
+    """
+
+    try:
+
+        return _call_gemini_image(prompt)
+
+    except Exception as error:
+
+        print("Gemini image generation failed:", error)
+
+        return build_pollinations_image_url(prompt)
+
+
+# Patterns that clearly signal "generate me an image", so a
+# request can be recognized in plain conversation and not
+# just through the dedicated button.
+
+IMAGE_GENERATION_PATTERNS = [
+
+    r"^generate\s+(?:an?\s+)?image\s+(?:of|for|showing)?\s*(.+)",
+    r"^generate\s+(?:an?\s+)?picture\s+(?:of|for|showing)?\s*(.+)",
+    r"^create\s+(?:an?\s+)?image\s+(?:of|for|showing)?\s*(.+)",
+    r"^create\s+(?:an?\s+)?picture\s+(?:of|for|showing)?\s*(.+)",
+    r"^draw\s+(?:me\s+)?(?:an?\s+)?(.+)",
+    r"^make\s+(?:me\s+)?(?:an?\s+)?(?:image|picture)\s+(?:of|for|showing)?\s*(.+)",
+    r"^image\s+generation[:\-]?\s*(.+)",
+    r"^generate\s+image[:\-]?\s*(.+)"
+
+]
+
+
+def extract_image_generation_prompt(message):
+
+    text = message.strip()
+
+
+    for pattern in IMAGE_GENERATION_PATTERNS:
+
+        match = re.match(pattern, text, re.IGNORECASE)
+
+
+        if match:
+
+            prompt = match.group(1).strip().rstrip(".!? ")
+
+
+            if prompt:
+
+                return prompt
+
+
+    return None
+
+
+# =========================================================
 # SAFE MATH
 # =========================================================
 
@@ -2705,6 +2868,29 @@ def chat():
             user_facts=user_facts,
             history=history
         )
+
+
+    elif extract_image_generation_prompt(message):
+
+        image_prompt = extract_image_generation_prompt(message)
+
+        generated_url = generate_image_url(image_prompt)
+
+
+        if generated_url:
+
+            reply = (
+                f"Here's your image of {image_prompt}:\n\n"
+                f"![{image_prompt}]({generated_url})"
+            )
+
+        else:
+
+            reply = (
+                "Cipher couldn't generate that image right now -- "
+                "both image providers are unavailable. Please try "
+                "again shortly."
+            )
 
 
     elif "joke" in msg:
