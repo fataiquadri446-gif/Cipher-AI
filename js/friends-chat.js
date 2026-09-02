@@ -694,6 +694,277 @@ async function loadMessages(friendId) {
    RENDER MESSAGES
 ========================================= */
 
+/* =========================================
+   CODE CARDS
+   Mirrors the code-card system in the main
+   Cipher chat, so forwarded code (or any code
+   pasted into a DM) shows as a tappable card
+   here too, instead of a giant text bubble.
+========================================= */
+
+const DmCodeBlocks = new Map();
+
+let dmCodeBlockCounter = 0;
+
+
+const DM_CODE_EXTENSIONS = {
+
+    python: "py", py: "py",
+    javascript: "js", js: "js",
+    typescript: "ts", ts: "ts",
+    html: "html",
+    css: "css",
+    json: "json",
+    bash: "sh", shell: "sh", sh: "sh",
+    sql: "sql",
+    java: "java",
+    c: "c",
+    cpp: "cpp", "c++": "cpp",
+    csharp: "cs", "c#": "cs",
+    go: "go",
+    rust: "rs",
+    php: "php",
+    ruby: "rb",
+    swift: "swift",
+    kotlin: "kt",
+    yaml: "yml", yml: "yml",
+    xml: "xml",
+    markdown: "md", md: "md"
+
+};
+
+
+function dmExtensionForLanguage(lang) {
+
+    return DM_CODE_EXTENSIONS[(lang || "").toLowerCase()] || "txt";
+
+}
+
+
+function renderMessageContent(text) {
+
+    if (!/```/.test(text)) {
+
+        return escapeHTML(text).replace(/\n/g, "<br>");
+
+    }
+
+
+    const placeholders = [];
+
+
+    const withoutCode = text.replace(
+
+        /```(\w+)?\n?([\s\S]*?)```/g,
+
+        (match, lang, code) => {
+
+            const id =
+                `dm-code-${Date.now()}-${dmCodeBlockCounter++}`;
+
+            DmCodeBlocks.set(id, {
+
+                code: code.trim(),
+
+                lang: (lang || "text").toLowerCase()
+
+            });
+
+
+            const token = `@@DMCODE_${id}@@`;
+
+            placeholders.push({ token, id });
+
+            return token;
+
+        }
+
+    );
+
+
+    let html =
+        escapeHTML(withoutCode).replace(/\n/g, "<br>");
+
+
+    placeholders.forEach(({ token, id }) => {
+
+        const block = DmCodeBlocks.get(id);
+
+        const label = (block.lang || "code").toUpperCase();
+
+
+        html = html.replace(
+            token,
+            `
+            <div class="code-card" data-code-id="${id}" role="button" tabindex="0">
+                <div class="code-card-icon">&lt;/&gt;</div>
+                <div class="code-card-info">
+                    <strong>Code</strong>
+                    <small>Code · ${escapeHTML(label)}</small>
+                </div>
+            </div>
+            `
+        );
+
+    });
+
+
+    return html;
+
+}
+
+
+function openDmCodeModal(id) {
+
+    const block = DmCodeBlocks.get(id);
+
+    if (!block) return;
+
+
+    let modal =
+        document.getElementById("code-viewer-modal");
+
+
+    if (!modal) {
+
+        modal = document.createElement("div");
+
+        modal.id = "code-viewer-modal";
+
+        modal.className = "code-viewer-overlay";
+
+
+        modal.innerHTML = `
+
+            <div class="code-viewer">
+
+                <div class="code-viewer-header">
+
+                    <strong id="code-viewer-lang"></strong>
+
+                    <div class="code-viewer-actions">
+
+                        <button type="button" id="code-viewer-copy">Copy</button>
+
+                        <button type="button" id="code-viewer-download">Download</button>
+
+                        <button type="button" id="code-viewer-close">×</button>
+
+                    </div>
+
+                </div>
+
+                <pre class="code-viewer-body"><code id="code-viewer-code"></code></pre>
+
+            </div>
+
+        `;
+
+
+        document.body.appendChild(modal);
+
+
+        modal.addEventListener("click", event => {
+
+            if (event.target === modal) {
+
+                modal.classList.remove("open");
+
+            }
+
+        });
+
+
+        document
+            .getElementById("code-viewer-close")
+            .addEventListener("click", () => {
+
+                modal.classList.remove("open");
+
+            });
+
+    }
+
+
+    document.getElementById("code-viewer-lang").textContent =
+        (block.lang || "code").toUpperCase();
+
+    document.getElementById("code-viewer-code").textContent =
+        block.code;
+
+
+    const copyButton =
+        document.getElementById("code-viewer-copy");
+
+    copyButton.onclick = async () => {
+
+        try {
+
+            await navigator.clipboard.writeText(block.code);
+
+            copyButton.textContent = "Copied!";
+
+            setTimeout(() => {
+
+                copyButton.textContent = "Copy";
+
+            }, 1500);
+
+        } catch {
+
+            alert("Unable to copy.");
+
+        }
+
+    };
+
+
+    const downloadButton =
+        document.getElementById("code-viewer-download");
+
+    downloadButton.onclick = () => {
+
+        const ext = dmExtensionForLanguage(block.lang);
+
+        const blob = new Blob([block.code], { type: "text/plain" });
+
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+
+        link.href = url;
+
+        link.download = `code.${ext}`;
+
+        link.click();
+
+        URL.revokeObjectURL(url);
+
+    };
+
+
+    modal.classList.add("open");
+
+}
+
+
+document.addEventListener("click", event => {
+
+    const card = event.target.closest(".code-card");
+
+    if (card) {
+
+        openDmCodeModal(card.dataset.codeId);
+
+    }
+
+});
+
+
+/* =========================================
+   RENDER MESSAGES
+========================================= */
+
 function renderMessages(conversationMessages) {
 
     const messages =
@@ -763,8 +1034,8 @@ function renderMessages(conversationMessages) {
 
         } else {
 
-            bubble.textContent =
-                message.content;
+            bubble.innerHTML =
+                renderMessageContent(message.content);
 
         }
 
