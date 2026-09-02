@@ -94,6 +94,9 @@ const App = {
     attachmentButton:
         document.getElementById("upload-btn"),
 
+    imageGenToggle:
+        document.getElementById("image-gen-toggle"),
+
     fileInput:
         document.getElementById("file-input"),
 
@@ -533,6 +536,24 @@ function registerGlobalEvents() {
         App.fileInput.addEventListener(
             "change",
             handleFileSelection
+        );
+
+    }
+
+
+    /* =====================================================
+       IMAGE GENERATION TOGGLE
+    ===================================================== */
+
+    if (App.imageGenToggle) {
+
+        App.imageGenToggle.addEventListener(
+            "click",
+            () => {
+
+                toggleImageGenMode();
+
+            }
         );
 
     }
@@ -1388,6 +1409,52 @@ function clearReminderError() {
 ========================================================= */
 
 Cipher.pendingImage = null;
+
+
+/* =========================================================
+   IMAGE GENERATION MODE
+   A one-shot toggle: turn it on, type a description, hit
+   send -- the trigger phrase the backend recognizes gets
+   prepended automatically, then the mode turns itself back
+   off. Exposed on window so chat.js's sendMessage() can
+   read and clear it without a circular dependency between
+   the two files.
+========================================================= */
+
+Cipher.imageGenMode = false;
+
+
+function toggleImageGenMode(force = null) {
+
+    Cipher.imageGenMode =
+        force !== null
+            ? Boolean(force)
+            : !Cipher.imageGenMode;
+
+
+    if (App.imageGenToggle) {
+
+        App.imageGenToggle.classList.toggle(
+            "active",
+            Cipher.imageGenMode
+        );
+
+    }
+
+
+    if (App.input) {
+
+        App.input.placeholder =
+            Cipher.imageGenMode
+                ? "Describe the image you want…"
+                : "Message Cipher...";
+
+    }
+
+}
+
+
+window.toggleImageGenMode = toggleImageGenMode;
 
 
 function openFilePicker() {
