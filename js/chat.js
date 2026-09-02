@@ -104,7 +104,7 @@ async function sendMessage(event) {
 
     if (Chat.sending) return;
 
-    const message = ChatUI.input.value.trim();
+    let message = ChatUI.input.value.trim();
 
     const pendingImage =
         (typeof Cipher !== "undefined")
@@ -113,6 +113,33 @@ async function sendMessage(event) {
 
 
     if (!message && !pendingImage) return;
+
+    /*
+     * Image-generation mode: prepend the trigger phrase the
+     * backend already recognizes, so the button and typing
+     * it naturally both go through the exact same code path.
+     * Only applies to plain text -- an attached photo is
+     * something to analyze, not a generation request.
+     */
+
+    if (
+        typeof Cipher !== "undefined" &&
+        Cipher.imageGenMode &&
+        !pendingImage &&
+        message
+    ) {
+
+        message = `Generate an image of ${message}`;
+
+
+        if (typeof window.toggleImageGenMode === "function") {
+
+            window.toggleImageGenMode(false);
+
+        }
+
+    }
+
 
     /*
      * Check for a theme-change request before anything
@@ -452,6 +479,20 @@ function createMessageElement(role, text, imageDataUrl = null) {
     wrapper.dataset.role = role;
 
     wrapper.dataset.time = Date.now();
+
+
+    /*
+     * The rendered HTML replaces code blocks with tappable
+     * cards, so the visible text alone isn't enough to
+     * recover the original message (e.g. for Copy or
+     * Forward). Keep the untouched original here instead.
+     */
+
+    if (text) {
+
+        wrapper.dataset.rawText = text;
+
+    }
 
 
     const imageHTML =
@@ -894,7 +935,34 @@ function renderMarkdown(text) {
     );
 
 
-    let html = escapeHTML(withoutCode);
+    /*
+     * Markdown images (used for AI-generated pictures) are
+     * pulled out the same way, before escaping, so the URL
+     * survives intact.
+     */
+
+    const imagePlaceholders = [];
+
+
+    const withoutImages = withoutCode.replace(
+
+        /!\[([^\]]*)\]\(([^)]+)\)/g,
+
+        (match, alt, url) => {
+
+            const token =
+                `@@IMAGEMD_${imagePlaceholders.length}@@`;
+
+            imagePlaceholders.push({ token, alt, url });
+
+            return token;
+
+        }
+
+    );
+
+
+    let html = escapeHTML(withoutImages);
 
     html = html.replace(
 
@@ -975,6 +1043,16 @@ function renderMarkdown(text) {
     });
 
 
+    imagePlaceholders.forEach(({ token, alt, url }) => {
+
+        html = html.replace(
+            token,
+            `<img class="msg-image" src="${escapeHTML(url)}" alt="${escapeHTML(alt)}" loading="lazy">`
+        );
+
+    });
+
+
     return html;
 
 }
@@ -1016,6 +1094,16 @@ function createMessageActions(role, text) {
 
             </button>
 
+            <button
+                class="message-btn"
+                onclick="openForwardModal(this)"
+                title="Forward to a friend"
+                type="button">
+
+                ➡️
+
+            </button>
+
         </div>
 
     `;
@@ -1029,16 +1117,18 @@ function createMessageActions(role, text) {
 
 async function copyMessage(button) {
 
-    const message =
+    const messageEl =
+        button.closest(".msg");
 
-        button.closest(".msg")
-              .querySelector(".message-text");
+    const text =
+        messageEl.dataset.rawText
+        || messageEl.querySelector(".message-text").innerText;
 
     try {
 
         await navigator.clipboard.writeText(
 
-            message.innerText
+            text
 
         );
 
@@ -1074,6 +1164,222 @@ function regenerateResponse() {
         "Regeneration will be enabled after backend integration."
 
     );
+
+}
+
+
+/* ==========================================
+   FORWARD TO A FRIEND
+   Sends the exact original message (code blocks
+   included, not just the "Code" card placeholder)
+   as a direct message to a chosen friend.
+========================================== */
+
+async function openForwardModal(button) {
+
+    const messageEl =
+        button.closest(".msg");
+
+    const text =
+        messageEl.dataset.rawText
+        || messageEl.querySelector(".message-text").innerText;
+
+
+    if (!text || !text.trim()) {
+
+        showWarning("Nothing to forward.");
+
+        return;
+
+    }
+
+
+    let friends = [];
+
+
+    try {
+
+        const response =
+            await fetch("/api/friends", {
+                credentials: "same-origin"
+            });
+
+        friends = await response.json();
+
+    } catch (error) {
+
+        console.error(error);
+
+        showError("Unable to load your friends list.");
+
+        return;
+
+    }
+
+
+    if (!Array.isArray(friends) || friends.length === 0) {
+
+        showInfo(
+            "You don't have any friends yet — add one from the Friends page first."
+        );
+
+        return;
+
+    }
+
+
+    showForwardPicker(friends, text);
+
+}
+
+
+function showForwardPicker(friends, text) {
+
+    let overlay =
+        document.getElementById("forward-modal");
+
+
+    if (!overlay) {
+
+        overlay = document.createElement("div");
+
+        overlay.id = "forward-modal";
+
+        overlay.className = "forward-overlay";
+
+        document.body.appendChild(overlay);
+
+
+        overlay.addEventListener("click", event => {
+
+            if (event.target === overlay) {
+
+                overlay.classList.remove("open");
+
+            }
+
+        });
+
+    }
+
+
+    overlay.innerHTML = `
+
+        <div class="forward-panel">
+
+            <div class="forward-header">
+
+                <strong>Forward to a friend</strong>
+
+                <button type="button" id="forward-close">×</button>
+
+            </div>
+
+            <div class="forward-list">
+
+                ${friends.map(friend => `
+
+                    <button
+                        type="button"
+                        class="forward-friend"
+                        data-id="${escapeHTML(String(friend.id))}"
+                        data-name="${escapeHTML(friend.username)}"
+                    >
+
+                        <span class="forward-avatar">
+                            ${escapeHTML(
+                                friend.username
+                                    ? friend.username[0].toUpperCase()
+                                    : "?"
+                            )}
+                        </span>
+
+                        <span>${escapeHTML(friend.username)}</span>
+
+                    </button>
+
+                `).join("")}
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    overlay.classList.add("open");
+
+
+    document
+        .getElementById("forward-close")
+        .addEventListener("click", () => {
+
+            overlay.classList.remove("open");
+
+        });
+
+
+    overlay
+        .querySelectorAll(".forward-friend")
+        .forEach(friendButton => {
+
+            friendButton.addEventListener(
+                "click",
+                () => sendForward(
+                    overlay,
+                    friendButton.dataset.id,
+                    friendButton.dataset.name,
+                    text
+                )
+            );
+
+        });
+
+}
+
+
+async function sendForward(overlay, friendId, friendName, text) {
+
+    overlay.classList.remove("open");
+
+
+    try {
+
+        const response = await fetch(
+            `/api/messages/${friendId}`,
+            {
+                method: "POST",
+
+                credentials: "same-origin",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    content: text
+                })
+            }
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error("Forward failed");
+
+        }
+
+
+        showSuccess(`Forwarded to ${friendName}.`);
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showError("Unable to forward that message.");
+
+    }
 
 }
 
