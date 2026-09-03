@@ -94,9 +94,6 @@ const App = {
     attachmentButton:
         document.getElementById("upload-btn"),
 
-    imageGenToggle:
-        document.getElementById("image-gen-toggle"),
-
     fileInput:
         document.getElementById("file-input"),
 
@@ -543,20 +540,12 @@ function registerGlobalEvents() {
 
     /* =====================================================
        IMAGE GENERATION TOGGLE
+       NOTE: the old dedicated toggle button was replaced
+       by the "Image Generation" welcome card. It's now
+       triggered through the same handleWelcomeCard() path
+       as Chat/Research/Documents, so there's no separate
+       listener to bind here anymore.
     ===================================================== */
-
-    if (App.imageGenToggle) {
-
-        App.imageGenToggle.addEventListener(
-            "click",
-            () => {
-
-                toggleImageGenMode();
-
-            }
-        );
-
-    }
 
 
     /* =====================================================
@@ -1432,9 +1421,19 @@ function toggleImageGenMode(force = null) {
             : !Cipher.imageGenMode;
 
 
-    if (App.imageGenToggle) {
+    /*
+     * Visual feedback lives on the "Image Generation"
+     * welcome card now, not a dedicated toggle button.
+     * It only stays visible on the welcome screen, so
+     * this is a nice-to-have, not load-bearing.
+     */
 
-        App.imageGenToggle.classList.toggle(
+    const imageGenCard =
+        document.getElementById("imageGenerationBtn");
+
+    if (imageGenCard) {
+
+        imageGenCard.classList.toggle(
             "active",
             Cipher.imageGenMode
         );
@@ -1677,6 +1676,15 @@ function handleWelcomeCard(event) {
         case "documents":
 
             openFilePicker();
+
+            break;
+
+
+        case "image":
+
+            toggleImageGenMode(true);
+
+            focusMessageInput();
 
             break;
 
