@@ -1314,6 +1314,199 @@ img{
 
 
 /* ===================================================
+   FEATURE CARD (Image Generation and future entries)
+   Uses the app's actual live theme variables, which
+   cipher-ui.js already updates across all 16 themes --
+   no separate [data-theme] CSS block needed.
+=================================================== */
+
+.feature-card{
+
+    flex-direction:row;
+    align-items:flex-start;
+    gap:14px;
+
+}
+
+
+.image-generation-card{
+
+    position:relative;
+    overflow:hidden;
+
+    border:1px solid color-mix(
+        in srgb,
+        var(--accent) 55%,
+        transparent
+    );
+
+    transition:
+        transform .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease;
+
+}
+
+
+/* Subtle theme-colored glow */
+.image-generation-card::before{
+
+    content:"";
+    position:absolute;
+    inset:0;
+
+    background:radial-gradient(
+        circle at 90% 10%,
+        color-mix(in srgb, var(--accent) 18%, transparent),
+        transparent 55%
+    );
+
+    pointer-events:none;
+
+}
+
+
+.image-generation-card:hover{
+
+    transform:translateY(-3px);
+
+    border-color:var(--accent);
+
+    box-shadow:
+        0 0 0 1px color-mix(
+            in srgb,
+            var(--accent) 25%,
+            transparent
+        ),
+        0 8px 30px color-mix(
+            in srgb,
+            var(--accent) 18%,
+            transparent
+        );
+
+}
+
+
+/* Toggled on via the welcome card itself, while image
+   generation mode is active */
+.image-generation-card.active{
+
+    border-color:var(--accent);
+
+    box-shadow:
+        0 0 0 2px color-mix(
+            in srgb,
+            var(--accent) 40%,
+            transparent
+        );
+
+}
+
+
+.image-icon{
+
+    width:48px;
+    height:48px;
+    flex-shrink:0;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:14px;
+
+    color:var(--accent);
+
+    background:color-mix(
+        in srgb,
+        var(--accent) 12%,
+        transparent
+    );
+
+    border:1px solid color-mix(
+        in srgb,
+        var(--accent) 30%,
+        transparent
+    );
+
+}
+
+
+.image-icon svg{
+
+    width:26px;
+    height:26px;
+
+}
+
+
+.feature-content{
+
+    min-width:0;
+
+}
+
+
+.feature-title-row{
+
+    display:flex;
+    align-items:center;
+    gap:9px;
+
+}
+
+
+.feature-title-row h3{
+
+    margin:0;
+    font-size:15px;
+    color:var(--text-primary);
+
+}
+
+
+.image-generation-card p{
+
+    margin:6px 0 0;
+
+    color:var(--text-secondary);
+
+    font-size:13px;
+
+}
+
+
+.new-badge{
+
+    display:inline-flex;
+    align-items:center;
+
+    padding:3px 7px;
+
+    border-radius:6px;
+
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.5px;
+
+    color:var(--accent);
+
+    background:color-mix(
+        in srgb,
+        var(--accent) 14%,
+        transparent
+    );
+
+    border:1px solid color-mix(
+        in srgb,
+        var(--accent) 35%,
+        transparent
+    );
+
+}
+
+
+/* ===================================================
    CHAT MESSAGES
 =================================================== */
 
