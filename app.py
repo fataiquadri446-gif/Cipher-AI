@@ -13,6 +13,7 @@ from authlib.integrations.flask_client import OAuth
 import math
 import json
 import os
+import threading
 import re
 import random
 import ast
@@ -264,7 +265,7 @@ def _call_gemini_image(prompt):
     response = requests.post(
         url,
         json=payload,
-        timeout=25
+        timeout=15
     )
 
 
@@ -685,7 +686,7 @@ def _call_gemini(message, image_base64, image_mime_type, system_text, history):
     response = requests.post(
         url,
         json=payload,
-        timeout=15
+        timeout=8
     )
 
 
@@ -763,7 +764,7 @@ def _call_groq(message, image_base64, image_mime_type, system_text, history):
         url,
         json=payload,
         headers=headers,
-        timeout=12
+        timeout=6
     )
 
 
@@ -831,7 +832,7 @@ def _call_openrouter(message, image_base64, image_mime_type, system_text, histor
         url,
         json=payload,
         headers=headers,
-        timeout=12
+        timeout=6
     )
 
 
@@ -1002,7 +1003,7 @@ a chemistry exam"). If no, reply with exactly: NONE
         response = requests.post(
             url,
             json=payload,
-            timeout=20
+            timeout=6
         )
 
 
@@ -1124,6 +1125,35 @@ def save_user_fact(user_id, fact):
 
         print(
             "Save user fact error:",
+            error
+        )
+
+
+def _learn_from_message(user_id, message, reply):
+
+    """
+    Runs on a background thread so memory learning never
+    adds latency to the reply the person is waiting for.
+    """
+
+    try:
+
+        fact = extract_memory_fact(
+            message,
+            reply
+        )
+
+        if fact:
+
+            save_user_fact(
+                user_id,
+                fact
+            )
+
+    except Exception as error:
+
+        print(
+            "Memory learning skipped:",
             error
         )
 
@@ -2936,30 +2966,18 @@ def chat():
 
         # -------------------------------------------------
         # Best-effort: learn a durable fact from this
-        # message, if there is one. Never blocks or
-        # fails the actual chat reply.
+        # message, if there is one. Runs in the background
+        # after the reply is ready, so it adds no wait time
+        # to the response the person actually sees -- it
+        # used to run synchronously here and add a whole
+        # extra API call's worth of latency to every message.
         # -------------------------------------------------
 
-        try:
-
-            fact = extract_memory_fact(
-                message,
-                reply
-            )
-
-            if fact:
-
-                save_user_fact(
-                    current_user.id,
-                    fact
-                )
-
-        except Exception as error:
-
-            print(
-                "Memory learning skipped:",
-                error
-            )
+        threading.Thread(
+            target=_learn_from_message,
+            args=(current_user.id, message, reply),
+            daemon=True
+        ).start()
 
 
     # -----------------------------------------------------
