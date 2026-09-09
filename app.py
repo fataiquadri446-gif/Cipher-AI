@@ -21,6 +21,7 @@ import operator
 import requests
 import psycopg2
 import psycopg2.extras
+import psycopg2.pool
 
 
 # =========================================================
@@ -128,6 +129,30 @@ result, then explain it clearly. Don't expose raw internal
 chain-of-thought — give the person the calculations, assumptions,
 and conclusions they need to follow your answer, not a stream of
 unfiltered reasoning.
+
+HANDLING IMPERFECT INPUT
+
+People type fast, on phones, with typos, dropped words, and
+inconsistent capitalization — this is completely normal and never
+worth remarking on. Read past small mistakes and figure out the
+person's most likely intended meaning before responding — for
+example, "waht is teh capitol of frnace" clearly means "what is the
+capital of France," so just answer the real question. Only ask for
+clarification when a message is genuinely ambiguous between two
+very different meanings, not just because it's imperfectly typed.
+Never mock, correct, or make a point of someone's typos unless they
+specifically ask you to proofread something.
+
+STAYING ACCURATE
+
+Prioritize giving a correct, grounded answer over a fast-sounding
+one — speed never justifies guessing. If you're not confident about
+a fact, name, date, or detail, say so plainly rather than filling
+the gap with something that merely sounds plausible. When a
+question depends on something you're unsure of, say what you do
+know and flag the part that's uncertain, rather than presenting a
+guess with full confidence. Getting it right matters more than
+sounding polished.
 
 RESPONSE STYLE
 
@@ -1069,7 +1094,7 @@ def get_user_facts(user_id, limit=15):
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
 
         return [row["fact"] for row in rows]
@@ -1118,7 +1143,7 @@ def save_user_fact(user_id, fact):
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
 
     except Exception as error:
@@ -1162,24 +1187,79 @@ def _learn_from_message(user_id, message, reply):
 # DATABASE
 # =========================================================
 
-def get_db():
+_db_pool = None
 
-    database_url = os.environ.get(
-        "DATABASE_URL"
-    )
+
+def _init_db_pool():
+
+    global _db_pool
+
+    database_url = os.environ.get("DATABASE_URL")
 
 
     if not database_url:
+
+        return
+
+
+    _db_pool = psycopg2.pool.ThreadedConnectionPool(
+        1,
+        10,
+        database_url,
+        sslmode="require"
+    )
+
+
+def get_db():
+
+    """
+    Borrows a connection from a pool instead of opening a
+    brand-new one every time. Opening a fresh Postgres
+    connection means a full TCP + TLS handshake on every
+    single call -- with dozens of call sites across the
+    app, that was adding real, avoidable latency to nearly
+    every request. Always pair this with release_db(conn)
+    instead of calling conn.close() directly, so the
+    connection goes back to the pool rather than being
+    destroyed.
+    """
+
+    global _db_pool
+
+    if _db_pool is None:
+
+        _init_db_pool()
+
+
+    if _db_pool is None:
 
         raise RuntimeError(
             "DATABASE_URL is not configured."
         )
 
 
-    return psycopg2.connect(
-        database_url,
-        sslmode="require"
-    )
+    return _db_pool.getconn()
+
+
+def release_db(conn):
+
+    global _db_pool
+
+    if _db_pool is None or conn is None:
+
+        return
+
+
+    try:
+
+        _db_pool.putconn(conn)
+
+    except Exception as error:
+
+        print(
+            "DB pool release error:",
+            error
+        )
 
 
 def init_db():
@@ -1597,7 +1677,7 @@ def init_db():
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
 # =========================================================
@@ -1704,7 +1784,7 @@ def load_user(user_id):
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     if row:
@@ -1808,7 +1888,7 @@ def signup():
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
 
         user = User(
@@ -1912,7 +1992,7 @@ def login():
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
 
         if (
@@ -2074,7 +2154,7 @@ def update_profile():
 
             cur.close()
 
-            conn.close()
+            release_db(conn)
 
             return jsonify({
 
@@ -2102,7 +2182,7 @@ def update_profile():
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
 
         return jsonify({
@@ -2291,7 +2371,7 @@ def google_callback():
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
 
         user = User(
@@ -2389,7 +2469,7 @@ def get_chats():
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     chats = [
@@ -2464,7 +2544,7 @@ def new_chat():
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     return jsonify({
@@ -2525,7 +2605,7 @@ def get_messages(chat_id):
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
 
         return jsonify({
@@ -2558,7 +2638,7 @@ def get_messages(chat_id):
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     messages = [
@@ -2627,7 +2707,7 @@ def toggle_pin(chat_id):
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     if not row:
@@ -2686,7 +2766,7 @@ def delete_chat(chat_id):
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     if not deleted:
@@ -3020,7 +3100,7 @@ def chat():
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     return jsonify({
@@ -3225,7 +3305,7 @@ def create_reminder():
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
 
         return jsonify({
@@ -3327,7 +3407,7 @@ def get_reminders():
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     reminders = [
@@ -3428,7 +3508,7 @@ def upcoming_reminders():
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     return jsonify([
@@ -3513,7 +3593,7 @@ def due_reminders():
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     return jsonify([
@@ -3597,7 +3677,7 @@ def complete_reminder(
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     if not row:
@@ -3663,7 +3743,7 @@ def delete_reminder(
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     if not deleted:
@@ -3728,7 +3808,7 @@ def list_memory():
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     return jsonify([
@@ -3812,7 +3892,7 @@ def delete_memory(fact_id):
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     if not deleted:
@@ -4087,7 +4167,7 @@ def generate_friend_code():
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
         return jsonify({
 
@@ -4110,7 +4190,7 @@ def generate_friend_code():
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     return jsonify({
@@ -4177,7 +4257,7 @@ def redeem_friend_code():
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
         return jsonify({
 
@@ -4190,7 +4270,7 @@ def redeem_friend_code():
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
         return jsonify({
 
@@ -4203,7 +4283,7 @@ def redeem_friend_code():
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
         return jsonify({
 
@@ -4216,7 +4296,7 @@ def redeem_friend_code():
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
         return jsonify({
 
@@ -4244,7 +4324,7 @@ def redeem_friend_code():
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
         return jsonify({
 
@@ -4287,7 +4367,7 @@ def redeem_friend_code():
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     return jsonify({
@@ -4352,7 +4432,7 @@ def get_friends():
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     return jsonify([
@@ -4410,7 +4490,7 @@ def get_dm_conversation(friend_id):
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
         return jsonify({
 
@@ -4448,7 +4528,7 @@ def get_dm_conversation(friend_id):
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     return jsonify([
@@ -4517,7 +4597,7 @@ def send_dm(friend_id):
 
         cur.close()
 
-        conn.close()
+        release_db(conn)
 
         return jsonify({
 
@@ -4547,7 +4627,7 @@ def send_dm(friend_id):
 
     cur.close()
 
-    conn.close()
+    release_db(conn)
 
 
     return jsonify({
