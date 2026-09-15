@@ -2413,6 +2413,35 @@ def home():
 
 
 # =========================================================
+# PWA: SERVICE WORKER + MANIFEST
+#
+# The service worker is served from the root path (not
+# /static/js/sw.js) so its scope covers the whole app --
+# a service worker can only control paths at or below
+# where it's served from.
+# =========================================================
+
+@app.route("/sw.js")
+def service_worker():
+
+    return send_from_directory(
+        app.root_path,
+        "sw.js",
+        mimetype="application/javascript"
+    )
+
+
+@app.route("/manifest.json")
+def web_manifest():
+
+    return send_from_directory(
+        app.root_path,
+        "manifest.json",
+        mimetype="application/manifest+json"
+    )
+
+
+# =========================================================
 # FRIENDS PAGE
 # =========================================================
 
