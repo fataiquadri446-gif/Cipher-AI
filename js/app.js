@@ -2440,5 +2440,107 @@ window.CipherApp = {
 
 
 /* =========================================================
+   PWA: INSTALL PROMPT
+   Chrome only fires beforeinstallprompt when its own
+   installability criteria are met (manifest + service
+   worker + icons). We capture that event instead of
+   letting Chrome show its own address-bar icon, so there's
+   a clear, discoverable "Install Cipher" button instead.
+========================================================= */
+
+let deferredInstallPrompt = null;
+
+
+window.addEventListener("beforeinstallprompt", event => {
+
+    event.preventDefault();
+
+    deferredInstallPrompt = event;
+
+
+    const installButton =
+        document.getElementById("install-app-btn");
+
+    if (installButton) {
+
+        installButton.classList.remove("hidden");
+
+    }
+
+});
+
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const installButton =
+        document.getElementById("install-app-btn");
+
+
+    if (installButton) {
+
+        installButton.addEventListener("click", async () => {
+
+            if (!deferredInstallPrompt) return;
+
+
+            deferredInstallPrompt.prompt();
+
+
+            await deferredInstallPrompt.userChoice;
+
+
+            deferredInstallPrompt = null;
+
+            installButton.classList.add("hidden");
+
+        });
+
+    }
+
+});
+
+
+window.addEventListener("appinstalled", () => {
+
+    const installButton =
+        document.getElementById("install-app-btn");
+
+    if (installButton) {
+
+        installButton.classList.add("hidden");
+
+    }
+
+
+    if (typeof showSuccess === "function") {
+
+        showSuccess("Cipher installed!");
+
+    }
+
+});
+
+
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener("load", () => {
+
+        navigator.serviceWorker
+            .register("/sw.js")
+            .catch(error => {
+
+                console.error(
+                    "Service worker registration failed:",
+                    error
+                );
+
+            });
+
+    });
+
+}
+
+
+/* =========================================================
    END OF APP.JS
 ========================================================= */
