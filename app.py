@@ -231,7 +231,7 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 # Groq alone can cover everything Cipher needs -- and its
 # custom LPU hardware makes it the fastest of the three
 # providers, which is why it's tried first below.
-GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+GROQ_MODEL = "openai/gpt-oss-120b"
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 
