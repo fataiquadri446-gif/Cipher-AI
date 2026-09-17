@@ -364,16 +364,22 @@ def generate_image_url(prompt):
 # request can be recognized in plain conversation and not
 # just through the dedicated button.
 
-IMAGE_GENERATION_PATTERNS = [
+# Detects image-generation intent anywhere in the message
+# instead of requiring one exact phrase order -- "generate
+# a random image", "make me a picture of a cat", "draw
+# something cool" all need to work, not just one rigid form.
 
-    r"^generate\s+(?:an?\s+)?image\s+(?:of|for|showing)?\s*(.+)",
-    r"^generate\s+(?:an?\s+)?picture\s+(?:of|for|showing)?\s*(.+)",
-    r"^create\s+(?:an?\s+)?image\s+(?:of|for|showing)?\s*(.+)",
-    r"^create\s+(?:an?\s+)?picture\s+(?:of|for|showing)?\s*(.+)",
-    r"^draw\s+(?:me\s+)?(?:an?\s+)?(.+)",
-    r"^make\s+(?:me\s+)?(?:an?\s+)?(?:image|picture)\s+(?:of|for|showing)?\s*(.+)",
-    r"^image\s+generation[:\-]?\s*(.+)",
-    r"^generate\s+image[:\-]?\s*(.+)"
+IMAGE_GENERATION_VERBS = r"(?:generate|create|draw|make|design|produce|render|paint)"
+
+IMAGE_GENERATION_NOUNS = r"(?:image|picture|photo|art|illustration|drawing|artwork|graphic|wallpaper)"
+
+RANDOM_IMAGE_PROMPTS = [
+
+    "a surreal dreamlike landscape with vivid colors",
+    "an imaginative abstract composition, bold colors",
+    "a whimsical fantasy creature in a glowing forest",
+    "a futuristic city skyline at sunset, vivid colors",
+    "a cozy cabin in a snowy mountain landscape"
 
 ]
 
@@ -383,22 +389,69 @@ def extract_image_generation_prompt(message):
     text = message.strip()
 
 
-    for pattern in IMAGE_GENERATION_PATTERNS:
+    # Most reliable signal: an explicit subject after "of/for/showing"
+    subject_match = re.search(
+        rf"{IMAGE_GENERATION_NOUNS}\s+(?:of|for|showing)\s+(.+)",
+        text,
+        re.IGNORECASE
+    )
 
-        match = re.match(pattern, text, re.IGNORECASE)
+    if subject_match:
+
+        prompt = subject_match.group(1).strip().rstrip(".!? ")
+
+        if prompt:
+
+            return prompt
 
 
-        if match:
+    has_verb = re.search(IMAGE_GENERATION_VERBS, text, re.IGNORECASE)
 
-            prompt = match.group(1).strip().rstrip(".!? ")
-
-
-            if prompt:
-
-                return prompt
+    has_noun = re.search(IMAGE_GENERATION_NOUNS, text, re.IGNORECASE)
 
 
-    return None
+    if not (has_verb and has_noun):
+
+        return None
+
+
+    # Verb + noun present but no clean "of X" subject -- pull
+    # out whatever sits between them (e.g. "make me a cool
+    # picture" -> "cool"), and fall back to a curated random
+    # prompt if nothing usable is left (e.g. "generate a
+    # random image" has nothing descriptive to extract).
+
+    between_match = re.search(
+        rf"{IMAGE_GENERATION_VERBS}\s+(?:me\s+)?(.*?){IMAGE_GENERATION_NOUNS}",
+        text,
+        re.IGNORECASE
+    )
+
+    descriptor = ""
+
+    if between_match:
+
+        descriptor = re.sub(
+            r"^(a|an|the|some)\s+",
+            "",
+            between_match.group(1).strip(),
+            flags=re.IGNORECASE
+        ).strip()
+
+
+    filler_words = {
+        "", "random", "a random", "some random", "cool",
+        "nice", "an", "a", "the"
+    }
+
+
+    if descriptor and descriptor.lower() not in filler_words:
+
+        return descriptor
+
+
+    return random.choice(RANDOM_IMAGE_PROMPTS)
+
 
 
 # =========================================================
