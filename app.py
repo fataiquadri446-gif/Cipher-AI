@@ -1,4 +1,14 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory, url_for, redirect
+from flask import (
+    Flask,
+    render_template,
+    request,
+    jsonify,
+    send_from_directory,
+    url_for,
+    redirect,
+    g,
+    has_app_context
+)
 from flask_login import (
     LoginManager,
     UserMixin,
@@ -8,12 +18,12 @@ from flask_login import (
     current_user
 )
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth
 
 import math
 import json
 import os
-import threading
 import re
 import random
 import ast
@@ -38,10 +48,42 @@ app.secret_key = os.environ.get(
 
 
 # =========================================================
+# VERCEL SETTINGS
+#
+# - Vercel sets the VERCEL env var automatically.
+# - Vercel sits behind a proxy, so ProxyFix makes Flask
+#   see the real https scheme and host. Without this,
+#   Google Sign-In builds http:// redirect URLs and Google
+#   rejects them.
+# - Cookies are only marked "secure" on Vercel, so local
+#   http://127.0.0.1 development keeps working.
+# =========================================================
+
+IS_VERCEL = bool(os.environ.get("VERCEL"))
+
+app.wsgi_app = ProxyFix(
+    app.wsgi_app,
+    x_for=1,
+    x_proto=1,
+    x_host=1
+)
+
+app.config["PREFERRED_URL_SCHEME"] = "https" if IS_VERCEL else "http"
+
+app.config["SESSION_COOKIE_SECURE"] = IS_VERCEL
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+
+app.config["REMEMBER_COOKIE_SECURE"] = IS_VERCEL
+app.config["REMEMBER_COOKIE_SAMESITE"] = "Lax"
+app.config["REMEMBER_COOKIE_HTTPONLY"] = True
+
+
+# =========================================================
 # GOOGLE OAUTH
 #
 # Requires GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to be
-# set as environment variables on Render. Until they are
+# set as environment variables on Vercel. Until they are
 # set, /login/google will return a clear error instead of
 # crashing.
 # =========================================================
@@ -76,6 +118,9 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
 # static/. This route serves files from js/ whenever the
 # browser requests them at /static/js/<filename>, matching
 # what index.html expects.
+#
+# (vercel.json must include js/** in includeFiles for this
+# to work on Vercel.)
 # =========================================================
 
 @app.route("/static/js/<path:filename>")
@@ -255,6 +300,11 @@ import urllib.parse
 
 GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image"
 
+# VERCEL: responses larger than ~4.5 MB are rejected by
+# Vercel. A base64 image bigger than this is swapped for
+# the Pollinations URL instead of being sent inline.
+MAX_INLINE_IMAGE_CHARS = 3_000_000
+
 
 def _call_gemini_image(prompt):
 
@@ -351,7 +401,18 @@ def generate_image_url(prompt):
 
     try:
 
-        return _call_gemini_image(prompt)
+        result = _call_gemini_image(prompt)
+
+
+        # VERCEL: keep the response under Vercel's size limit.
+        if len(result) > MAX_INLINE_IMAGE_CHARS:
+
+            print("Gemini image too large for Vercel, using fallback.")
+
+            return build_pollinations_image_url(prompt)
+
+
+        return result
 
     except Exception as error:
 
@@ -668,9 +729,6 @@ def _build_openai_user_content(message, image_base64, image_mime_type):
         }
 
     ]
-
-
-    return messages
 
 
 def _call_gemini(message, image_base64, image_mime_type, system_text, history):
@@ -1210,8 +1268,13 @@ def save_user_fact(user_id, fact):
 def _learn_from_message(user_id, message, reply):
 
     """
-    Runs on a background thread so memory learning never
-    adds latency to the reply the person is waiting for.
+    VERCEL CHANGE: this used to run on a background thread.
+    Vercel freezes the function as soon as the response is
+    sent, so a background thread would be killed before it
+    finished. It now runs inline, and chat() only calls it
+    when the message looks like it contains a personal fact
+    (see PERSONAL_FACT_HINTS), so most messages skip the
+    extra API call entirely.
     """
 
     try:
@@ -1236,8 +1299,46 @@ def _learn_from_message(user_id, message, reply):
         )
 
 
+# Cheap check so we only pay for the memory-extraction call
+# on messages that might actually contain a personal fact.
+PERSONAL_FACT_HINTS = re.compile(
+    r"\b(i am|i'm|im|my|mine|i like|i love|i hate|i prefer|"
+    r"i work|i study|i live|i use|i want|i need|call me|"
+    r"my name|i'm learning|i am learning)\b",
+    re.IGNORECASE
+)
+
+
+# Generated images are stored in chat history as markdown with
+# a huge base64 data URL. Sending those back to the AI providers
+# as history wastes tokens and can break requests, so they are
+# replaced with a short placeholder before being used as history.
+DATA_IMAGE_MARKDOWN = re.compile(
+    r"!\[[^\]]*\]\(data:[^)]*\)"
+)
+
+
+def _strip_data_images(text):
+
+    return DATA_IMAGE_MARKDOWN.sub(
+        "[generated image]",
+        text or ""
+    )
+
+
 # =========================================================
 # DATABASE
+#
+# VERCEL CHANGES:
+#   - Small pool (serverless instances are short-lived and
+#     many can run at once, so each should hold few
+#     connections). Use Supabase's transaction pooler URL
+#     (port 6543) as DATABASE_URL.
+#   - Connections are checked before use, because a frozen
+#     instance often comes back with dead connections.
+#   - Any connection a request forgot to release is returned
+#     automatically when the request ends, so a single error
+#     can't slowly exhaust the pool.
 # =========================================================
 
 _db_pool = None
@@ -1257,24 +1358,49 @@ def _init_db_pool():
 
     _db_pool = psycopg2.pool.ThreadedConnectionPool(
         1,
-        10,
+        5,
         database_url,
-        sslmode="require"
+        sslmode="require",
+        connect_timeout=10,
+        keepalives=1,
+        keepalives_idle=30,
+        keepalives_interval=10,
+        keepalives_count=3
     )
+
+
+def _connection_is_healthy(conn):
+
+    try:
+
+        if conn.closed:
+
+            return False
+
+
+        cur = conn.cursor()
+
+        cur.execute("SELECT 1")
+
+        cur.close()
+
+        conn.rollback()
+
+        return True
+
+    except Exception:
+
+        return False
 
 
 def get_db():
 
     """
-    Borrows a connection from a pool instead of opening a
-    brand-new one every time. Opening a fresh Postgres
-    connection means a full TCP + TLS handshake on every
-    single call -- with dozens of call sites across the
-    app, that was adding real, avoidable latency to nearly
-    every request. Always pair this with release_db(conn)
-    instead of calling conn.close() directly, so the
-    connection goes back to the pool rather than being
-    destroyed.
+    Borrows a connection from the pool. Always pair this
+    with release_db(conn) instead of conn.close(), so the
+    connection goes back to the pool. If a route forgets
+    (or crashes before it gets the chance), the connection
+    is returned automatically at the end of the request.
     """
 
     global _db_pool
@@ -1291,7 +1417,29 @@ def get_db():
         )
 
 
-    return _db_pool.getconn()
+    conn = _db_pool.getconn()
+
+
+    if not _connection_is_healthy(conn):
+
+        try:
+
+            _db_pool.putconn(conn, close=True)
+
+        except Exception:
+
+            pass
+
+
+        conn = _db_pool.getconn()
+
+
+    if has_app_context():
+
+        g.setdefault("_db_conns", []).append(conn)
+
+
+    return conn
 
 
 def release_db(conn):
@@ -1305,6 +1453,20 @@ def release_db(conn):
 
     try:
 
+        if has_app_context():
+
+            tracked = g.get("_db_conns")
+
+            if tracked and conn in tracked:
+
+                tracked.remove(conn)
+
+
+        if not conn.closed:
+
+            conn.rollback()
+
+
         _db_pool.putconn(conn)
 
     except Exception as error:
@@ -1313,6 +1475,17 @@ def release_db(conn):
             "DB pool release error:",
             error
         )
+
+
+@app.teardown_appcontext
+def _release_leaked_connections(exception=None):
+
+    leaked = list(g.pop("_db_conns", None) or [])
+
+
+    for conn in leaked:
+
+        release_db(conn)
 
 
 def init_db():
@@ -2050,6 +2223,7 @@ def login():
 
         if (
             not row
+            or not row["password_hash"]
             or not check_password_hash(
                 row["password_hash"],
                 password
@@ -2472,6 +2646,9 @@ def home():
 # /static/js/sw.js) so its scope covers the whole app --
 # a service worker can only control paths at or below
 # where it's served from.
+#
+# (vercel.json must include sw.js and manifest.json in
+# includeFiles for these to work on Vercel.)
 # =========================================================
 
 @app.route("/sw.js")
@@ -2996,6 +3173,10 @@ def chat():
     # Load conversation history (before saving this message)
     # so Cipher actually knows what was said earlier in this
     # chat, instead of answering each message in isolation.
+    #
+    # VERCEL CHANGE: generated images are stripped out of the
+    # history (they're huge base64 strings) before it's sent
+    # to the AI providers.
     # -----------------------------------------------------
 
     cur.execute(
@@ -3014,7 +3195,10 @@ def chat():
     )
 
     history = [
-        { "role": row["role"], "content": row["content"] }
+        {
+            "role": row["role"],
+            "content": _strip_data_images(row["content"])
+        }
         for row in cur.fetchall()
     ]
 
@@ -3128,18 +3312,20 @@ def chat():
 
         # -------------------------------------------------
         # Best-effort: learn a durable fact from this
-        # message, if there is one. Runs in the background
-        # after the reply is ready, so it adds no wait time
-        # to the response the person actually sees -- it
-        # used to run synchronously here and add a whole
-        # extra API call's worth of latency to every message.
+        # message, if there is one.
+        #
+        # VERCEL CHANGE: no background thread (Vercel would
+        # freeze it). It runs inline, and only for messages
+        # that look like they contain a personal fact.
         # -------------------------------------------------
 
-        threading.Thread(
-            target=_learn_from_message,
-            args=(current_user.id, message, reply),
-            daemon=True
-        ).start()
+        if PERSONAL_FACT_HINTS.search(message):
+
+            _learn_from_message(
+                current_user.id,
+                message,
+                reply
+            )
 
 
     # -----------------------------------------------------
@@ -4724,19 +4910,31 @@ def send_dm(friend_id):
 
 # =========================================================
 # DATABASE INITIALIZATION
+#
+# VERCEL CHANGE: init_db() used to run on every cold start.
+# On Vercel that is slow and can cause table-lock clashes
+# when several instances start at once.
+#
+# - Locally (not on Vercel): it still runs automatically.
+# - On Vercel: it only runs if the env var INIT_DB=1 is set.
+#   Set it for ONE deploy if you're pointing at a brand-new
+#   database, then remove it. If your tables already exist
+#   (same database as Render), you don't need it at all.
 # =========================================================
 
-with app.app_context():
+if (not IS_VERCEL) or os.environ.get("INIT_DB") == "1":
 
-    init_db()
+    with app.app_context():
+
+        init_db()
 
 
 # =========================================================
-# RUN
+# RUN (local development only)
 # =========================================================
 
 if __name__ == "__main__":
 
     app.run(
-        debug=True
+        debug=os.environ.get("FLASK_DEBUG") == "1"
     )
